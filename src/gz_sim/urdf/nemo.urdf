@@ -439,7 +439,7 @@
   -->
 
   <gazebo>
-    <plugin name="ignition::gazebo::systems::JointStatePublisher" filename="libignition-gazebo-joint-state-publisher-system.so">
+    <plugin name="gz::sim::systems::JointStatePublisher" filename="gz-sim-joint-state-publisher-system">
       <update_rate>1000</update_rate>
         <joint_name>l_hip_pitch_joint</joint_name>
         <joint_name>l_hip_roll_joint</joint_name>
@@ -463,8 +463,8 @@
        <visualize>true</visualize>
        <topic>imu</topic>
        <plugin
-        filename="libignition-gazebo-imu-system.so"
-        name="ignition::gazebo::systems::Imu">
+        filename="gz-sim-imu-system"
+        name="gz::sim::systems::Imu">
         </plugin>
     </sensor>
   </gazebo>
