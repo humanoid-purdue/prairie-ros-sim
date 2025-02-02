@@ -11,29 +11,27 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/pelvis_box.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/pelvis_box.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/pelvis_box.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/pelvis_box.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_pelvis" />
-    </sensor>
   </link>
 
   <!-- Joint: floating_base -->
+  <!--
   <joint name="floating_base" type="floating">
     <parent link="world"/>
     <child link="pelvis"/>
     <origin xyz="0 0 0.8319" rpy="0 0 0"/>
   </joint>
+  -->
 
   <!-- Link: l_hip_pitch -->
   <link name="l_hip_pitch">
@@ -45,25 +43,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/l_hip_pitch.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_hip_pitch.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/l_hip_pitch.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_hip_pitch.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_l_hip_pitch" />
-    </sensor>
   </link>
 
   <!-- Joint: l_hip_pitch -->
-  <joint name="l_hip_pitch" type="revolute">
+  <joint name="l_hip_pitch_joint" type="revolute">
     <parent link="pelvis"/>
     <child link="l_hip_pitch"/>
     <origin xyz="0 0.0762 0" rpy="0 0 0"/>
@@ -81,25 +75,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/l_hip_roll.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_hip_roll.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/l_hip_roll.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_hip_roll.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_l_hip_roll" />
-    </sensor>
   </link>
 
   <!-- Joint: l_hip_roll -->
-  <joint name="l_hip_roll" type="revolute">
+  <joint name="l_hip_roll_joint" type="revolute">
     <parent link="l_hip_pitch"/>
     <child link="l_hip_roll"/>
     <origin xyz="-0.05715 0.127 0" rpy="0 0 0"/>
@@ -117,25 +107,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/l_hip_yaw.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_hip_yaw.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/l_hip_yaw.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_hip_yaw.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_l_hip_yaw" />
-    </sensor>
   </link>
 
   <!-- Joint: l_hip_yaw -->
-  <joint name="l_hip_yaw" type="revolute">
+  <joint name="l_hip_yaw_joint" type="revolute">
     <parent link="l_hip_roll"/>
     <child link="l_hip_yaw"/>
     <origin xyz="0.06254 0 -0.1905" rpy="0 0 0"/>
@@ -153,25 +139,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/l_knee.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_knee.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/l_knee.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_knee.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_l_knee" />
-    </sensor>
   </link>
 
   <!-- Joint: l_knee -->
-  <joint name="l_knee" type="revolute">
+  <joint name="l_knee_joint" type="revolute">
     <parent link="l_hip_yaw"/>
     <child link="l_knee"/>
     <origin xyz="0 0 -0.2286" rpy="0 0 0"/>
@@ -189,25 +171,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/l_foot_pitch.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_foot_pitch.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/l_foot_pitch.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_foot_pitch.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_l_foot_pitch" />
-    </sensor>
   </link>
 
   <!-- Joint: l_foot_pitch -->
-  <joint name="l_foot_pitch" type="revolute">
+  <joint name="l_foot_pitch_joint" type="revolute">
     <parent link="l_knee"/>
     <child link="l_foot_pitch"/>
     <origin xyz="0 0.00635 -0.3366" rpy="0 0 0"/>
@@ -225,26 +203,22 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/l_foot_roll.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_foot_roll.stl"/>
       </geometry>
-      <material name="metallic"/>
+      <!--<material name="metallic"/>-->
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/l_foot_roll.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/l_foot_roll.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_l_foot_roll" />
-    </sensor>
   </link>
 
   <!-- Joint: l_foot_roll -->
-  <joint name="l_foot_roll" type="revolute">
+  <joint name="l_foot_roll_joint" type="revolute">
     <parent link="l_foot_pitch"/>
     <child link="l_foot_roll"/>
     <origin xyz="0.0889 0 0" rpy="0 0 0"/>
@@ -264,25 +238,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/r_hip_pitch.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_hip_pitch.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/r_hip_pitch.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_hip_pitch.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_r_hip_pitch" />
-    </sensor>
   </link>
 
   <!-- Joint: r_hip_pitch -->
-  <joint name="r_hip_pitch" type="revolute">
+  <joint name="r_hip_pitch_joint" type="revolute">
     <parent link="pelvis"/>
     <child link="r_hip_pitch"/>
     <origin xyz="0 -0.0762 0" rpy="0 0 0"/>
@@ -300,25 +270,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/r_hip_roll.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_hip_roll.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/r_hip_roll.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_hip_roll.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_r_hip_roll" />
-    </sensor>
   </link>
 
   <!-- Joint: r_hip_roll -->
-  <joint name="r_hip_roll" type="revolute">
+  <joint name="r_hip_roll_joint" type="revolute">
     <parent link="r_hip_pitch"/>
     <child link="r_hip_roll"/>
     <origin xyz="-0.05715 -0.127 0" rpy="0 0 0"/>
@@ -336,25 +302,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/r_hip_yaw.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_hip_yaw.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/r_hip_yaw.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_hip_yaw.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_r_hip_yaw" />
-    </sensor>
   </link>
 
   <!-- Joint: r_hip_yaw -->
-  <joint name="r_hip_yaw" type="revolute">
+  <joint name="r_hip_yaw_joint" type="revolute">
     <parent link="r_hip_roll"/>
     <child link="r_hip_yaw"/>
     <origin xyz="0.06254 0 -0.1905" rpy="0 0 0"/>
@@ -372,25 +334,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/r_knee.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_knee.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/r_knee.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_knee.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_r_knee" />
-    </sensor>
   </link>
 
   <!-- Joint: r_knee -->
-  <joint name="r_knee" type="revolute">
+  <joint name="r_knee_joint" type="revolute">
     <parent link="r_hip_yaw"/>
     <child link="r_knee"/>
     <origin xyz="0 0 -0.2286" rpy="0 0 0"/>
@@ -408,25 +366,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/r_foot_pitch.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_foot_pitch.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/r_foot_pitch.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_foot_pitch.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_r_foot_pitch" />
-    </sensor>
   </link>
 
   <!-- Joint: r_foot_pitch -->
-  <joint name="r_foot_pitch" type="revolute">
+  <joint name="r_foot_pitch_joint" type="revolute">
     <parent link="r_knee"/>
     <child link="r_foot_pitch"/>
     <origin xyz="0 -0.00635 -0.3366" rpy="0 0 0"/>
@@ -444,25 +398,21 @@
     <!-- Visual Geometry -->
     <visual>
       <geometry>
-        <mesh filename="assets/r_foot_roll.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_foot_roll.stl"/>
       </geometry>
     </visual>
 
     <!-- Collision Geometry -->
     <collision>
       <geometry>
-        <mesh filename="assets/r_foot_roll.stl"/>
+        <mesh filename="package://gz_sim/meshes/nemo/r_foot_roll.stl"/>
       </geometry>
     </collision>
 
-    <sensor type="imu">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <sensor name="imu_r_foot_roll" />
-    </sensor>
   </link>
 
   <!-- Joint: r_foot_roll -->
-  <joint name="r_foot_roll" type="revolute">
+  <joint name="r_foot_roll_joint" type="revolute">
     <parent link="r_foot_pitch"/>
     <child link="r_foot_roll"/>
     <origin xyz="0.0889 0 0" rpy="0 0 0"/>
@@ -487,6 +437,37 @@
     <position kp="400.0" class="nemo" name="l_foot_roll" joint="l_foot_roll" forcerange="-22 22" inheritrange="1"/>
   </actuator>
   -->
+
+  <gazebo>
+    <plugin name="ignition::gazebo::systems::JointStatePublisher" filename="libignition-gazebo-joint-state-publisher-system.so">
+      <update_rate>1000</update_rate>
+        <joint_name>l_hip_pitch_joint</joint_name>
+        <joint_name>l_hip_roll_joint</joint_name>
+        <joint_name>l_hip_yaw_joint</joint_name>
+        <joint_name>l_knee_joint</joint_name>
+        <joint_name>l_foot_pitch_joint</joint_name>
+        <joint_name>l_foot_roll_joint</joint_name>
+        <joint_name>r_hip_pitch_joint</joint_name>
+        <joint_name>r_hip_roll_joint</joint_name>
+        <joint_name>r_hip_yaw_joint</joint_name>
+        <joint_name>r_knee_joint</joint_name>
+        <joint_name>r_foot_pitch_joint</joint_name>
+        <joint_name>r_foot_roll_joint</joint_name>
+    </plugin>
+  </gazebo>
+
+  <gazebo reference="pelvis">
+    <sensor name="imu_sensor" type="imu">
+       <always_on>1</always_on>
+       <update_rate>1</update_rate>
+       <visualize>true</visualize>
+       <topic>imu</topic>
+       <plugin
+        filename="libignition-gazebo-imu-system.so"
+        name="ignition::gazebo::systems::Imu">
+        </plugin>
+    </sensor>
+  </gazebo>
 
   <!-- Keyframe (Stand Position) -->
   <keyframe>
