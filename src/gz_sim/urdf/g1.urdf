@@ -1301,7 +1301,7 @@
   </link>
 
   <gazebo>
-    <plugin name="ignition::gazebo::systems::JointStatePublisher" filename="libignition-gazebo-joint-state-publisher-system.so">
+    <plugin name="gz::sim::systems::JointStatePublisher" filename="gz-sim-joint-state-publisher-system">
       <update_rate>2000</update_rate>
         <joint_name>left_hip_pitch_joint</joint_name>
         <joint_name>left_hip_roll_joint</joint_name>
@@ -1349,7 +1349,7 @@
     -->
 
   <gazebo>
-     <plugin name="ignition::gazebo::systems::JointTrajectoryController" filename="libignition-gazebo-joint-trajectory-controller-system.so">
+     <plugin name="gz::sim::systems::JointTrajectoryController" filename="gz-sim-joint-trajectory-controller-system">
         <update_rate>20000</update_rate>
 <joint_name>left_hip_pitch_joint</joint_name>
 <use_header_start_time>true</use_header_start_time>
@@ -1759,14 +1759,14 @@
 <velocity_cmd_max>5</velocity_cmd_max>
      </plugin>
      <plugin
-       filename="libignition-gazebo-pose-publisher-system.so"
-       name="ignition::gazebo::systems::PosePublisher">
+       filename="gz-sim-pose-publisher-system"
+       name="gz::sim::systems::PosePublisher">
        <publish_link_pose>true</publish_link_pose>
        <use_pose_vector_msg>true</use_pose_vector_msg>
      </plugin>
      <plugin
-       filename="libignition-gazebo-odometry-publisher-system.so"
-       name="ignition::gazebo::systems::OdometryPublisher">
+       filename="gz-sim-odometry-publisher-system"
+       name="gz::sim::systems::OdometryPublisher">
        <robot_base_frame>h1/pelvis</robot_base_frame>
        <dimensions>3</dimensions>
      </plugin>
@@ -1779,8 +1779,8 @@
        <visualize>true</visualize>
        <topic>imu</topic>
        <plugin
-        filename="libignition-gazebo-imu-system.so"
-        name="ignition::gazebo::systems::Imu">
+        filename="gz-sim-imu-system"
+        name="gz::sim::systems::Imu">
         </plugin>
     </sensor>
   </gazebo>
@@ -1794,8 +1794,8 @@
       </force_torque>
       <topic>rarj</topic>
       <plugin
-        filename="libignition-gazebo-forcetorque-system.so"
-        name="ignition::gazebo::systems::ForceTorque">
+        filename="gz-sim--forcetorque-system"
+        name="gz::sim::systems::ForceTorque">
       </plugin>
     </sensor>
   </gazebo>
@@ -1808,8 +1808,8 @@
       </force_torque>
       <topic>larj</topic>
       <plugin
-        filename="libignition-gazebo-forcetorque-system.so"
-        name="ignition::gazebo::systems::ForceTorque">
+        filename="gz-sim-forcetorque-system"
+        name="gz::sim::systems::ForceTorque">
         </plugin>
     </sensor>
   </gazebo>
