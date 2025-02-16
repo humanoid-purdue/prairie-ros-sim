@@ -40,4 +40,10 @@ def generate_launch_description():
             output='both',
             parameters=[{'use_sim_time': use_sim_time, 'robot_description': robot_desc}],
             arguments=[urdf]),
+        Node(
+            package='gz_sim',
+            executable='gz_state_observer',
+            name='gz_state_observer',
+            output='screen'
+        ),
     ])

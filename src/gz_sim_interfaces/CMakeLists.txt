@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(gz_sim_intefaces)
+project(gz_sim_interfaces)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -13,7 +13,8 @@ find_package(ament_cmake REQUIRED)
 find_package(builtin_interfaces REQUIRED)  # Ensure this line is present!
 find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/DrlObserve.msg"
+  "msg/StateObservation.msg"
+  "msg/StateObservationReduced.msg"
   DEPENDENCIES builtin_interfaces
  )
 

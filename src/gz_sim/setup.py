@@ -18,6 +18,7 @@ setup(
         ('share/' + package_name + '/meshes/g1', glob('meshes/g1/*')),
         ('share/' + package_name + '/sdf', glob('sdf/*')),
         ('share/' + package_name + '/config', glob('config/*')),
+        ('share/' + package_name + '/helpers', glob('helpers/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -28,6 +29,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'gz_state_observer = gz_sim.gz_state_observer:main'
         ],
     },
 )
