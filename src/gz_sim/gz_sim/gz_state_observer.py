@@ -67,7 +67,7 @@ class GZSateObserver(Node):
             10)
         self.subscription_4 = self.create_subscription(
             Clock,
-            '/sim_clock',
+            '/clock',
             self.clock_callback, 10
         )
         # Might be removed since in the real robot we don't have odometry

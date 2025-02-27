@@ -428,7 +428,7 @@
     <position kp="400.0" class="nemo" name="r_knee" joint="r_knee" forcerange="-34 34" inheritrange="1"/>
     <position kp="400.0" class="nemo" name="r_foot_pitch" joint="r_foot_pitch" forcerange="-34 34" inheritrange="1"/>
     <position kp="400.0" class="nemo" name="r_foot_roll" joint="r_foot_roll" forcerange="-22 22" inheritrange="1"/>
-
+    
     <position kp="400.0" class="nemo" name="l_hip_pitch" joint="l_hip_pitch" forcerange="-34 34" inheritrange="1"/>
     <position kp="400.0" class="nemo" name="l_hip_roll" joint="l_hip_roll" forcerange="-34 34" inheritrange="1"/>
     <position kp="400.0" class="nemo" name="l_hip_yaw" joint="l_hip_yaw" forcerange="-34 34" inheritrange="1"/>
@@ -438,6 +438,106 @@
   </actuator>
   -->
 
+  <!-- gz_ros2_control -->
+  <ros2_control name="nemo_gazebo" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <joint name="l_hip_pitch_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <limit effort="34.0"/>
+    </joint>
+
+    <joint name="l_hip_roll_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <limit effort="34.0"/>
+    </joint>
+  
+    <joint name="l_hip_yaw_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+      <limit effort="34.0"/>
+    </joint>
+
+    <joint name="l_knee_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <limit effort="34.0"/>
+    </joint>
+
+    <joint name="l_foot_pitch_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+      <limit effort="34.0"/>
+    </joint>
+
+    <joint name="l_foot_roll_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+      <limit effort="22.0"/>
+    </joint>
+
+    <joint name="r_hip_pitch_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="r_hip_roll_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <limit effort="34.0"/>
+    </joint>
+  
+    <joint name="r_hip_yaw_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <limit effort="34.0"/>
+    </joint>
+
+    <joint name="r_knee_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <limit effort="34.0"/>
+    </joint>
+
+    <joint name="r_foot_pitch_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <limit effort="34.0"/>
+    </joint>
+
+    <joint name="r_foot_roll_joint">
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <limit effort="22.0"/>
+    </joint>
+  </ros2_control>
+
+  <gazebo>
+  <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+    <parameters>/home/jshiao/PurdueHRC/prairie-ros-sim/src/gz_sim/config/nemo_robot_control.yaml</parameters>
+  </plugin>
+  </gazebo>
+
+  <!-- Joint State publisher -->
   <gazebo>
     <plugin name="gz::sim::systems::JointStatePublisher" filename="gz-sim-joint-state-publisher-system">
       <update_rate>1000</update_rate>

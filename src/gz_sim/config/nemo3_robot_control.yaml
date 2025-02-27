@@ -1,0 +1,76 @@
+controller_manager:
+  ros__parameters:  # In ROS 2, controller YAML files must have a top-level namespace before defining parameters.
+    update_rate: 100  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+      
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+  
+joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - l_hip_pitch_joint
+      - l_hip_roll_joint
+      - l_hip_yaw_joint
+      - l_knee_joint
+      - l_foot_pitch_joint
+      - l_foot_roll_joint
+      - r_hip_pitch_joint
+      - r_hip_roll_joint
+      - r_hip_yaw_joint
+      - r_knee_joint
+      - r_foot_pitch_joint
+      - r_foot_roll_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    gains:
+      l_hip_pitch_joint: {p: 20.0, i: 0.0, d: 2.0}
+      l_hip_roll_joint: {p: 10.0, i: 0.0, d: 1.0}
+      l_hip_yaw_joint: {p: 10.0, i: 0.0, d: 1.0}
+      l_knee_joint: {p: 20.0, i: 0.0, d: 2.0}
+      l_foot_pitch_joint: {p: 20.0, i: 0.0, d: 1.0}
+      l_foot_roll_joint: {p: 10.0, i: 0.0, d: 1.0}
+      r_hip_pitch_joint: {p: 20.0 , i: 0.0 , d: 2.0}
+      r_hip_roll_joint: {p: 10.0, i: 0.0, d: 1.0}
+      r_hip_yaw_joint: {p: 10.0, i: 0.0, d: 1.0}
+      r_knee_joint: {p: 20.0 , i: 0.0 , d: 2.0}
+      r_foot_pitch_joint: {p: 20.0 , i: 0.0 , d: 2.0}
+      r_foot_roll_joint: {p: 10.0, i: 0.0, d: 1.0}
+
+    #position_controller:
+    #  type: position_controllers/JointGroupPositionController
+    #  joints:
+    #    - l_hip_pitch_joint
+    #    - l_hip_roll_joint
+    #    - l_hip_yaw_joint
+    #    - l_knee_joint
+    #    - l_foot_pitch_joint
+    #    - l_foot_roll_joint
+    #    - r_hip_pitch_joint
+    #    - r_hip_roll_joint
+    #    - r_hip_yaw_joint
+    #    - r_knee_joint
+    #    - r_foot_pitch_joint
+    #    - r_foot_roll_joint
+    #  command_interfaces:
+    #    - position
+    #  state_interfaces:
+    #    - position
+    #  gains:
+    #    l_hip_pitch_joint: {p: 20.0, i: 0.0, d: 2.0}
+    #    l_hip_roll_joint: {p: 10.0, i: 0.0, d: 1.0}
+    #    l_hip_yaw_joint: {p: 10.0, i: 0.0, d: 1.0}
+    #    l_knee_joint: {p: 20.0, i: 0.0, d: 2.0}
+    #    l_foot_pitch_joint: {p: 20.0, i: 0.0, d: 1.0}
+    #    l_foot_roll_joint: {p: 10.0, i: 0.0, d: 1.0}
+    #    r_hip_pitch_joint: {p: 20.0 , i: 0.0 , d: 2.0}
+    #    r_hip_roll_joint: {p: 10.0, i: 0.0, d: 1.0}
+    #    r_hip_yaw_joint: {p: 10.0, i: 0.0, d: 1.0}
+    #    r_knee_joint: {p: 20.0 , i: 0.0 , d: 2.0}
+    #    r_foot_pitch_joint: {p: 20.0 , i: 0.0 , d: 2.0}
+    #    r_foot_roll_joint: {p: 10.0, i: 0.0, d: 1.0}

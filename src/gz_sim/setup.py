@@ -15,6 +15,7 @@ setup(
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
         ('share/' + package_name + '/urdf', glob('urdf/*')),
         ('share/' + package_name + '/meshes/nemo', glob('meshes/nemo/*')),
+        ('share/' + package_name + '/meshes/nemo3', glob('meshes/nemo3/*')),
         ('share/' + package_name + '/meshes/g1', glob('meshes/g1/*')),
         ('share/' + package_name + '/sdf', glob('sdf/*')),
         ('share/' + package_name + '/config', glob('config/*')),
