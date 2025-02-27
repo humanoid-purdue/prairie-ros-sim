@@ -15,8 +15,6 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
-    #default_rviz_config_path = os.path.join(get_package_share_directory('gz_sim'), 'rviz/robot_viewer.rviz')
-
     # Xacro to URDF
     robot_description_content = ParameterValue(
         Command([
@@ -28,8 +26,6 @@ def generate_launch_description():
             ),
         ]), value_type=str
     )
-    #print(f"xacro to urdf: {robot_description_content}")
-    #robot_description = {'robot_description': robot_description_content}
 
     # Config file for ros2_control
     robot_controllers_config = PathJoinSubstitution(
@@ -50,10 +46,13 @@ def generate_launch_description():
         package='controller_manager',
         executable='spawner',
         arguments=[
-            'joint_trajectory_controller',
-            '--param-file',
-            robot_controllers_config,
-            ],
+            'joint_trajectory_controller'],
+            # Not sure why following not working
+            #[
+            #'joint_trajectory_controller',
+            #'--param-file',
+            #robot_controllers_config,
+            #],
     )
 
     # Node: robot_state_publisher
@@ -106,23 +105,11 @@ def generate_launch_description():
         output='screen'
     )
 
-    #urdf_file_name = 'urdf/nemo3.urdf'
-    #urdf = os.path.join(
-    #    get_package_share_directory('gz_sim'),
-    #    urdf_file_name)
-
-    #ros2_control_config = os.path.join(get_package_share_directory('gz_sim'), 'config', 'nemo3_robot_control.yaml')
+    #default_rviz_config_path = os.path.join(get_package_share_directory('gz_sim'), 'rviz/robot_viewer.rviz')
     #rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path,
     #                                 description='Absolute path to rviz config file')
 
-    #pkg_gz = get_package_share_directory('gz_sim')
-    #gz_launch = PathJoinSubstitution([pkg_gz, 'launch', 'walk_plane.launch.py'])
-
-    #with open(urdf, 'r') as infp:
-    #    robot_desc = infp.read()
-
     return LaunchDescription([
-        #IncludeLaunchDescription(PythonLaunchDescriptionSource(gz_launch)),
         # Launch gazebo environment
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -147,40 +134,19 @@ def generate_launch_description():
         gz_bridge,
         node_robot_state_publisher,
         gz_spawn_entity,
-        #Node(
-        #    package='robot_state_publisher',
-        #    executable='robot_state_publisher',
-        #    name='robot_state_publisher',
-        #    output='both',
-        #    parameters=[{'use_sim_time': use_sim_time, 'robot_description': robot_desc}]
-        #    ),
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            output='both',
+            parameters=[{'use_sim_time': use_sim_time, 'robot_description': robot_description_content}]
+            ),
         Node(
             package='gz_sim',
             executable='gz_state_observer',
             name='gz_state_observer',
             output='screen'
         ),
-        #Node(
-        #    package="controller_manager",
-        #    executable="ros2_control_node",
-        #    parameters=[ros2_control_config],
-        #    output="screen"
-        #),
-        #Node(
-        #    package="controller_manager",
-        #    executable="spawner",
-        #    arguments=["joint_state_broadcaster"],
-        #),
-        #Node(
-        #    package="controller_manager",
-        #    executable="spawner",
-        #    arguments=["joint_trajectory_controller"],
-        #),
-        #Node(
-        #    package="controller_manager",
-        #    executable="spawner",
-        #    arguments=["position_controller"],
-        #),
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='false',
