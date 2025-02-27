@@ -129,7 +129,7 @@ def generate_launch_description():
                 [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
                                        'launch',
                                        'gz_sim.launch.py'])]),
-            launch_arguments=[('gz_args', [' -r -v 1 ', sdf]),
+            launch_arguments=[('gz_args', [' -r -v 1 ', sdf]), # -r to run immediately, otherwise, the controllers will not work
                               ('on_exit_shutdown', 'True')]
         ),
         RegisterEventHandler(
