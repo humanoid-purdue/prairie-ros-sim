@@ -26,7 +26,8 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(gz_launch_path),
             launch_arguments={
                 'gz_args': [sdf],
-                'on_exit_shutdown': 'True'
+                'on_exit_shutdown': 'True',
+                '--render-engine': ['ogre']
             }.items(),
         )
     start_gazebo_ros_spawner_cmd = Node(

@@ -13,7 +13,6 @@ find_package(ament_cmake REQUIRED)
 find_package(builtin_interfaces REQUIRED)  # Ensure this line is present!
 find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/StateObservation.msg"
   "msg/StateObservationReduced.msg"
   DEPENDENCIES builtin_interfaces
  )
