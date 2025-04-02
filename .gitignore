@@ -53,3 +53,6 @@ qtcreator-*
 CATKIN_IGNORE
 
 .DS_Store
+
+/src/prairie2-venv
+/.idea
