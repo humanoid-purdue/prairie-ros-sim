@@ -26,7 +26,6 @@
         izz="0.00358009"/>
     </inertial>
       <visual name="l_hip_pitch">
-         <origin xyz="0 0 0" rpy="0 0 0"/>
          <geometry>
             <mesh filename="package://prairie_control/meshes/nemo4b/l_hip_pitch.stl"/>
          </geometry>
@@ -47,7 +46,6 @@
          <inertia ixx="0.006611571483374219" iyy="0.006331359985392611" izz="0.0028985185312331704" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="l_hip_roll">
-         <origin xyz="-0.01736573595523465 2.8464927243536956e-06 -0.05970583053459872" rpy="0.00014232068753268503 -0.18267748790935934 -0.0003902767213758727"/>
          <geometry>
             <mesh filename="package://prairie_control/meshes/nemo4b/l_hip_roll.stl"/>
          </geometry>
@@ -57,7 +55,7 @@
    <joint type="revolute" name="l_hip_roll">
       <parent link="l_hip_pitch"/>
       <child link="l_hip_roll"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="-0.07875 0.0 0.0" rpy="0 0 0"/>
       <axis xyz="1.0 0.0 0.0"/>
       <limit lower="-0.4" upper="1.5" effort="100" velocity="100"/>
    </joint>
@@ -68,7 +66,6 @@
          <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="l_hip_yaw">
-         <origin xyz="5.83664874371905e-06 1.7109240304756822e-06 -0.062326293981562565" rpy="-0.0002696017728186506 0.00016457134354230796 1.5707920334258687"/>
          <geometry>
             <mesh filename="package://prairie_control/meshes/nemo4b/l_hip_yaw.stl"/>
          </geometry>
@@ -78,9 +75,9 @@
    <joint type="revolute" name="l_hip_yaw">
       <parent link="l_hip_roll"/>
       <child link="l_hip_yaw"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.00715 0.0 -0.1263" rpy="0 0 0"/>
       <axis xyz="0.0 0.0 1.0"/>
-      <limit lower="-1.0" upper="1.0" effort="100" velocity="100"/>
+      <limit lower="-1.0" upper="1.0" effort="46" velocity="100"/>
    </joint>
    <link name="l_knee">
       <inertial>
@@ -89,7 +86,6 @@
          <inertia ixx="0.0070466" iyy="0.00513742" izz="0.00225232" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="l_knee">
-         <origin xyz="-1.4921539788234289e-09 7.910392518134238e-09 -0.10297404194441043" rpy="0.0 0.0 -3.2172707848725117e-06"/>
          <geometry>
             <mesh filename="package://prairie_control/meshes/nemo4b/l_knee.stl"/>
          </geometry>
@@ -99,7 +95,7 @@
    <joint type="revolute" name="l_knee">
       <parent link="l_hip_yaw"/>
       <child link="l_knee"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.0 -0.07875" rpy="0 0 0"/>
       <axis xyz="0.0 1.0 0.0"/>
       <limit lower="-2.0" upper="2.0" effort="100" velocity="100"/>
    </joint>
@@ -110,7 +106,6 @@
          <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="l_foot_pitch">
-         <origin xyz="0.01642265215060797 -2.5247692832924115e-06 -6.3433757846142034e-06" rpy="1.5705709613898433 -2.2427544625447382e-05 1.5706413297236463"/>
          <geometry>
             <mesh filename="package://prairie_control/meshes/nemo4b/l_foot_pitch.stl"/>
          </geometry>
@@ -120,7 +115,7 @@
    <joint type="revolute" name="l_foot_pitch">
       <parent link="l_knee"/>
       <child link="l_foot_pitch"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.0 -0.206" rpy="0 0 0"/>
       <axis xyz="0.0 1.0 0.0"/>
       <limit lower="-2.0" upper="2.0" effort="100" velocity="100"/>
    </joint>
@@ -131,17 +126,23 @@
          <inertia ixx="0.005416700784880941" iyy="0.004963623876621819" izz="0.0028013153384972476" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="l_foot_roll">
-         <origin xyz="0.007994183510704024 1.1742462541293414e-05 -0.03811882374488236" rpy="0.805359327591217 -0.00015554951913299142 1.5712645041576923"/>
          <geometry>
             <mesh filename="package://prairie_control/meshes/nemo4b/l_foot_roll.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
+
+      <collision>
+        <origin xyz="-0.0187 0 -0.07975" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.1 0.0505 0.006"/>
+        </geometry>
+      </collision>
    </link>
    <joint type="revolute" name="l_foot_roll">
       <parent link="l_foot_pitch"/>
       <child link="l_foot_roll"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.07875 0.0 0.0" rpy="0 0 0"/>
       <axis xyz="1.0 0.0 0.0"/>
       <limit lower="-1.0" upper="1.0" effort="100" velocity="100"/>
    </joint>
@@ -152,9 +153,8 @@
          <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="r_hip_pitch">
-         <origin xyz="-0.016426052311187045 -3.8697664800539455e-07 -6.069910157291952e-06" rpy="1.571045608706061 -0.0002897102791530326 1.5707899781964318"/>
          <geometry>
-            <mesh filename="package://prairie_control/meshes/nemo4b/r_hip_pitch.stl"/>
+            <mesh filename="package://prairie_control/meshes/nemo4b/l_hip_pitch.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -173,9 +173,8 @@
          <inertia ixx="0.006611571483374219" iyy="0.006331359985392611" izz="0.0028985185312331704" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="r_hip_roll">
-         <origin xyz="-0.01736573590596694 -2.846560797212238e-06 -0.059705830517740546" rpy="-0.0001423206363125254 -0.18267748889084268 0.0003902816912764815"/>
          <geometry>
-            <mesh filename="package://prairie_control/meshes/nemo4b/r_hip_roll.stl"/>
+            <mesh filename="package://prairie_control/meshes/nemo4b/l_hip_roll.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -183,7 +182,7 @@
    <joint type="revolute" name="r_hip_roll">
       <parent link="r_hip_pitch"/>
       <child link="r_hip_roll"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="-0.07875 0.0 0.0" rpy="0 0 0"/>
       <axis xyz="1.0 0.0 0.0"/>
       <limit lower="-1.5" upper="0.4" effort="100" velocity="100"/>
    </joint>
@@ -194,9 +193,8 @@
          <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="r_hip_yaw">
-         <origin xyz="5.8366539332816436e-06 -1.7109134866172812e-06 -0.06232629396045607" rpy="-0.00026959739179754916 -0.0001645742933347183 1.5708006286735454"/>
          <geometry>
-            <mesh filename="package://prairie_control/meshes/nemo4b/r_hip_yaw.stl"/>
+            <mesh filename="package://prairie_control/meshes/nemo4b/l_hip_yaw.stl"/>
          </geometry>
          <material name="white"/>
       </visual>
@@ -204,7 +202,7 @@
    <joint type="revolute" name="r_hip_yaw">
       <parent link="r_hip_roll"/>
       <child link="r_hip_yaw"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.00715 0.0 -0.1263" rpy="0 0 0"/>
       <axis xyz="0.0 0.0 1.0"/>
       <limit lower="-1.0" upper="1.0" effort="100" velocity="100"/>
    </joint>
@@ -215,7 +213,6 @@
          <inertia ixx="0.0070466" iyy="0.00513742" izz="0.00225232" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="l_knee">
-         <origin xyz="-1.4921539788234289e-09 7.910392518134238e-09 -0.10297404194441043" rpy="0.0 0.0 -3.2172707848725117e-06"/>
          <geometry>
             <mesh filename="package://prairie_control/meshes/nemo4b/l_knee.stl"/>
          </geometry>
@@ -225,7 +222,7 @@
    <joint type="revolute" name="r_knee">
       <parent link="r_hip_yaw"/>
       <child link="r_knee"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.0 -0.07875" rpy="0 0 0"/>
       <axis xyz="0.0 1.0 0.0"/>
       <limit lower="-2.0" upper="2.0" effort="100" velocity="100"/>
    </joint>
@@ -236,7 +233,6 @@
          <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="l_foot_pitch">
-         <origin xyz="0.01642265215060797 -2.5247692832924115e-06 -6.3433757846142034e-06" rpy="1.5705709613898433 -2.2427544625447382e-05 1.5706413297236463"/>
          <geometry>
             <mesh filename="package://prairie_control/meshes/nemo4b/l_foot_pitch.stl"/>
          </geometry>
@@ -246,7 +242,7 @@
    <joint type="revolute" name="r_foot_pitch">
       <parent link="r_knee"/>
       <child link="r_foot_pitch"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.0 -0.206" rpy="0 0 0"/>
       <axis xyz="0.0 1.0 0.0"/>
       <limit lower="-2.0" upper="2.0" effort="100" velocity="100"/>
    </joint>
@@ -257,7 +253,6 @@
          <inertia ixx="0.005416700784880941" iyy="0.004963623876621819" izz="0.0028013153384972476" ixy="0" ixz="0" iyz="0"/>
       </inertial>
       <visual name="l_foot_roll">
-         <origin xyz="0.007994183510704024 1.1742462541293414e-05 -0.03811882374488236" rpy="0.805359327591217 -0.00015554951913299142 1.5712645041576923"/>
          <geometry>
             <mesh filename="package://prairie_control/meshes/nemo4b/l_foot_roll.stl"/>
          </geometry>
@@ -267,7 +262,7 @@
    <joint type="revolute" name="r_foot_roll">
       <parent link="r_foot_pitch"/>
       <child link="r_foot_roll"/>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <origin xyz="0.07875 0.0 0.0" rpy="0 0 0"/>
       <axis xyz="1.0 0.0 0.0"/>
       <limit lower="-1.0" upper="1.0" effort="100" velocity="100"/>
    </joint>
