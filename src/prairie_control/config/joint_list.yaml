@@ -1,0 +1,48 @@
+0:
+  leg: true
+  movable: true
+  name: l_hip_pitch
+1:
+  leg: true
+  movable: true
+  name: l_hip_roll
+2:
+  leg: true
+  movable: true
+  name: l_hip_yaw
+3:
+  leg: true
+  movable: true
+  name: l_knee
+4:
+  leg: true
+  movable: true
+  name: l_ankle_pitch
+5:
+  leg: true
+  movable: true
+  name: l_ankle_roll
+6:
+  leg: true
+  movable: true
+  name: r_hip_pitch
+7:
+  leg: true
+  movable: true
+  name: r_hip_roll
+8:
+  leg: true
+  movable: true
+  name: r_hip_yaw
+9:
+  leg: true
+  movable: true
+  name: r_knee
+10:
+  leg: true
+  movable: true
+  name: r_ankle_pitch
+11:
+  leg: true
+  movable: true
+  name: r_ankle_roll
