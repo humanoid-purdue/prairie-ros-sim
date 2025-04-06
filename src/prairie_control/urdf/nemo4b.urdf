@@ -32,7 +32,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="l_hip_pitch">
+   <joint type="revolute" name="l_hip_pitch_joint">
       <parent link="pelvis"/>
       <child link="l_hip_pitch"/>
       <origin xyz="0.0 0.0965 -0.112" rpy="0 0 0"/>
@@ -52,7 +52,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="l_hip_roll">
+   <joint type="revolute" name="l_hip_roll_joint">
       <parent link="l_hip_pitch"/>
       <child link="l_hip_roll"/>
       <origin xyz="-0.07875 0.0 0.0" rpy="0 0 0"/>
@@ -72,7 +72,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="l_hip_yaw">
+   <joint type="revolute" name="l_hip_yaw_joint">
       <parent link="l_hip_roll"/>
       <child link="l_hip_yaw"/>
       <origin xyz="0.00715 0.0 -0.1263" rpy="0 0 0"/>
@@ -92,7 +92,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="l_knee">
+   <joint type="revolute" name="l_knee_joint">
       <parent link="l_hip_yaw"/>
       <child link="l_knee"/>
       <origin xyz="0.0 0.0 -0.07875" rpy="0 0 0"/>
@@ -112,7 +112,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="l_foot_pitch">
+   <joint type="revolute" name="l_foot_pitch_joint">
       <parent link="l_knee"/>
       <child link="l_foot_pitch"/>
       <origin xyz="0.0 0.0 -0.206" rpy="0 0 0"/>
@@ -135,11 +135,11 @@
       <collision>
         <origin xyz="-0.0187 0 -0.07975" rpy="0 0 0"/>
         <geometry>
-          <box size="0.1 0.0505 0.006"/>
+          <box size="0.2 0.101 0.012"/>
         </geometry>
       </collision>
    </link>
-   <joint type="revolute" name="l_foot_roll">
+   <joint type="revolute" name="l_foot_roll_joint">
       <parent link="l_foot_pitch"/>
       <child link="l_foot_roll"/>
       <origin xyz="0.07875 0.0 0.0" rpy="0 0 0"/>
@@ -159,7 +159,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="r_hip_pitch">
+   <joint type="revolute" name="r_hip_pitch_joint">
       <parent link="pelvis"/>
       <child link="r_hip_pitch"/>
       <origin xyz="0.0 -0.0965 -0.112" rpy="0.0 0.0 0.0"/>
@@ -179,7 +179,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="r_hip_roll">
+   <joint type="revolute" name="r_hip_roll_joint">
       <parent link="r_hip_pitch"/>
       <child link="r_hip_roll"/>
       <origin xyz="-0.07875 0.0 0.0" rpy="0 0 0"/>
@@ -199,7 +199,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="r_hip_yaw">
+   <joint type="revolute" name="r_hip_yaw_joint">
       <parent link="r_hip_roll"/>
       <child link="r_hip_yaw"/>
       <origin xyz="0.00715 0.0 -0.1263" rpy="0 0 0"/>
@@ -219,7 +219,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="r_knee">
+   <joint type="revolute" name="r_knee_joint">
       <parent link="r_hip_yaw"/>
       <child link="r_knee"/>
       <origin xyz="0.0 0.0 -0.07875" rpy="0 0 0"/>
@@ -239,7 +239,7 @@
          <material name="white"/>
       </visual>
    </link>
-   <joint type="revolute" name="r_foot_pitch">
+   <joint type="revolute" name="r_foot_pitch_joint">
       <parent link="r_knee"/>
       <child link="r_foot_pitch"/>
       <origin xyz="0.0 0.0 -0.206" rpy="0 0 0"/>
@@ -258,8 +258,15 @@
          </geometry>
          <material name="white"/>
       </visual>
+
+      <collision>
+        <origin xyz="-0.0187 0 -0.07975" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.2 0.101 0.012"/>
+        </geometry>
+      </collision>
    </link>
-   <joint type="revolute" name="r_foot_roll">
+   <joint type="revolute" name="r_foot_roll_joint">
       <parent link="r_foot_pitch"/>
       <child link="r_foot_roll"/>
       <origin xyz="0.07875 0.0 0.0" rpy="0 0 0"/>
@@ -273,24 +280,24 @@
    <gazebo>
     <plugin name="gz::sim::systems::JointStatePublisher" filename="gz-sim-joint-state-publisher-system">
       <update_rate>2000</update_rate>
-        <joint_name>l_hip_pitch</joint_name>
-        <joint_name>l_hip_roll</joint_name>
-        <joint_name>l_hip_yaw</joint_name>
-        <joint_name>l_knee</joint_name>
-        <joint_name>l_foot_pitch</joint_name>
-        <joint_name>l_foot_roll</joint_name>
-        <joint_name>r_hip_pitch</joint_name>
-        <joint_name>r_hip_roll</joint_name>
-        <joint_name>r_hip_yaw</joint_name>
-        <joint_name>r_knee</joint_name>
-        <joint_name>r_foot_pitch</joint_name>
-        <joint_name>r_foot_roll</joint_name>
+        <joint_name>l_hip_pitch_joint</joint_name>
+        <joint_name>l_hip_roll_joint</joint_name>
+        <joint_name>l_hip_yaw_joint</joint_name>
+        <joint_name>l_knee_joint</joint_name>
+        <joint_name>l_foot_pitch_joint</joint_name>
+        <joint_name>l_foot_roll_joint</joint_name>
+        <joint_name>r_hip_pitch_joint</joint_name>
+        <joint_name>r_hip_roll_joint</joint_name>
+        <joint_name>r_hip_yaw_joint</joint_name>
+        <joint_name>r_knee_joint</joint_name>
+        <joint_name>r_foot_pitch_joint</joint_name>
+        <joint_name>r_foot_roll_joint</joint_name>
     </plugin>
   </gazebo>
 
   <gazebo>
     <plugin name="gz::sim::systems::JointTrajectoryController" filename="gz-sim-joint-trajectory-controller-system">
-      <joint_name>l_hip_pitch</joint_name>
+      <joint_name>l_hip_pitch_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>50</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -301,7 +308,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>l_hip_roll</joint_name>
+      <joint_name>l_hip_roll_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>40</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -312,7 +319,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>l_hip_yaw</joint_name>
+      <joint_name>l_hip_yaw_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>40</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -323,7 +330,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>l_knee</joint_name>
+      <joint_name>l_knee_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>50</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -334,7 +341,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>l_foot_pitch</joint_name>
+      <joint_name>l_foot_pitch_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>50</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -345,7 +352,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>l_foot_roll</joint_name>
+      <joint_name>l_foot_roll_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>40</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -356,7 +363,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>r_hip_pitch</joint_name>
+      <joint_name>r_hip_pitch_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>50</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -367,7 +374,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>r_hip_roll</joint_name>
+      <joint_name>r_hip_roll_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>40</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -378,7 +385,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>r_hip_yaw</joint_name>
+      <joint_name>r_hip_yaw_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>40</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -389,7 +396,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>r_knee</joint_name>
+      <joint_name>r_knee_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>50</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -400,7 +407,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>r_foot_pitch</joint_name>
+      <joint_name>r_foot_pitch_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>50</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -411,7 +418,7 @@
       <velocity_cmd_min>-10</velocity_cmd_min>
       <velocity_cmd_max>10</velocity_cmd_max>
 
-      <joint_name>r_foot_roll</joint_name>
+      <joint_name>r_foot_roll_joint</joint_name>
       <use_header_start_time>true</use_header_start_time>
       <position_p_gain>40</position_p_gain>
       <position_d_gain>0</position_d_gain>
@@ -431,6 +438,7 @@
     <plugin
        filename="gz-sim-odometry-publisher-system"
        name="gz::sim::systems::OdometryPublisher">
+       <odom_publish_frequency>10000</odom_publish_frequency>
        <robot_base_frame>h1/pelvis</robot_base_frame>
        <dimensions>3</dimensions>
     </plugin>
@@ -439,7 +447,7 @@
   <gazebo reference="pelvis">
     <sensor name="imu_sensor" type="imu">
        <always_on>1</always_on>
-       <update_rate>1</update_rate>
+       <update_rate>1000</update_rate>
        <visualize>true</visualize>
        <topic>imu</topic>
        <plugin

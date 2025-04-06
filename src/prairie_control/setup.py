@@ -28,7 +28,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'default_state = prairie_control.default_state:main'
+            'default_state = prairie_control.default_state:main',
+            'default_pd = prairie_control.default_pd:main',
+            'home_pd = prairie_control.home_pd:main'
         ],
     },
 )

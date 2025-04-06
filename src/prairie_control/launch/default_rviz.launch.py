@@ -14,7 +14,7 @@ def generate_launch_description():
 
     default_rviz_config_path = os.path.join(get_package_share_directory('prairie_control'), 'rviz/robot_viewer.rviz')
 
-    urdf_file_name = 'urdf/nemo4b.urdf'
+    urdf_file_name = 'urdf/nemo4b.sdf'
     urdf = os.path.join(
         get_package_share_directory('prairie_control'),
         urdf_file_name)

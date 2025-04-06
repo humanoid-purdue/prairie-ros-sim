@@ -14,6 +14,7 @@ find_package(builtin_interfaces REQUIRED)  # Ensure this line is present!
 find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/StateObservationReduced.msg"
+  "msg/RawObservation.msg"
   DEPENDENCIES builtin_interfaces
  )
 

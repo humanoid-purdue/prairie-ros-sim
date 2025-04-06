@@ -59,14 +59,6 @@
       URDF has no direct "free" joint type; you can approximate it with <joint type="floating"/>.
       If you want it fixed to the world, use <joint type="fixed"/>.
   -->
-  <joint name="floating_base" type="floating">
-    <!-- This “world” link is implicit. Some people name it "world" or "base_link". -->
-    <parent link="world"/>
-    <child link="pelvis"/>
-    <!-- The MuJoCo 'pos="0.0 0.0 0.6088"' is the initial position. URDF can represent it as: -->
-    <origin xyz="0.0 0.0 0.6088" rpy="0 0 0"/>
-  </joint>
-
 
   <!-- =========================
        Left Hip Pitch
@@ -115,7 +107,7 @@
   </link>
 
   <!-- The joint from pelvis to l_hip_pitch -->
-  <joint name="l_hip_pitch" type="revolute">
+  <joint name="joint_l_hip_pitch" type="revolute">
     <parent link="pelvis"/>
     <child link="l_hip_pitch"/>
     <!-- The MuJoCo body "l_hip_pitch" is at pos="0.0 0.0965 -0.112" relative to pelvis -->
@@ -159,7 +151,7 @@
     </collision>
   </link>
 
-  <joint name="l_hip_roll" type="revolute">
+  <joint name="joint_l_hip_roll" type="revolute">
     <parent link="l_hip_pitch"/>
     <child link="l_hip_roll"/>
     <!-- from MuJoCo pos="-0.07875 0.0 0.0" -->
@@ -212,7 +204,7 @@
     </collision>
   </link>
 
-  <joint name="l_foot_roll" type="revolute">
+  <joint name="joint_l_foot_roll" type="revolute">
     <parent link="l_foot_pitch"/>
     <child link="l_foot_roll"/>
     <origin xyz="0.07875 0.0 0.0" rpy="0 0 0"/>
@@ -235,7 +227,7 @@
       If you want to specify transmissions in ROS2 for each joint, you add <transmission> blocks:
          <transmission name="l_hip_pitch_trans">
            <type>transmission_interface/SimpleTransmission</type>
-           <joint name="l_hip_pitch">
+           <joint name="joint_l_hip_pitch">
              <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
            </joint>
            <actuator name="motor_l_hip_pitch">

@@ -21,6 +21,65 @@ import numpy as np
 
 #JOINT_LIST = helpers.makeJointList()[0]
 N_JOINTS = 12
+from helpers import helpers
+
+from scipy.spatial.transform import Rotation as R
+
+def update_velocity(acceleration, orientation_quat, dt, current_velocity):
+    """
+    Update the local linear velocity of an IMU in the sensor's frame.
+    
+    Parameters:
+      acceleration (np.array): 3-element array representing the raw accelerometer
+                               reading in the sensor frame (m/s²).
+      orientation_quat (np.array): 4-element array for the sensor's orientation as a 
+                                   quaternion [x, y, z, w]. This quaternion rotates vectors 
+                                   from the sensor frame to the world frame.
+      dt (float): Time interval between measurements (s).
+      current_velocity (np.array): 3-element array representing the current velocity in 
+                                   the sensor frame (m/s).
+    
+    Returns:
+      np.array: Updated velocity in the sensor frame (m/s).
+    """
+    # Create a rotation object from the quaternion.
+    r = R.from_quat(orientation_quat)
+    
+    # Define the gravitational acceleration in the world frame.
+    # Here we assume a right-handed coordinate system with z pointing upward.
+    gravity_world = np.array([0, 0, -9.81])
+    
+    # Rotate the gravity vector from world frame to sensor frame.
+    # Since 'r' rotates from sensor to world, the inverse rotates from world to sensor.
+    gravity_sensor = r.inv().apply(gravity_world)
+    
+    # Remove the gravitational component from the raw acceleration.
+    net_accel = acceleration - gravity_sensor
+    
+    # Update the velocity by integrating the net acceleration over the time interval.
+    new_velocity = current_velocity + net_accel * dt
+    return new_velocity
+
+def global_to_local_velocity(global_velocity, quaternion):
+    """
+    Transform a global velocity vector into a local velocity vector 
+    using the inverse of the provided orientation quaternion.
+    
+    Parameters:
+        global_velocity (array-like): The velocity vector in the global frame (3 elements).
+        quaternion (array-like): The orientation quaternion in [w, x, y, z] format.
+        
+    Returns:
+        np.ndarray: The velocity vector in the local frame.
+    """
+    
+    # Create a Rotation object from the quaternion
+    rotation = R.from_quat(quaternion)
+    
+    # To transform from global to local, apply the inverse rotation.
+    local_velocity = rotation.inv().apply(global_velocity)
+    
+    return local_velocity
 
 def quaternion_rotation_matrix(Q):
     """
@@ -69,24 +128,31 @@ class GZSateObserver(Node):
 
         self.sim_time = 0
         self.prev_time = 0
-        self.prev_jvel = None
-        self.prev_jacc = None
         self.orientation = None
         #self.prev_pos = None
         #self.efforts = None
 
+        self.odom_pos = [0., 0., 0.60833]
+        self.odom_pos_prev = [0., 0., 0.60833]
+        self.odom_rot = np.array([0., 0., 0., 1.])
+        self.linvel = np.zeros([3])
+
+        self.odom_prev_time = 0
+
+        self.lin_acc = np.zeros([3])
+
         # joint states
+        self.jpos_filt = helpers.SignalFilter(N_JOINTS, 1000, 20)
+        self.jvel_filt = helpers.SignalFilter(N_JOINTS, 1000, 20)
+
+        self.angvel_filt = helpers.SignalFilter(3, 1000, 10)  # calculated from IMU data (of pelvis, i.e. expected CoM)
+        self.vel_filt = helpers.SignalFilter(3, 1000, 20)
         #self.vel_filt = helpers.SignalFilter(3, 1000, 20) # calculated from odometry data (displacement / dt)
 
         self.ang_vel = np.array([0., 0., 0.]).tolist()
-        #self.odom_pos = [0., 0., 0.743]
-        #self.odom_rot = np.array([0., 0., 0., 1.]).tolist()
-        #self.left_force = np.zeros([3])
-        #self.right_force = np.zeros([3])
 
         self.obs_pub = self.create_publisher(StateObservationReduced, 'state_observation', qos_profile)
 
-        #self.sv_fwd = helpers.SVFwdKinematics()
 
         self.subscription_1 = self.create_subscription(
             JointState,
@@ -102,6 +168,12 @@ class GZSateObserver(Node):
             Clock,
             '/clock',
             self.clock_callback, 10
+        )
+        self.subscription_2 = self.create_subscription(
+            Odometry,
+            '/robot_odometry',
+            self.odometry_callback,
+            10
         )
         # Might be removed since in the real robot we don't have odometry
         #self.subscription_2 = self.create_subscription(
@@ -139,6 +211,12 @@ class GZSateObserver(Node):
     #    point = msg.points[0]
     #    self.efforts = dict(zip(msg.joint_names, point.effort))
 
+    def odometry_callback(self, msg):
+        pose = msg.pose.pose
+        self.odom_pos = [pose.position.x, pose.position.y, pose.position.z]
+        self.odom_rot = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
+
+
     def clock_callback(self, msg):
         secs = msg.clock.sec
         nsecs = msg.clock.nanosec
@@ -149,11 +227,7 @@ class GZSateObserver(Node):
         orien_quat_list = np.array([msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w])
         self.orientation = orien_quat_list
         self.ang_vel = [msg.angular_velocity.x, msg.angular_velocity.y, msg.angular_velocity.z]
-
-    #def odometry_callback(self, msg):
-    #    pose = msg.pose.pose
-    #    self.odom_pos = [pose.position.x, pose.position.y, pose.position.z]
-    #    self.odom_rot = [pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
+        self.lin_acc = np.array([msg.linear_acceleration.x, msg.linear_acceleration.y, msg.linear_acceleration.z])
 
 
     def joint_state_callback(self, joint_msg: JointState):
@@ -165,34 +239,24 @@ class GZSateObserver(Node):
         pub_obs_msg = StateObservationReduced()
         pub_obs_msg.joint_name = joint_msg.name
         dt = sim_time - self.prev_time
-
-        #self.get_logger().info("L{} R{}".format(self.left_force, self.right_force))
-
-        #sv.pos = self.odom_pos
-        #sv.orien_quat = self.odom_rot
-
-        if self.prev_jvel is None:
-            self.prev_jvel = np.array(joint_msg.velocity)
-        if self.prev_jacc is None:
-            self.prev_jacc = np.zeros([len(joint_msg.name)])
-        #if self.prev_pos is None:
-        #    self.prev_pos = self.odom_pos
-
-        if dt == 0:
-            jacc = self.prev_jacc
-            #vel = np.zeros([3])
-        else:
-            jacc = (np.array(joint_msg.velocity) - self.prev_jvel) / dt
-            #vel = (np.array(self.odom_pos) - np.array(self.prev_pos)) / dt
-            self.prev_jvel = np.array(joint_msg.velocity)
-            self.prev_jacc = jacc
-        pub_obs_msg.joint_acc = jacc.tolist()
-
-        #self.vel_filt.update(vel)
-
+        global_vel = None
+        #if dt != 0:
+        op = np.array(self.odom_pos)
+        op_prev = np.array(self.odom_pos_prev)
+        if (np.linalg.norm(op - op_prev) > 0.00001):
+            if (sim_time - self.odom_prev_time) != 0:
+                global_vel = (op - op_prev) / (sim_time - self.odom_prev_time)
+                self.odom_prev_time = sim_time
+                self.odom_pos_prev = self.odom_pos
+        if self.orientation is not None:
+            self.linvel = update_velocity(self.lin_acc, self.orientation, dt, self.linvel)
+        if self.orientation is not None and global_vel is not None:
+            self.linvel = global_to_local_velocity(global_vel, self.orientation)
+        #self.vel_filt.update(self.linvel)
         self.jpos_filt.update(np.array(joint_msg.position))
         self.jvel_filt.update(np.array(joint_msg.velocity))
         self.angvel_filt.update(np.array(self.ang_vel))
+        #self.linvel = self.vel_filt.get()
         if dt != 0 and self.sim_time > 0.1:
             pub_obs_msg.joint_pos = joint_msg.position
             pub_obs_msg.joint_vel = self.jvel_filt.get().tolist()
@@ -209,16 +273,18 @@ class GZSateObserver(Node):
             pub_obs_msg.ang_vel = self.ang_vel
             #sv.vel = vel.tolist()
 
+        
 
         # Calculate gravity vector in body (robot) frame
         if self.orientation is not None:
-            rot_matrix = quaternion_rotation_matrix(self.orientation)
+            rot_matrix = helpers.quaternion_rotation_matrix(self.orientation)
             gravity = np.array([0, 0, -9.81])
             self.grav_vec = rot_matrix.dot(gravity)
         else:
             self.grav_vec = np.array([0, 0, -9.81])
         pub_obs_msg.grav_vec = self.grav_vec.tolist()
-            
+        pub_obs_msg.lin_vel = self.linvel.tolist()
+        pub_obs_msg.lin_acc = self.lin_acc.tolist()
 
         #sv = self.sv_fwd.update(sv)
 
