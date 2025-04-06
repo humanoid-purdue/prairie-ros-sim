@@ -53,6 +53,7 @@ class home_pd(Node):
         
         self.ankle_l_id = 4
         self.ankle_r_id = 10
+        self.wpn = policy_network.walk_policy(t = 0.0)
 
     def state_callback(self, obs):
         self.joint_pos = np.array(obs.joint_pos)
@@ -76,14 +77,20 @@ class home_pd(Node):
                 
         jtp.time_from_start = Duration()
 
-        
-        pos_t, tau_delta = self.stand_pd()
+        tau_delta = np.zeros([12])
+        vel_t = np.zeros([12])
+
+        if self.state_time < 3.0:
+            pos_t, tau_delta = self.stand_pd()
+        else:
+            pos_t, vel_t = self.walk_gz()
+
 
         jtp.positions = pos_t.tolist()
 
 
 
-        jtp.velocities = [0.] * len(JOINT_LIST_COMPLETE)
+        jtp.velocities = vel_t.tolist()
         jtp.effort = tau_delta.tolist()
         joint_traj.points = [jtp]
         self.joint_pub.publish(joint_traj)
@@ -101,7 +108,25 @@ class home_pd(Node):
         return pos_t, tau_delta
     
     def walk_gz(self):
-        return
+        if self.state_time < 3.0:
+            self.wpn.reinit(t = self.state_time)
+            pos = np.zeros([12])
+            vel = np.zeros([12])
+        else:
+            vel_target = np.array([0.3, 0.0])
+            angvel_target = np.array([0.0])
+            pos, vel = self.wpn.apply_net(self.joint_pos,
+                               self.joint_vel,
+                               self.ang_vel,
+                               self.grav_vec,
+                               self.lin_vel,
+                               vel_target,
+                               angvel_target,
+                               0,
+                               self.state_time)
+            pos = np.array(pos)
+            vel = np.array(vel)
+        return pos, vel
 
 def main(args=None):
     rclpy.init(args=args)
