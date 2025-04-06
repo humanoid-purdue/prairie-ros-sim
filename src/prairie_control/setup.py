@@ -17,6 +17,7 @@ setup(
         ('share/' + package_name + '/rviz', glob('rviz/*')),
         ('share/' + package_name + '/config', glob('config/*')),
         ('share/' + package_name + '/helpers', glob('helpers/*')),
+        ('share/' + package_name + '/walk_policy', glob('walk_policy/*')),
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*')))
     ],
     install_requires=['setuptools'],

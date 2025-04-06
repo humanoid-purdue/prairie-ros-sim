@@ -278,10 +278,10 @@ class GZSateObserver(Node):
         # Calculate gravity vector in body (robot) frame
         if self.orientation is not None:
             rot_matrix = helpers.quaternion_rotation_matrix(self.orientation)
-            gravity = np.array([0, 0, -9.81])
+            gravity = np.array([0, 0, -1.0])
             self.grav_vec = rot_matrix.dot(gravity)
         else:
-            self.grav_vec = np.array([0, 0, -9.81])
+            self.grav_vec = np.array([0, 0, -1.0])
         pub_obs_msg.grav_vec = self.grav_vec.tolist()
         pub_obs_msg.lin_vel = self.linvel.tolist()
         pub_obs_msg.lin_acc = self.lin_acc.tolist()

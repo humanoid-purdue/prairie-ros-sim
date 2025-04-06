@@ -11,6 +11,12 @@ from gz_sim_interfaces.msg import StateObservationReduced
 
 JOINT_LIST_COMPLETE = ["l_hip_pitch_joint", "l_hip_roll_joint", "l_hip_yaw_joint", "l_knee_joint", "l_foot_pitch_joint", "l_foot_roll_joint",
                        "r_hip_pitch_joint", "r_hip_roll_joint", "r_hip_yaw_joint", "r_knee_joint", "r_foot_pitch_joint", "r_foot_roll_joint"]
+helper_path = os.path.join(
+            get_package_share_directory('prairie_control'),
+            "helpers")
+
+sys.path.append(helper_path)
+import policy_network
 
 class home_pd(Node):
     def __init__(self):
@@ -63,33 +69,40 @@ class home_pd(Node):
         joint_traj = JointTrajectory()
         jtp = JointTrajectoryPoint()
 
-        time_coeff = min(self.state_time / 0.5 , 1.0)
+        
         now = self.get_clock().now()
         joint_traj.header.stamp = now.to_msg()
         joint_traj.joint_names = JOINT_LIST_COMPLETE
                 
         jtp.time_from_start = Duration()
 
-        jtp_ankle_pd = self.lin_acc[0] * -1
-        pos_delta = np.zeros([12])
-        pos_delta[self.ankle_l_id] = jtp_ankle_pd
-        pos_delta[self.ankle_r_id] = jtp_ankle_pd
         
-        pos2 = self.home_pose * time_coeff
-        pos2 = pos2
+        pos_t, tau_delta = self.stand_pd()
 
-        jtp.positions = pos2
+        jtp.positions = pos_t.tolist()
 
-        efforts = [0.] * len(JOINT_LIST_COMPLETE)
 
 
         jtp.velocities = [0.] * len(JOINT_LIST_COMPLETE)
-        jtp.effort = pos_delta.tolist()
+        jtp.effort = tau_delta.tolist()
         joint_traj.points = [jtp]
         self.joint_pub.publish(joint_traj)
 
         return
     
+
+    def stand_pd(self):
+        time_coeff = min(self.state_time / 0.5 , 1.0)
+        jtp_ankle_pd = self.lin_acc[0] * -2
+        tau_delta = np.zeros([12])
+        tau_delta[self.ankle_l_id] = jtp_ankle_pd
+        tau_delta[self.ankle_r_id] = jtp_ankle_pd
+        pos_t = self.home_pose * time_coeff
+        return pos_t, tau_delta
+    
+    def walk_gz(self):
+        return
+
 def main(args=None):
     rclpy.init(args=args)
 
