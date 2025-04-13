@@ -1,4 +1,3 @@
-from math import sin, cos, pi
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -259,8 +258,8 @@ class GZSateObserver(Node):
         #self.linvel = self.vel_filt.get()
         if dt != 0 and self.sim_time > 0.1:
             pub_obs_msg.joint_pos = joint_msg.position
-            pub_obs_msg.joint_vel = self.jvel_filt.get().tolist()
-            pub_obs_msg.ang_vel = self.angvel_filt.get().tolist()
+            pub_obs_msg.joint_vel = joint_msg.velocity #self.jvel_filt.get().tolist()
+            pub_obs_msg.ang_vel = self.ang_vel #self.angvel_filt.get().tolist()
             #sv.vel = self.vel_filt.get().tolist()
         elif self.sim_time < 0.05:
             pub_obs_msg.joint_pos = joint_msg.position
@@ -277,9 +276,11 @@ class GZSateObserver(Node):
 
         # Calculate gravity vector in body (robot) frame
         if self.orientation is not None:
-            rot_matrix = helpers.quaternion_rotation_matrix(self.orientation)
+            rot_matrix = quaternion_rotation_matrix(self.orientation)
             gravity = np.array([0, 0, -1.0])
-            self.grav_vec = rot_matrix.dot(gravity)
+            self.grav_vec = np.linalg.inv(rot_matrix) @ gravity
+            #inv_pelvis_rot = math.quat_inv(self.orientation)
+            #self.grav_vec = math.rotate(np.array([0, 0, -1]), inv_pelvis_rot)
         else:
             self.grav_vec = np.array([0, 0, -1.0])
         pub_obs_msg.grav_vec = self.grav_vec.tolist()

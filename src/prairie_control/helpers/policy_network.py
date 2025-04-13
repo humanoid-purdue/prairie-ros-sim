@@ -48,7 +48,7 @@ def tanh2Action(action: jnp.ndarray):
 class walk_policy():
     def __init__(self, t = 0.0):
         make_inference_fn = makeIFN()
-        saved_params = model.load_params(policy_path + '/walk_policy17')
+        saved_params = model.load_params(policy_path + '/walk_policy_acc5')
         inference_fn = make_inference_fn(saved_params)
         self.jit_inference_fn = jax.jit(inference_fn)
         self.rng = jax.random.PRNGKey(0)
@@ -68,11 +68,14 @@ class walk_policy():
                   joint_vel, 
                   angvel, 
                   grav_vec, 
-                  linvel, 
+                  lin_acc, 
                   vel_target, 
                   angvel_target, 
                   halt, t):
+        
         dt = t - self.prev_t
+        self.prev_t = t
+        
         phase = 2 * np.pi * dt / 1.0
         self.phase += phase
         self.phase = np.mod(self.phase, jnp.pi * 2)
@@ -85,11 +88,13 @@ class walk_policy():
         velocity = jnp.array(joint_vel)
         angvel = jnp.array(angvel)
         grav_vec = jnp.array(grav_vec)
-        linvel = jnp.array(linvel)
+        lin_acc = jnp.array(lin_acc)
+        lin_acc = lin_acc - grav_vec * 9.81
         cmd = jnp.array([vel_target[0], vel_target[1], angvel_target[0], halt])
         phase_clock = jnp.array([jnp.sin(self.phase[0]), jnp.cos(self.phase[0]),
                              jnp.sin(self.phase[1]), jnp.cos(self.phase[1])])
-        obs = jnp.concatenate([self.hidden, linvel,
+        #print("awfaefaw", linvel, angvel, grav_vec, position, velocity, phase_clock, cmd)
+        obs = jnp.concatenate([self.hidden, lin_acc,
                            angvel, grav_vec, position, velocity, self.prev_action, phase_clock, cmd
                            ])
         act_rng, self.rng = jax.random.split(self.rng)

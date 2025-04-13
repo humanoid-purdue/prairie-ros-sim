@@ -29,7 +29,7 @@ class home_pd(Node):
             qos_profile
         )
         self.joint_pub = self.create_publisher(JointTrajectory, 'joint_trajectories', qos_profile)
-        self.timer = self.create_timer(0.0001, self.timer_callback)
+        self.timer = self.create_timer(0.002, self.timer_callback)
         self.lin_vel = np.zeros([3])
         self.joint_pos = np.zeros([12])
         self.joint_vel = np.zeros([12])
@@ -37,6 +37,7 @@ class home_pd(Node):
         self.grav_vec = np.zeros([3])
         self.lin_acc = np.zeros([3])
         self.state_time = 0.0
+        self.prev_time = 0.0
 
         self.home_pose = np.array([-0.698132,
                                0,
@@ -51,6 +52,9 @@ class home_pd(Node):
                                         -0.523599,
                                         0])
         
+        self.p_gains = np.array([50, 40, 40, 50, 50, 40, 50, 40, 40, 50, 50, 40.])
+        self.k_gains = np.array([4., 2., 2., 4., 4., 2., 4., 2., 2., 4., 4., 2.])
+
         self.ankle_l_id = 4
         self.ankle_r_id = 10
         self.wpn = policy_network.walk_policy(t = 0.0)
@@ -69,6 +73,7 @@ class home_pd(Node):
 
         joint_traj = JointTrajectory()
         jtp = JointTrajectoryPoint()
+        jtp2 = JointTrajectoryPoint()
 
         
         now = self.get_clock().now()
@@ -76,24 +81,34 @@ class home_pd(Node):
         joint_traj.joint_names = JOINT_LIST_COMPLETE
                 
         jtp.time_from_start = Duration()
+        jtp.time_from_start.sec = 0
+        jtp.time_from_start.nanosec = 0
+
+        jtp2.time_from_start = Duration()
+        jtp2.time_from_start.sec = 0
+        jtp2.time_from_start.nanosec = 0
 
         tau_delta = np.zeros([12])
         vel_t = np.zeros([12])
 
-        if self.state_time < 3.0:
-            pos_t, tau_delta = self.stand_pd()
-        else:
-            pos_t, vel_t = self.walk_gz()
+        if self.state_time - self.prev_time > 0.02:
+            self.prev_time = self.state_time
+            if self.state_time < 3.0:
+                pos_t, tau_delta = self.stand_pd()
+            else:
+                pos_t, vel_t = self.walk_gz()
 
 
-        jtp.positions = pos_t.tolist()
+            jtp.positions = pos_t.tolist()
+            jtp.velocities = vel_t.tolist()
+            jtp.effort = tau_delta.tolist()
 
-
-
-        jtp.velocities = vel_t.tolist()
-        jtp.effort = tau_delta.tolist()
-        joint_traj.points = [jtp]
-        self.joint_pub.publish(joint_traj)
+            jtp2.positions = pos_t.tolist()
+            jtp2.velocities = vel_t.tolist()
+            jtp2.effort = tau_delta.tolist()
+            jtp2.time_from_start.sec = 99999999
+            joint_traj.points = [jtp, jtp2]
+            self.joint_pub.publish(joint_traj)
 
         return
     
@@ -108,24 +123,26 @@ class home_pd(Node):
         return pos_t, tau_delta
     
     def walk_gz(self):
+        vel_target = np.array([0.4, 0.0])
+        angvel_target = np.array([np.sin(self.state_time - 3.0) * 0.7])
+
         if self.state_time < 3.0:
             self.wpn.reinit(t = self.state_time)
             pos = np.zeros([12])
             vel = np.zeros([12])
         else:
-            vel_target = np.array([0.3, 0.0])
-            angvel_target = np.array([0.0])
             pos, vel = self.wpn.apply_net(self.joint_pos,
                                self.joint_vel,
                                self.ang_vel,
                                self.grav_vec,
-                               self.lin_vel,
+                               self.lin_acc,
                                vel_target,
                                angvel_target,
                                0,
                                self.state_time)
             pos = np.array(pos)
             vel = np.array(vel)
+            
         return pos, vel
 
 def main(args=None):
