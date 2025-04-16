@@ -46,7 +46,7 @@ install(TARGETS
 )
 
 install(
-  FILES ${CMAKE_SOURCE_DIR}/lib/${EXTRA_LIBS}
+  FILES ${CMAKE_SOURCE_DIR}/lib2/${EXTRA_LIBS}
   DESTINATION lib
 )
 
