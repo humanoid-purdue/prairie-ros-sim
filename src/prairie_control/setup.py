@@ -18,6 +18,7 @@ setup(
         ('share/' + package_name + '/config', glob('config/*')),
         ('share/' + package_name + '/helpers', glob('helpers/*')),
         ('share/' + package_name + '/walk_policy', glob('walk_policy/*')),
+        ('share/' + package_name + '/data', glob('data/*')),
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*')))
     ],
     install_requires=['setuptools'],
@@ -31,7 +32,8 @@ setup(
         'console_scripts': [
             'default_state = prairie_control.default_state:main',
             'default_pd = prairie_control.default_pd:main',
-            'home_pd = prairie_control.home_pd:main'
+            'home_pd = prairie_control.home_pd:main',
+            'static_pd = prairie_control.static_pd:main',
         ],
     },
 )

@@ -8,6 +8,7 @@ from rclpy.qos import QoSProfile
 from builtin_interfaces.msg import Duration, Time
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from gz_sim_interfaces.msg import StateObservationReduced
+from geometry_msgs.msg import Twist
 
 JOINT_LIST_COMPLETE = ["l_hip_pitch_joint", "l_hip_roll_joint", "l_hip_yaw_joint", "l_knee_joint", "l_foot_pitch_joint", "l_foot_roll_joint",
                        "r_hip_pitch_joint", "r_hip_roll_joint", "r_hip_yaw_joint", "r_knee_joint", "r_foot_pitch_joint", "r_foot_roll_joint"]
@@ -28,6 +29,12 @@ class home_pd(Node):
             self.state_callback,
             qos_profile
         )
+        self.keyboard_subscriber = self.create_subscription(
+            Twist,
+            '/cmd_vel',
+            self.keyboard_callback,
+            qos_profile
+        )
         self.joint_pub = self.create_publisher(JointTrajectory, 'joint_trajectories', qos_profile)
         self.timer = self.create_timer(0.002, self.timer_callback)
         self.lin_vel = np.zeros([3])
@@ -36,6 +43,9 @@ class home_pd(Node):
         self.ang_vel = np.zeros([3])
         self.grav_vec = np.zeros([3])
         self.lin_acc = np.zeros([3])
+        self.cmd_vel = np.zeros([2])
+        self.cmd_angvel = np.zeros([1])
+        self.halt = 1
         self.state_time = 0.0
         self.prev_time = 0.0
 
@@ -122,10 +132,17 @@ class home_pd(Node):
         pos_t = self.home_pose * time_coeff
         return pos_t, tau_delta
     
+    def keyboard_callback(self, msg):
+        self.cmd_vel[0] = msg.linear.x * 0.4
+        self.cmd_vel[1] = msg.linear.y
+        self.cmd_angvel[0] = msg.angular.z * 0.6
+        if (msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0):
+            self.halt = 1
+        else:
+            self.halt = 0
+        return
+    
     def walk_gz(self):
-        vel_target = np.array([0.4, 0.0])
-        angvel_target = np.array([np.sin(self.state_time - 3.0) * 0.7])
-
         if self.state_time < 3.0:
             self.wpn.reinit(t = self.state_time)
             pos = np.zeros([12])
@@ -136,9 +153,9 @@ class home_pd(Node):
                                self.ang_vel,
                                self.grav_vec,
                                self.lin_acc,
-                               vel_target,
-                               angvel_target,
-                               0,
+                               self.cmd_vel,
+                               self.cmd_angvel,
+                               self.halt,
                                self.state_time)
             pos = np.array(pos)
             vel = np.array(vel)

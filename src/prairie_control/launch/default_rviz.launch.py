@@ -14,7 +14,7 @@ def generate_launch_description():
 
     default_rviz_config_path = os.path.join(get_package_share_directory('prairie_control'), 'rviz/robot_viewer.rviz')
 
-    urdf_file_name = 'urdf/nemo4b.sdf'
+    urdf_file_name = 'urdf/nemo4b.urdf'
     urdf = os.path.join(
         get_package_share_directory('prairie_control'),
         urdf_file_name)
@@ -36,9 +36,9 @@ def generate_launch_description():
             parameters=[{'use_sim_time': use_sim_time, 'robot_description': robot_desc}],
             arguments=[urdf]),
         Node(
-            package='prairie_control',
-            executable='default_state',
-            name='default_state',
+            package='motor_controller',
+            executable='motor_controller',
+            name='motor_controller',
             output='screen'),
         Node(
             package='rviz2',
