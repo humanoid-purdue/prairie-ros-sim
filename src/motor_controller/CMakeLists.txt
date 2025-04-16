@@ -7,7 +7,7 @@ endif()
 
 include_directories(include)
 include_directories(include/)
-link_directories(lib)
+link_directories(lib2)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
