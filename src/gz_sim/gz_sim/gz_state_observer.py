@@ -20,7 +20,63 @@ import numpy as np
 
 #JOINT_LIST = helpers.makeJointList()[0]
 N_JOINTS = 12
-from helpers import helpers
+
+import scipy
+
+class SignalFilter:
+    """
+    A class to help with applying a low-pass Butterworth filter to a signal.
+
+    :ivar sos: The second-order sections representation of the low-pass filter.
+    :vartype: np.ndarray
+    :ivar zi: A list of the initial conditions of the filters
+    :vartype: list of np.ndarray
+    :ivar y: An array of the most recent filtered values for each signal point.
+    :vartype: np.ndarray
+    """
+
+    def __init__(self, n_signal, freq, cutoff):
+        """
+        Constructor method
+
+        :param n_signal: The number of signal points (dimension) to filter.
+        :type params: int
+        :param freq: The sampling frequency of the signal.
+        :type freq: float
+        :param cutoff: The cutoff frequency of the filter.
+        :type cutoff: float
+        """
+
+        # self.b, self.a = scipy.signal.butter(4, cutoff, btype='low', analog=False, fs = freq)
+        nyquist = 0.5 * freq
+        normal_cutoff = cutoff / nyquist
+        self.sos = scipy.signal.butter(4, normal_cutoff, btype='low', analog=False, output='sos')
+        self.zi = []
+        self.y = np.zeros(n_signal)  # filter results
+        for c in range(n_signal):
+            self.zi += [scipy.signal.sosfilt_zi(self.sos)]
+
+    def update(self, vec):
+        """
+        Apply the filter to a set of input signals and update the conditions of the filters.
+
+        :param vec: A 2-D array where each row is a signal to be filtered. (the length of it should = n_signal)
+        :type vec: np.ndarray
+        """
+        for c in range(vec.shape[0]):
+            filtered_point, self.zi[c] = scipy.signal.sosfilt(self.sos, vec[c:c + 1], zi=self.zi[c], axis=0)
+            self.y[c] = filtered_point[0]
+
+    def get(self):
+        """
+        Retrieves list of filtered signals.
+
+        :return: List of filtered signals.
+        :rtype: List of np.ndarray
+        """
+
+        return self.y
+
 
 from scipy.spatial.transform import Rotation as R
 
