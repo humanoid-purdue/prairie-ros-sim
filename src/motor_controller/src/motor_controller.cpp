@@ -19,6 +19,10 @@ MotorController::MotorController() : rclcpp::Node("motor_controller"), count_(0)
         "joint_trajectories", 10,
         std::bind(&MotorController::trajectoryCallback, this, std::placeholders::_1)
     );
+    float pelvis_offsets[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    float left_offsets[6] = {0.0, 0.0, 0.0, 1.57079632679, -1.57079632679, 0.0};
+    float right_offsets[6] = {0.0, 0.0, 0.0, -1.57079632679, 1.57079632679, 0.0};
+    motor_manager.set_q_offsets(pelvis_offsets, left_offsets, right_offsets);
 }
 
 void MotorController::trajectoryCallback(const trajectory_msgs::msg::JointTrajectory::SharedPtr msg)
@@ -43,6 +47,9 @@ void MotorController::trajectoryCallback(const trajectory_msgs::msg::JointTrajec
     for (int i = 0; i < 12; i++) {
         motor_manager.joint_state[i].kp = kp;
         motor_manager.joint_state[i].kd = kd;
+        if (i == 5) {
+            motor_manager.joint_state[i].kp = 1.0;
+        }
         motor_manager.joint_state[i].des_p = msg->points[0].positions[i];
         motor_manager.joint_state[i].des_d = msg->points[0].velocities[i];
     }

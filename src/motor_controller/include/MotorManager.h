@@ -27,8 +27,10 @@ class SingleMotorManager {
         MotorData data[6];
         std::unique_ptr<SerialPort> serial;
         bool serial_init = false;
+        float find_q(float cur_q, float des_q);
     public:
         struct RawMotorStruct raw_motor[6];
+        float q_offsets[6];
         float raw_q_motor[6];
         float raw_dq_motor[6];
         int motor_error[6];
@@ -36,6 +38,7 @@ class SingleMotorManager {
         ~SingleMotorManager();
         void update();
         void printMotorData();
+        void set_q_offsets(float q[6]);
 };
 
 class MotorManager {
@@ -59,6 +62,7 @@ class MotorManager {
         bool safe;
         float gear_ratio;
     public:
+        void set_q_offsets(float pelvis_des_q[6], float left_des_q[6], float right_des_q[6]);
         struct JointStateStruct joint_state[12];
         MotorManager();
         ~MotorManager();

@@ -5,6 +5,7 @@
 #include "unitreeMotor/unitreeMotor.h"
 #include <string>
 #include <stdexcept>
+#include <cmath>
 
 SingleMotorManager::SingleMotorManager(std::string port){
     try {
@@ -24,6 +25,7 @@ SingleMotorManager::SingleMotorManager(std::string port){
         cmd[i].kp   = 0.0;
         cmd[i].kd   = 0.0;
         cmd[i].tau = 0.0;
+        q_offsets[i] = 0.0;
     }
 }
 
@@ -36,14 +38,14 @@ void SingleMotorManager::update() {
         } else {
             cmd[i].kp = raw_motor[i].kp;
             cmd[i].kd = raw_motor[i].kd;
-            cmd[i].q = raw_motor[i].des_p;
+            cmd[i].q = raw_motor[i].des_p + q_offsets[i];
             cmd[i].dq = raw_motor[i].des_d;
             cmd[i].tau = raw_motor[i].tau;
         }
         if (serial_init) {
             serial -> sendRecv(&cmd[i], &data[i]);
         }
-        raw_q_motor[i] = data[i].q;
+        raw_q_motor[i] = data[i].q + q_offsets[i];
         raw_dq_motor[i] = data[i].dq;
         motor_error[i] = 0;
         if (data[i].merror != 0) {
@@ -67,6 +69,26 @@ void SingleMotorManager::printMotorData() {
 }
 
 SingleMotorManager::~SingleMotorManager() {
+}
+
+float SingleMotorManager::find_q(float cur_q, float des_q) {
+    float min_sep = 10.0;
+    float min_offset = 0.0;
+    for (int i = -8; i < 9; i++) {
+        float probe_q = std::fmod((6.33 * M_PI / 3) * i, 2.0f * M_PI);
+        float probe_sep = std::abs(probe_q - des_q);
+        if (probe_sep < min_sep) {
+            min_sep = probe_sep;
+            min_offset = probe_q;
+        }
+    }
+    return min_offset;
+}
+
+void SingleMotorManager::set_q_offsets(float q[6]) {
+    for (int i = 0; i < 6; i++) {
+        q_offsets[i] = find_q(raw_q_motor[i], q[i]);
+    }
 }
 
 MotorManager::MotorManager() :
@@ -96,6 +118,18 @@ void MotorManager::assignMotorCmd(struct JointStateStruct &data, struct RawMotor
     raw.des_p = data.des_p * mult * gear_ratio;
     raw.des_d = data.des_d * mult * gear_ratio;
     raw.tau = data.tau * mult * gear_ratio;
+}
+
+void MotorManager::set_q_offsets(float pelvis_dq[6], float left_dq[6], float right_dq[6]) {
+    safe = false;
+    update();
+    // To determine what offsets should be,
+    // Go through each joint and determine what the approximate
+    // q in motor q space is and find minimum pi based offset for that.
+    // The motor q space would be in increments of 6.33 * p/3 radians modulo 2 pi
+    pelvis.set_q_offsets(pelvis_dq);
+    left.set_q_offsets(left_dq);
+    right.set_q_offsets(right_dq);
 }
 
 void MotorManager::update() {
@@ -160,9 +194,9 @@ void MotorManager::update() {
 
     // 0: l_hip_pitch
     joint_state[0].current_q = (
-        left.raw_q_motor[2] + left.raw_q_motor[1] * -1) / (2 * gear_ratio);
+        pelvis.raw_q_motor[2] + pelvis.raw_q_motor[1] * -1) / (2 * gear_ratio);
     joint_state[0].current_dq = (
-        left.raw_dq_motor[2] + left.raw_dq_motor[1] * -1) / (2 * gear_ratio);
+        pelvis.raw_dq_motor[2] + pelvis.raw_dq_motor[1] * -1) / (2 * gear_ratio);
 
     // 1: l_hip_roll
     joint_state[1].current_q = pelvis.raw_q_motor[0] * -1 / gear_ratio;
