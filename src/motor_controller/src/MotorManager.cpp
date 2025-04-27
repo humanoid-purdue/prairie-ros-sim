@@ -38,7 +38,7 @@ void SingleMotorManager::update() {
         } else {
             cmd[i].kp = raw_motor[i].kp;
             cmd[i].kd = raw_motor[i].kd;
-            cmd[i].q = raw_motor[i].des_p + q_offsets[i];
+            cmd[i].q = raw_motor[i].des_p - q_offsets[i];
             cmd[i].dq = raw_motor[i].des_d;
             cmd[i].tau = raw_motor[i].tau;
         }
@@ -74,20 +74,47 @@ SingleMotorManager::~SingleMotorManager() {
 float SingleMotorManager::find_q(float cur_q, float des_q) {
     float min_sep = 10.0;
     float min_offset = 0.0;
-    for (int i = -8; i < 9; i++) {
-        float probe_q = std::fmod((6.33 * M_PI / 3) * i, 2.0f * M_PI);
-        float probe_sep = std::abs(cur_q + probe_q - des_q);
-        if (probe_sep < min_sep) {
-            min_sep = probe_sep;
-            min_offset = probe_q;
+    for (int i = -6; i < 7; i++) {
+        for (int j = -5; j < 6; j++) {
+            float probe_q = std::fmod((6.33 * M_PI / 6) * i, 2.0f * M_PI) + j * 2 * M_PI;
+            //float probe_q = 6.33 * M_PI / 3;
+            float probe_sep = std::abs(cur_q + probe_q - des_q);
+            if (probe_sep < min_sep) {
+                min_sep = probe_sep;
+                min_offset = probe_q;
+            }
         }
     }
     return min_offset;
 }
 
+// float SingleMotorManager::find_q(float cur_q, float des_q) {
+//     float min_sep = 10.0;
+//     float min_offset = 0.0;
+//     for (int i = -6; i <= 6; i++) {
+//         float full_offset = i * (M_PI / 3.0f);
+        
+//         for (int j = -6; j < 6; j++) {
+//             float inner_offset = (6.33f * M_PI / 3.0f) * j;
+//             float total_offset = std::fmod(inner_offset + full_offset, M_PI * 2.0f);
+
+//             float probe_sep = std::abs(cur_q + total_offset - des_q);
+//             if (probe_sep < min_sep) {
+//                 min_sep = probe_sep;
+//                 min_offset = total_offset;
+//             }
+//         }
+            
+
+//     }
+//     return min_offset;
+// }
+
 void SingleMotorManager::set_q_offsets(float q[6]) {
+    std::cout << "------------------------" << std::endl;
     for (int i = 0; i < 6; i++) {
         q_offsets[i] = find_q(raw_q_motor[i], q[i]);
+        std::cout << raw_q_motor[i] << " | " << q[i] << " | " << q_offsets[i] << std::endl;
     }
 }
 
@@ -113,8 +140,8 @@ void MotorManager::assignMotorCmd(struct JointStateStruct &data, struct RawMotor
         kp = kp * 23 / abs(test_tau);
         kd = kd * 23 / abs(test_tau);
     }
-    raw.kp = data.kp / (gear_ratio * gear_ratio);
-    raw.kd = data.kd / (gear_ratio * gear_ratio);
+    raw.kp = kp;
+    raw.kd = kd;
     raw.des_p = data.des_p * mult * gear_ratio;
     raw.des_d = data.des_d * mult * gear_ratio;
     raw.tau = data.tau * mult * gear_ratio;
@@ -137,9 +164,10 @@ void MotorManager::update() {
     // Go through each joint and set the commands for each controller
 
     if (safe) {
+        std::cout << joint_state[1].des_p << "    " << joint_state[1].kp << std::endl;
         // 0: l_hip_pitch
         assignMotorCmd(joint_state[0], pelvis.raw_motor[2], 1.0);
-        assignMotorCmd(joint_state[0], left.raw_motor[1], -1.0);
+        assignMotorCmd(joint_state[0], pelvis.raw_motor[1], -1.0);
 
         // 1: l_hip_roll
         assignMotorCmd(joint_state[1], pelvis.raw_motor[0], -1.0);
@@ -169,12 +197,12 @@ void MotorManager::update() {
         assignMotorCmd(joint_state[8], right.raw_motor[0], -1.0);
 
         // 9: r_knee
-        assignMotorCmd(joint_state[9], right.raw_motor[1], 1.0);
-        assignMotorCmd(joint_state[9], right.raw_motor[2], -1.0);
+        assignMotorCmd(joint_state[9], right.raw_motor[1], -1.0);
+        assignMotorCmd(joint_state[9], right.raw_motor[2], 1.0);
 
         // 10: r_ankle_pitch
-        assignMotorCmd(joint_state[10], right.raw_motor[3], -1.0);
-        assignMotorCmd(joint_state[10], right.raw_motor[4], 1.0);
+        assignMotorCmd(joint_state[10], right.raw_motor[3], 1.0);
+        assignMotorCmd(joint_state[10], right.raw_motor[4], -1.0);
 
         // 11: r_ankle_roll
         assignMotorCmd(joint_state[11], right.raw_motor[5], 1.0);

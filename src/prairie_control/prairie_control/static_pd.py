@@ -124,8 +124,8 @@ class static_pd(Node):
         index = round(time_delta / 0.001)
         if (index < 0):
             index = 0
-        if (index > 9999):
-            index = 9999
+        if (index > 59999):
+            index = 59999
             self.state = 0
         pos_t = self.nemo_traj[index, 1:12]
         vel_t = self.nemo_traj[index, 12:23]
@@ -136,6 +136,7 @@ class static_pd(Node):
             self.joint_pos[i] = msg.position[i]
 
     def keyboard_callback(self, msg):
+        print("keyboard callback")
         if msg.linear.x > 0.5:
             self.state = 1
         if msg.linear.x < -0.5:
