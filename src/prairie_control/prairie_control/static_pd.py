@@ -37,7 +37,7 @@ class static_pd(Node):
             self.joint_state_callback,
             qos_profile
         )
-        self.nemo_traj = np.genfromtxt(os.path.join(data_path, 'nemo_traj.csv'), delimiter = ',')
+        self.nemo_traj = np.genfromtxt(os.path.join(data_path, 'joint_traj.csv'), delimiter = ',')
         self.joint_pos = np.zeros([12])
         self.joint_pub = self.create_publisher(JointTrajectory, 'joint_trajectories', qos_profile)
         self.timer = self.create_timer(0.002, self.timer_callback)
@@ -56,7 +56,7 @@ class static_pd(Node):
                                         0,
                                         0,
                                         1.22173,
-                                        -0.523599,                                        0])
+                                        -0.523599, 0])
 
 
     def timer_callback(self):

@@ -9,6 +9,7 @@ from builtin_interfaces.msg import Duration, Time
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from gz_sim_interfaces.msg import StateObservationReduced
 from geometry_msgs.msg import Twist
+import time
 
 JOINT_LIST_COMPLETE = ["l_hip_pitch_joint", "l_hip_roll_joint", "l_hip_yaw_joint", "l_knee_joint", "l_foot_pitch_joint", "l_foot_roll_joint",
                        "r_hip_pitch_joint", "r_hip_roll_joint", "r_hip_yaw_joint", "r_knee_joint", "r_foot_pitch_joint", "r_foot_roll_joint"]
@@ -46,6 +47,9 @@ class home_pd(Node):
         self.cmd_vel = np.zeros([2])
         self.cmd_angvel = np.zeros([1])
         self.halt = 1
+        self.prev_halt = 1
+        self.true_halt = 1
+        self.halt_start_t = time.time() - 0.5
         self.state_time = 0.0
         self.prev_time = 0.0
 
@@ -133,9 +137,9 @@ class home_pd(Node):
         return pos_t, tau_delta
     
     def keyboard_callback(self, msg):
-        self.cmd_vel[0] = msg.linear.x * 0.4
-        self.cmd_vel[1] = msg.linear.y
-        self.cmd_angvel[0] = msg.angular.z * 0.6
+        self.cmd_vel[0] = msg.linear.x * 0.5
+        self.cmd_vel[1] = msg.linear.y * 0.0
+        self.cmd_angvel[0] = msg.angular.z * 0.7
         if (msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0):
             self.halt = 1
         else:
@@ -143,6 +147,7 @@ class home_pd(Node):
         return
     
     def walk_gz(self):
+        self.update_halt()
         if self.state_time < 3.0:
             self.wpn.reinit(t = self.state_time)
             pos = np.zeros([12])
@@ -161,6 +166,19 @@ class home_pd(Node):
             vel = np.array(vel)
             
         return pos, vel
+    
+    def update_halt(self):
+        if self.halt != self.prev_halt:
+            self.halt_start_t = time.time()
+        if (self.halt == 1):
+            if (time.time() - self.halt_start_t > 0.5):
+                self.true_halt = 1
+            else:
+                self.true_halt = 0
+        else:
+            self.true_halt = 0
+        self.prev_halt = self.halt
+        return
 
 def main(args=None):
     rclpy.init(args=args)

@@ -197,11 +197,11 @@ class GZSateObserver(Node):
         self.lin_acc = np.zeros([3])
 
         # joint states
-        self.jpos_filt = helpers.SignalFilter(N_JOINTS, 1000, 20)
-        self.jvel_filt = helpers.SignalFilter(N_JOINTS, 1000, 20)
+        self.jpos_filt = SignalFilter(N_JOINTS, 1000, 20)
+        self.jvel_filt = SignalFilter(N_JOINTS, 1000, 20)
 
-        self.angvel_filt = helpers.SignalFilter(3, 1000, 10)  # calculated from IMU data (of pelvis, i.e. expected CoM)
-        self.vel_filt = helpers.SignalFilter(3, 1000, 20)
+        self.angvel_filt = SignalFilter(3, 1000, 10)  # calculated from IMU data (of pelvis, i.e. expected CoM)
+        self.vel_filt = SignalFilter(3, 1000, 20)
         #self.vel_filt = helpers.SignalFilter(3, 1000, 20) # calculated from odometry data (displacement / dt)
 
         self.ang_vel = np.array([0., 0., 0.]).tolist()

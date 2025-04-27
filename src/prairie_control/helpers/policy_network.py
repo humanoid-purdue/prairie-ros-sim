@@ -35,12 +35,23 @@ def makeIFN():
     return make_inference_fn
 
 def tanh2Action(action: jnp.ndarray):
+    home_pose = np.array([-0.698132,
+                               0,
+                                 0,
+                                   1.22173,
+                                     -0.523599,
+                                       0,
+                                        -0.698132,
+                                        0,
+                                        0,
+                                        1.22173,
+                                        -0.523599, 0])
     pos_t = action[:ACT_SIZE//2]
     vel_t = action[ACT_SIZE//2:]
     vel_sp = vel_t * 10
 
     #pos_sp = ((pos_t + 1) * (top_limit - bottom_limit) / 2 + bottom_limit)
-    pos_sp = pos_t * 1.0
+    pos_sp = pos_t * 2.0 + home_pose
 
     return jnp.concatenate([pos_sp, vel_sp])
 
@@ -48,7 +59,7 @@ def tanh2Action(action: jnp.ndarray):
 class walk_policy():
     def __init__(self, t = 0.0):
         make_inference_fn = makeIFN()
-        saved_params = model.load_params(policy_path + '/walk_policy_acc5')
+        saved_params = model.load_params(policy_path + '/walk_policy_acc0')
         inference_fn = make_inference_fn(saved_params)
         self.jit_inference_fn = jax.jit(inference_fn)
         self.rng = jax.random.PRNGKey(0)
