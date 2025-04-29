@@ -59,7 +59,7 @@ def tanh2Action(action: jnp.ndarray):
 class walk_policy():
     def __init__(self, t = 0.0):
         make_inference_fn = makeIFN()
-        saved_params = model.load_params(policy_path + '/walk_policy_acc0')
+        saved_params = model.load_params(policy_path + '/walk_policy_acc')
         inference_fn = make_inference_fn(saved_params)
         self.jit_inference_fn = jax.jit(inference_fn)
         self.rng = jax.random.PRNGKey(0)

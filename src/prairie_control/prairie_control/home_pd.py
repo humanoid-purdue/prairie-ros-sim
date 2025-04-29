@@ -137,7 +137,7 @@ class home_pd(Node):
         return pos_t, tau_delta
     
     def keyboard_callback(self, msg):
-        self.cmd_vel[0] = msg.linear.x * 0.5
+        self.cmd_vel[0] = msg.linear.x * 0.4
         self.cmd_vel[1] = msg.linear.y * 0.0
         self.cmd_angvel[0] = msg.angular.z * 0.7
         if (msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0):
@@ -153,6 +153,9 @@ class home_pd(Node):
             pos = np.zeros([12])
             vel = np.zeros([12])
         else:
+            if (self.cmd_angvel[0] == 0.0 and self.cmd_vel[0] != 0.0):
+                self.cmd_angvel[0] = max(min(-self.ang_vel[2] * 1.1, 0.7), -0.7)
+                
             pos, vel = self.wpn.apply_net(self.joint_pos,
                                self.joint_vel,
                                self.ang_vel,
