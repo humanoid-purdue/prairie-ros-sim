@@ -12,6 +12,16 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
+    empty_gz = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('gz_sim'),
+                'launch',
+                'empty_gz_nemo4b.launch.py'
+            )
+        )
+    )
+
     default_rviz_config_path = os.path.join(get_package_share_directory('prairie_control'), 'rviz/robot_viewer.rviz')
 
     urdf_file_name = 'urdf/nemo4b.urdf'
@@ -28,14 +38,14 @@ def generate_launch_description():
             'use_sim_time',
             default_value='false',
             description='Use simulation (Gazebo) clock if true'),
+        empty_gz,
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
             name='robot_state_publisher',
             output='screen',
             parameters=[{'use_sim_time': use_sim_time, 'robot_description': robot_desc}],
-            arguments=[urdf],
-            remappings=[('joint_states','/real_joint_states')]),
+            arguments=[urdf]),
         Node(
             package='motor_controller',
             executable='motor_controller',

@@ -34,6 +34,7 @@ setup(
             'default_pd = prairie_control.default_pd:main',
             'home_pd = prairie_control.home_pd:main',
             'static_pd = prairie_control.static_pd:main',
+            'echo_keyboard = prairie_control.echo_keyboard:main',
         ],
     },
 )

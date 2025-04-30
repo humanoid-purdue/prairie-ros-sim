@@ -28,6 +28,7 @@ setup(
         "console_scripts": [
             "keyboard_teleop_incremental = keyboard_teleop.keyboard_teleop_incremental:main",
             "keyboard_teleop_hold = keyboard_teleop.keyboard_teleop_hold:main",
+            "prairie_cmd = keyboard_teleop.prairie_cmd:main",
         ],
     },
 )

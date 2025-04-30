@@ -12,11 +12,11 @@ using namespace std::chrono_literals;
 
 MotorController::MotorController() : rclcpp::Node("motor_controller"), count_(0), motor_manager()
 {
-    publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
+    publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("/real_joint_states", 10);
     timer_update = this->create_wall_timer(100us, std::bind(&MotorController::update_motor, this));
     timer_publish = this->create_wall_timer(500us, std::bind(&MotorController::publish_jointstate, this));
     trajectory_subscriber_ = this->create_subscription<trajectory_msgs::msg::JointTrajectory>(
-        "joint_trajectories", 10,
+        "/real_joint_trajectories", 10,
         std::bind(&MotorController::trajectoryCallback, this, std::placeholders::_1)
     );
     float pelvis_offsets[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};

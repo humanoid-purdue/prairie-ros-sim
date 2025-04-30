@@ -10,6 +10,7 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from gz_sim_interfaces.msg import StateObservationReduced
 from geometry_msgs.msg import Twist
 import time
+from gz_sim_interfaces.msg import KeyboardCmd
 
 JOINT_LIST_COMPLETE = ["l_hip_pitch_joint", "l_hip_roll_joint", "l_hip_yaw_joint", "l_knee_joint", "l_foot_pitch_joint", "l_foot_roll_joint",
                        "r_hip_pitch_joint", "r_hip_roll_joint", "r_hip_yaw_joint", "r_knee_joint", "r_foot_pitch_joint", "r_foot_roll_joint"]
@@ -31,8 +32,8 @@ class home_pd(Node):
             qos_profile
         )
         self.keyboard_subscriber = self.create_subscription(
-            Twist,
-            '/cmd_vel',
+            KeyboardCmd,
+            '/keyboard_cmd',
             self.keyboard_callback,
             qos_profile
         )
@@ -137,10 +138,10 @@ class home_pd(Node):
         return pos_t, tau_delta
     
     def keyboard_callback(self, msg):
-        self.cmd_vel[0] = msg.linear.x * 0.4
-        self.cmd_vel[1] = msg.linear.y * 0.0
-        self.cmd_angvel[0] = msg.angular.z * 0.7
-        if (msg.linear.x == 0.0 and msg.linear.y == 0.0 and msg.angular.z == 0.0):
+        self.cmd_vel[0] = msg.x * 0.4
+        self.cmd_vel[1] = msg.y * 0.4
+        self.cmd_angvel[0] = msg.angz * 0.7
+        if (msg.x == 0.0 and msg.y == 0.0 and msg.angz == 0.0):
             self.halt = 1
         else:
             self.halt = 0
