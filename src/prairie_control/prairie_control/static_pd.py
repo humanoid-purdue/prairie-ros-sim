@@ -35,7 +35,7 @@ class static_pd(Node):
 
         self.joint_state_subscriber = self.create_subscription(
             JointState,
-            '/real_joint_states',
+            '/joint_states',
             self.joint_state_callback,
             qos_profile
         )
