@@ -15,7 +15,13 @@ sudo apt install ros-${ROS_DISTRO}-gz-ros2-control-demos
 ros2 launch gz_sim empty_gz_nemo3.launch.py
 
 ```
-
+### Python
+```
+pip install jax
+pip install brax
+pip install mujoco
+pip install numpy
+```
 ### Debug
 ```
 ros2 control list_hardware_components # check if the urdf config for ros2_control plugin is loaded correctly
