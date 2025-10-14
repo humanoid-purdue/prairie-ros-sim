@@ -3,7 +3,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, SetEnvironmentVariable,
                             IncludeLaunchDescription, SetLaunchConfiguration,
-                            RegisterEventHandler)
+                            RegisterEventHandler, TimerAction)
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -16,7 +16,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
 
-    urdf_file_name = 'urdf/nemo4b.urdf'
+    urdf_file_name = 'urdf/nemo6.urdf'
     urdf = os.path.join(
         get_package_share_directory('prairie_control'),
         urdf_file_name)
@@ -104,21 +104,11 @@ def generate_launch_description():
         ),
         gz_bridge,
         node_robot_state_publisher,
-        gz_spawn_entity,
+        TimerAction(period=15.0, actions=[gz_spawn_entity]),  # Delayed spawn by 2s
         Node(
             package='gz_sim',
             executable='gz_state_observer',
             name='gz_state_observer',
             output='screen'
-        ),
-        Node(
-            package='prairie_control',
-            executable='home_pd',
-            name='home_pd',
-            output='screen'),
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='false',
-            description='Use simulation (Gazebo) clock if true'
-        ),
+        )
     ])

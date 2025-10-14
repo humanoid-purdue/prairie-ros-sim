@@ -12,6 +12,16 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
+    empty_gz = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('gz_sim'),
+                'launch',
+                'gz_only_nemo6.launch.py'
+            )
+        )
+    )
+
     default_rviz_config_path = os.path.join(get_package_share_directory('prairie_control'), 'rviz/robot_viewer.rviz')
 
     urdf_file_name = 'urdf/nemo6.urdf'
@@ -45,5 +55,21 @@ def generate_launch_description():
             executable='rviz2',
             name = 'rviz2',
             arguments = ['-d' + default_rviz_config_path]
-        )
+        ),
+        Node(
+            package='prairie_control',
+            executable='master',
+            name='master',
+            output='screen'),
+        Node(
+            package='prairie_control',
+            executable='gz_standing',
+            name='gz_standing',
+            output='screen'),
+        Node(
+            package='prairie_control',
+            executable='gz_policy',
+            name='gz_policy',
+            output='screen'),
+            empty_gz,
     ])

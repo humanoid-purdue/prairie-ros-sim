@@ -17,14 +17,14 @@ def generate_launch_description():
             os.path.join(
                 get_package_share_directory('gz_sim'),
                 'launch',
-                'empty_gz_nemo4b.launch.py'
+                'empty_gz_nemo6.launch.py'
             )
         )
     )
 
     default_rviz_config_path = os.path.join(get_package_share_directory('prairie_control'), 'rviz/robot_viewer.rviz')
 
-    urdf_file_name = 'urdf/nemo4b.urdf'
+    urdf_file_name = 'urdf/nemo6.urdf'
     urdf = os.path.join(
         get_package_share_directory('prairie_control'),
         urdf_file_name)

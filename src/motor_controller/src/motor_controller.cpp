@@ -64,10 +64,10 @@ void MotorController::publish_jointstate()
 {
     auto message = sensor_msgs::msg::JointState();
     message.header.stamp = this->now();
-    message.name.resize(12);
-    message.position.resize(12);
-    message.velocity.resize(12);
-    message.effort.resize(12);
+    message.name.resize(18);
+    message.position.resize(18);
+    message.velocity.resize(18);
+    message.effort.resize(18);
 
     message.name[0] = "l_hip_pitch_joint";
     message.position[0] = motor_manager.joint_state[0].current_q;
@@ -116,6 +116,30 @@ void MotorController::publish_jointstate()
     message.name[11] = "r_foot_roll_joint";
     message.position[11] = motor_manager.joint_state[11].current_q;
     message.velocity[11] = motor_manager.joint_state[11].current_dq;
+
+    message.name[12] = "l_shoulder_pitch_joint";
+    message.position[12] = 0.0;
+    message.velocity[12] = 0.0;
+
+    message.name[13] = "l_shoulder_roll_joint";
+    message.position[13] = 0.05;
+    message.velocity[13] = 0.0;
+
+    message.name[14] = "l_elbow_joint";
+    message.position[14] = 0.0;
+    message.velocity[14] = 0.0;
+
+    message.name[15] = "r_shoulder_pitch_joint";
+    message.position[15] = 0.0;
+    message.velocity[15] = 0.0;
+
+    message.name[16] = "r_shoulder_roll_joint";
+    message.position[16] = -0.05;
+    message.velocity[16] = 0.0;
+
+    message.name[17] = "r_elbow_joint";
+    message.position[17] = 0.0;
+    message.velocity[17] = 0.0;
 
     publisher_->publish(message);
 

@@ -14,6 +14,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/urdf', glob('urdf/*')),
         ('share/' + package_name + '/meshes/nemo4b', glob('meshes/nemo4b/*')),
+        ('share/' + package_name + '/meshes/nemo6', glob('meshes/nemo6/*')),
         ('share/' + package_name + '/rviz', glob('rviz/*')),
         ('share/' + package_name + '/config', glob('config/*')),
         ('share/' + package_name + '/helpers', glob('helpers/*')),
@@ -35,6 +36,9 @@ setup(
             'home_pd = prairie_control.home_pd:main',
             'static_pd = prairie_control.static_pd:main',
             'echo_keyboard = prairie_control.echo_keyboard:main',
+            'gz_standing = prairie_control.gz_standing:main',
+            'gz_policy = prairie_control.gz_policy:main',
+            'master = prairie_control.master:main',
         ],
     },
 )
