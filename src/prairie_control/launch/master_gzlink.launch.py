@@ -71,5 +71,10 @@ def generate_launch_description():
             executable='gz_policy',
             name='gz_policy',
             output='screen'),
+        Node(
+            package='prairie_control',
+            executable='gz_mirror',
+            name='gz_mirror',
+            output='screen'),
             empty_gz,
     ])

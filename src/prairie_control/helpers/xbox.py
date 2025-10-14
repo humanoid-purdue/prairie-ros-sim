@@ -12,17 +12,21 @@ class XboxController:
 
     Features:
       - Left & right stick (x,y) values in [-1,1] after deadzone filtering.
-      - Button release mapping: A,B,X,Y,LB,RB -> integer states 0..5.
+      - Two discrete states set on button release:
+        * state1: A,B -> 0,1
+        * state2: X,Y,LB,RB -> 0,1,2,3
       - Non-blocking update(); poll periodically (e.g. in your main loop).
     """
 
-    BUTTON_STATE_MAP = {  # pygame button index -> state int
+    BUTTON_TO_STATE1 = {  # pygame button index -> state1 int
         0: 0,  # A
         1: 1,  # B
-        3: 2,  # X
-        4: 3,  # Y
-        6: 4,  # LB
-        7: 5,  # RB
+    }
+    BUTTON_TO_STATE2 = {  # pygame button index -> state2 int
+        3: 0,  # X
+        4: 1,  # Y
+        6: 2,  # LB
+        7: 3,  # RB
     }
 
     def __init__(self, joystick_id: int = 0, deadzone: float = 0.1):
@@ -37,7 +41,8 @@ class XboxController:
         self.js.init()
         self.left = StickState()
         self.right = StickState()
-        self.state: Optional[int] = 0  # Set on button release
+        self.state1: Optional[int] = 0  # Set on A/B release
+        self.state2: Optional[int] = 0  # Set on X/Y/LB/RB release
         self._axis_map = self._detect_axis_layout()
 
     def _detect_axis_layout(self):
@@ -60,8 +65,10 @@ class XboxController:
         # Process only relevant events to avoid queue growth
         for event in pygame.event.get([pygame.JOYAXISMOTION, pygame.JOYBUTTONUP]):
             if event.type == pygame.JOYBUTTONUP and event.joy == self.js.get_id():
-                if event.button in self.BUTTON_STATE_MAP:
-                    self.state = self.BUTTON_STATE_MAP[event.button]
+                if event.button in self.BUTTON_TO_STATE1:
+                    self.state1 = self.BUTTON_TO_STATE1[event.button]
+                elif event.button in self.BUTTON_TO_STATE2:
+                    self.state2 = self.BUTTON_TO_STATE2[event.button]
         # Read axes (continuous)
         self.left.x = self._apply_deadzone(self.js.get_axis(self._axis_map["lx"]))
         self.left.y = self._apply_deadzone(-self.js.get_axis(self._axis_map["ly"]))  # invert Y for typical up positive
@@ -76,8 +83,15 @@ class XboxController:
     def right_stick(self) -> Tuple[float, float]:
         return (self.right.x, self.right.y)
 
-    def get_state(self) -> Optional[int]:
-        return self.state
+    def get_state1(self) -> Optional[int]:
+        return self.state1
+
+    def get_state2(self) -> Optional[int]:
+        return self.state2
+
+    def get_state(self) -> Tuple[Optional[int], Optional[int]]:
+        """Return (state1, state2) for convenience."""
+        return (self.state1, self.state2)
 
     def close(self):  # optional cleanup
         try:
@@ -88,11 +102,12 @@ class XboxController:
 if __name__ == "__main__":  # simple demo
     import time
     ctrl = XboxController()
-    print("Press A,B,X,Y,LB,RB to set state 0..5. Ctrl+C to exit.")
+    print("A/B -> state1=0/1 | X/Y/LB/RB -> state2=0/1/2/3. Ctrl+C to exit.")
     try:
         while True:
             ctrl.update()
-            print(f"L:{ctrl.left_stick} R:{ctrl.right_stick} state:{ctrl.get_state()}", end='\r')
+            s1, s2 = ctrl.get_state()
+            print(f"L:{ctrl.left_stick} R:{ctrl.right_stick} state1:{s1} state2:{s2}", end='\r')
             time.sleep(0.02)
     except KeyboardInterrupt:
         print("\nExiting")

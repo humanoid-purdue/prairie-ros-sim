@@ -38,6 +38,7 @@ setup(
             'echo_keyboard = prairie_control.echo_keyboard:main',
             'gz_standing = prairie_control.gz_standing:main',
             'gz_policy = prairie_control.gz_policy:main',
+            'gz_mirror = prairie_control.gz_mirror:main',
             'master = prairie_control.master:main',
         ],
     },
