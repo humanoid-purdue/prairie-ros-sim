@@ -32,19 +32,17 @@ class gz_standing(Node):
 
         # Read IMU data and publish JTP 
 
-        self.home_pose = np.array([-0.698132,
-                        0,
-                        0,
-                        1.22173,
-                        -0.523599,
-                        0,
-                        -0.698132,
-                        0,
-                        0,
-                        1.22173,
-                        -0.523599, 0,
-                        0, 0.05, 0,
-                        0, -0.05, 0])
+        self.home_pose = np.array([
+            -0.698132, 0, 0, 1.22173, -0.523599, 0,
+            -0.698132, 0, 0, 1.22173, -0.523599, 0,
+            0, 0.05, 0, 0, -0.05, 0
+        ])
+
+        self.sit_pose = np.array([
+            -0.9673, 0, 0, 2.13, -1.0735, 0,
+            -0.9673, 0, 0, 2.13, -1.0735, 0,
+            0, 0.05, 0, 0, -0.05, 0
+        ])
         
         self.ff_torque = np.array([
             -0.6, 0.0, 0.0, 1.11, -0.3, 0.0,
@@ -92,7 +90,7 @@ class gz_standing(Node):
 
         pos_t = self.home_pose.copy()
         
-        if self.obs!= {}:
+        if self.obs != {}:
             time_coeff = min(self.obs["time"] / 0.5 , 1.0)
             des_pos = time_coeff * self.home_pose
             jtp_ankle_ff = self.obs["linear_acceleration"][0] * -2.5
