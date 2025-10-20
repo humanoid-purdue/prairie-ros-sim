@@ -44,7 +44,8 @@ class gz_mirror(Node):
     def timer_callback(self):
         if self.obs != {}:
             pos_t = self.obs['joint_position'].copy()
-            pos_v = self.obs['joint_velocity'].copy()
+            #pos_v = self.obs['joint_velocity'].copy()
+            pos_v = np.zeros_like(self.obs["joint_velocity"])
 
             joint_traj = JointTrajectory()
             jtp = JointTrajectoryPoint()

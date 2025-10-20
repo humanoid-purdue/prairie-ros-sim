@@ -136,10 +136,11 @@ class master(Node):
         return
     
     def default_real_pd(self):
-        if self.ctrl.state2 == 1:
+        print(self.state2)
+        if self.state2 == 1:
             pos_t = self.stand_pd()
             jtp = self.pos_t2traj(pos_t)
-        elif self.ctrl.state2 == 2 and self.gz_mirror_jtp is not None:
+        elif self.state2 == 2 and self.gz_mirror_jtp is not None:
             jtp = self.gz_mirror_jtp
         else:
             pos_t = np.zeros([18])

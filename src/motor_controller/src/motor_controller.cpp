@@ -32,7 +32,7 @@ void MotorController::trajectoryCallback(const trajectory_msgs::msg::JointTrajec
         ss << msg->points[0].positions[i] << " ";
     }
     //RCLCPP_INFO(this->get_logger(), "Trajectory positions: %s", ss.str().c_str());
-    float kp = 24.0;
+    float kp = 10.0;
     float kd = 1.0;
     bool all_zero = true;
     for (int i = 0; i < 12; i++) {

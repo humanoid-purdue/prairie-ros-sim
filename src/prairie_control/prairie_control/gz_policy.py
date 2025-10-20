@@ -70,7 +70,7 @@ class gz_policy(Node):
     
     def master_callback(self, msg):
         self.state = msg.state1
-        vel = np.array([msg.ly, msg.lx]) * np.array([0.6, -0.4])
+        vel = np.array([msg.ly, msg.lx]) * np.array([0.4, -0.3])
         angvel = np.array([msg.rx]) * -0.8
         self.cmd = np.hstack((vel, angvel))
         return
