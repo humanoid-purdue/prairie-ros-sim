@@ -20,6 +20,8 @@ sys.path.append(helper_path)
 import policy_network, utils
 from utils import JOINT_LIST_COMPLETE
 
+FILT = 0.9
+
 class gz_policy(Node):
     def __init__(self):
         super().__init__('gz_policy')
@@ -64,6 +66,7 @@ class gz_policy(Node):
 
         self.wpn = policy_network.walk_policy(t = 0.0)
 
+
     def state_callback(self, msg):
         self.obs = utils.fill_obs_dict(msg)
         return 
@@ -72,7 +75,9 @@ class gz_policy(Node):
         self.state = msg.state1
         vel = np.array([msg.ly, msg.lx]) * np.array([0.4, -0.3])
         angvel = np.array([msg.rx]) * -0.8
-        self.cmd = np.hstack((vel, angvel))
+        current_cmd = np.hstack((vel, angvel))
+        self.cmd = self.cmd * FILT + current_cmd * (1 - FILT)
+
         return
     
     def timer_callback(self):
