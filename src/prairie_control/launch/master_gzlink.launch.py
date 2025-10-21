@@ -77,4 +77,14 @@ def generate_launch_description():
             name='gz_mirror',
             output='screen'),
             empty_gz,
+        Node(
+            package='prairie_control',
+            executable='real_imu',
+            name='real_imu',
+            output='screen'),
+        Node(
+            package='prairie_control',
+            executable='real_state_estimator',
+            name='real_state_estimator',
+            output='screen'),
     ])

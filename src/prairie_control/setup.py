@@ -39,6 +39,8 @@ setup(
             'gz_standing = prairie_control.gz_standing:main',
             'gz_policy = prairie_control.gz_policy:main',
             'gz_mirror = prairie_control.gz_mirror:main',
+            'real_imu = prairie_control.real_imu:main',
+            'real_state_estimator = prairie_control.real_state_estimator:main',
             'master = prairie_control.master:main',
         ],
     },

@@ -188,7 +188,6 @@ class master(Node):
     def joint_state_callback(self, msg):
         for i in range(12):
             self.joint_pos[i] = msg.position[i]
-        
 
     
 def main(args=None):
