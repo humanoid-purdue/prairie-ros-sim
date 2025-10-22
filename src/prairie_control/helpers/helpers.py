@@ -384,3 +384,4 @@ def np2Point(arr):
     a.y = arr[1]
     a.z = arr[2]
     return a
+

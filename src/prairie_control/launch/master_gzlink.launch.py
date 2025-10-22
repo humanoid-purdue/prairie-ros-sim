@@ -12,9 +12,19 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
+    empty_gz = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('gz_sim'),
+                'launch',
+                'gz_only_nemo6.launch.py'
+            )
+        )
+    )
+
     default_rviz_config_path = os.path.join(get_package_share_directory('prairie_control'), 'rviz/robot_viewer.rviz')
 
-    urdf_file_name = 'urdf/nemo4b.urdf'
+    urdf_file_name = 'urdf/nemo6.urdf'
     urdf = os.path.join(
         get_package_share_directory('prairie_control'),
         urdf_file_name)
@@ -34,8 +44,7 @@ def generate_launch_description():
             name='robot_state_publisher',
             output='screen',
             parameters=[{'use_sim_time': use_sim_time, 'robot_description': robot_desc}],
-            arguments=[urdf],
-            remappings=[('joint_states','/real_joint_states')]),
+            arguments=[urdf]),
         Node(
             package='motor_controller',
             executable='motor_controller',
@@ -49,7 +58,33 @@ def generate_launch_description():
         ),
         Node(
             package='prairie_control',
-            executable='static_pd',
-            name='static_pd',
-            output='screen')
+            executable='master',
+            name='master',
+            output='screen'),
+        Node(
+            package='prairie_control',
+            executable='gz_standing',
+            name='gz_standing',
+            output='screen'),
+        Node(
+            package='prairie_control',
+            executable='gz_policy',
+            name='gz_policy',
+            output='screen'),
+        Node(
+            package='prairie_control',
+            executable='gz_mirror',
+            name='gz_mirror',
+            output='screen'),
+            empty_gz,
+        Node(
+            package='prairie_control',
+            executable='real_imu',
+            name='real_imu',
+            output='screen'),
+        Node(
+            package='prairie_control',
+            executable='real_state_estimator',
+            name='real_state_estimator',
+            output='screen'),
     ])

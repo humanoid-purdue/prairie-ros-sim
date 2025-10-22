@@ -12,11 +12,11 @@ using namespace std::chrono_literals;
 
 MotorController::MotorController() : rclcpp::Node("motor_controller"), count_(0), motor_manager()
 {
-    publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
+    publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
     timer_update = this->create_wall_timer(100us, std::bind(&MotorController::update_motor, this));
     timer_publish = this->create_wall_timer(500us, std::bind(&MotorController::publish_jointstate, this));
     trajectory_subscriber_ = this->create_subscription<trajectory_msgs::msg::JointTrajectory>(
-        "joint_trajectories", 10,
+        "/real_joint_trajectories", 10,
         std::bind(&MotorController::trajectoryCallback, this, std::placeholders::_1)
     );
     float pelvis_offsets[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -32,7 +32,7 @@ void MotorController::trajectoryCallback(const trajectory_msgs::msg::JointTrajec
         ss << msg->points[0].positions[i] << " ";
     }
     //RCLCPP_INFO(this->get_logger(), "Trajectory positions: %s", ss.str().c_str());
-    float kp = 24.0;
+    float kp = 10.0;
     float kd = 1.0;
     bool all_zero = true;
     for (int i = 0; i < 12; i++) {
@@ -64,10 +64,10 @@ void MotorController::publish_jointstate()
 {
     auto message = sensor_msgs::msg::JointState();
     message.header.stamp = this->now();
-    message.name.resize(12);
-    message.position.resize(12);
-    message.velocity.resize(12);
-    message.effort.resize(12);
+    message.name.resize(18);
+    message.position.resize(18);
+    message.velocity.resize(18);
+    message.effort.resize(18);
 
     message.name[0] = "l_hip_pitch_joint";
     message.position[0] = motor_manager.joint_state[0].current_q;
@@ -116,6 +116,30 @@ void MotorController::publish_jointstate()
     message.name[11] = "r_foot_roll_joint";
     message.position[11] = motor_manager.joint_state[11].current_q;
     message.velocity[11] = motor_manager.joint_state[11].current_dq;
+
+    message.name[12] = "l_shoulder_pitch_joint";
+    message.position[12] = 0.0;
+    message.velocity[12] = 0.0;
+
+    message.name[13] = "l_shoulder_roll_joint";
+    message.position[13] = 0.05;
+    message.velocity[13] = 0.0;
+
+    message.name[14] = "l_elbow_joint";
+    message.position[14] = 0.0;
+    message.velocity[14] = 0.0;
+
+    message.name[15] = "r_shoulder_pitch_joint";
+    message.position[15] = 0.0;
+    message.velocity[15] = 0.0;
+
+    message.name[16] = "r_shoulder_roll_joint";
+    message.position[16] = -0.05;
+    message.velocity[16] = 0.0;
+
+    message.name[17] = "r_elbow_joint";
+    message.position[17] = 0.0;
+    message.velocity[17] = 0.0;
 
     publisher_->publish(message);
 

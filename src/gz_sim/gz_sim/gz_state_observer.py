@@ -19,7 +19,7 @@ import numpy as np
 #from ament_index_python.packages import get_package_share_directory
 
 #JOINT_LIST = helpers.makeJointList()[0]
-N_JOINTS = 12
+N_JOINTS = 18
 
 import scipy
 
@@ -201,13 +201,13 @@ class GZSateObserver(Node):
         self.jvel_filt = SignalFilter(N_JOINTS, 1000, 20)
 
         self.angvel_filt = SignalFilter(3, 1000, 10)  # calculated from IMU data (of pelvis, i.e. expected CoM)
+        self.linacc_filt = SignalFilter(3, 1000, 10)
         self.vel_filt = SignalFilter(3, 1000, 20)
         #self.vel_filt = helpers.SignalFilter(3, 1000, 20) # calculated from odometry data (displacement / dt)
 
         self.ang_vel = np.array([0., 0., 0.]).tolist()
 
-        self.obs_pub = self.create_publisher(StateObservationReduced, 'state_observation', qos_profile)
-
+        self.obs_pub = self.create_publisher(StateObservationReduced, 'gz_state_observation', qos_profile)
 
         self.subscription_1 = self.create_subscription(
             JointState,
@@ -308,24 +308,28 @@ class GZSateObserver(Node):
         if self.orientation is not None and global_vel is not None:
             self.linvel = global_to_local_velocity(global_vel, self.orientation)
         #self.vel_filt.update(self.linvel)
-        self.jpos_filt.update(np.array(joint_msg.position))
-        self.jvel_filt.update(np.array(joint_msg.velocity))
-        self.angvel_filt.update(np.array(self.ang_vel))
+        #self.jpos_filt.update(np.array(joint_msg.position))
+        #self.jvel_filt.update(np.array(joint_msg.velocity))
+        #self.angvel_filt.update(np.array(self.ang_vel))
+        #self.linacc_filt.update(np.array(self.lin_acc))
         #self.linvel = self.vel_filt.get()
         if dt != 0 and self.sim_time > 0.1:
             pub_obs_msg.joint_pos = joint_msg.position
             pub_obs_msg.joint_vel = joint_msg.velocity #self.jvel_filt.get().tolist()
             pub_obs_msg.ang_vel = self.ang_vel #self.angvel_filt.get().tolist()
+            pub_obs_msg.lin_acc = self.lin_acc
             #sv.vel = self.vel_filt.get().tolist()
         elif self.sim_time < 0.05:
             pub_obs_msg.joint_pos = joint_msg.position
             pub_obs_msg.joint_vel = np.zeros([len(joint_msg.velocity)]).tolist()
             pub_obs_msg.ang_vel = np.zeros([3]).tolist()
+            pub_obs_msg.lin_acc = np.zeros([3]).tolist()
             #sv.vel = np.zeros([3]).tolist()
         else:
             pub_obs_msg.joint_pos = joint_msg.position
             pub_obs_msg.joint_vel = joint_msg.velocity
             pub_obs_msg.ang_vel = self.ang_vel
+            pub_obs_msg.lin_acc = self.lin_acc
             #sv.vel = vel.tolist()
 
         
@@ -341,7 +345,7 @@ class GZSateObserver(Node):
             self.grav_vec = np.array([0, 0, -1.0])
         pub_obs_msg.grav_vec = self.grav_vec.tolist()
         pub_obs_msg.lin_vel = self.linvel.tolist()
-        pub_obs_msg.lin_acc = self.lin_acc.tolist()
+        #pub_obs_msg.lin_acc = self.lin_acc.tolist()
 
         #sv = self.sv_fwd.update(sv)
 

@@ -1,0 +1,598 @@
+<?xml version="1.0" ?>
+<robot name="nemo6">
+   <link name="pelvis">
+      <inertial>
+         <origin xyz="0.00505250 -0.00005977 0.18608225" rpy="0 0 0"/>
+         <mass value="5.29698285"/>
+         <inertia ixx="0.11381520" iyy="0.08283557" izz="0.05217409" ixy="-0.00002232" ixz="0.00625310" iyz="-0.00006998"/>
+      </inertial>
+      <visual name="pelvis">
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/pelvis.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <link name="l_hip_pitch">
+      <inertial>
+      <!-- pos="-0.01821923 0 -3.205e-05", mass="1.8670971"
+           fullinertia="0.00265583 0.00363357 0.00358009 -2e-07 -1.09e-06 0" -->
+      <origin xyz="-0.01821923 0.0 -0.00003205" rpy="0 0 0"/>
+      <mass value="1.8670971"/>
+      <inertia
+        ixx="0.00265583" ixy="-0.0000002"  ixz="-0.00000109"
+        iyy="0.00363357" iyz="0.0"
+        izz="0.00358009"/>
+    </inertial>
+      <visual name="l_hip_pitch">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_hip_pitch.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="l_hip_pitch_joint">
+      <parent link="pelvis"/>
+      <child link="l_hip_pitch"/>
+      <origin xyz="0.0 0.0965 -0.112" rpy="0 0 0"/>
+      <axis xyz="0.0 1.0 0.0"/>
+      <limit lower="-1.3" upper="1.3" effort="47.4" velocity="32"/>
+      <dynamics damping="2.0" />
+   </joint>
+   <link name="l_hip_roll">
+      <inertial>
+         <origin xyz="-0.01740501 1.764e-05 -0.05845559" rpy="0.0004863223254489439 0.19610377555273417 0.0010392456801208367"/>
+         <mass value="2.00459959"/>
+         <inertia ixx="0.006611571483374219" iyy="0.006331359985392611" izz="0.0028985185312331704" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_hip_roll">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_hip_roll.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="l_hip_roll_joint">
+      <parent link="l_hip_pitch"/>
+      <child link="l_hip_roll"/>
+      <origin xyz="-0.07875 0.0 0.0" rpy="0 0 0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="-0.4" upper="1.5" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="l_hip_yaw">
+      <inertial>
+         <origin xyz="3.205e-05 -0.0 -0.06053076999999999" rpy="0.001179318771453497 0.0002045579945115783 1.5707921576398078"/>
+         <mass value="1.8670971"/>
+         <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_hip_yaw">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_hip_yaw.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="l_hip_yaw_joint">
+      <parent link="l_hip_roll"/>
+      <child link="l_hip_yaw"/>
+      <origin xyz="0.00715 0.0 -0.1263" rpy="0 0 0"/>
+      <axis xyz="0.0 0.0 1.0"/>
+      <limit lower="-1.0" upper="1.0" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="l_knee">
+      <inertial>
+         <origin xyz="0.0 5e-05 -0.10289321" rpy="0.0 0.0 0.0"/>
+         <mass value="0.58007416"/>
+         <inertia ixx="0.0070466" iyy="0.00513742" izz="0.00225232" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_knee">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_knee.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="l_knee_joint">
+      <parent link="l_hip_yaw"/>
+      <child link="l_knee"/>
+      <origin xyz="0.0 0.0 -0.07875" rpy="0 0 0"/>
+      <axis xyz="0.0 1.0 0.0"/>
+      <limit lower="-2.0" upper="2.0" effort="47.4" velocity="32"/>
+      <dynamics damping="2.0" />
+   </joint>
+   <link name="l_foot_pitch">
+      <inertial>
+         <origin xyz="0.01821923 -0.0 -3.205e-05" rpy="1.571975646419184 4.169155001454428e-06 1.57100088478941"/>
+         <mass value="1.8670971"/>
+         <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_foot_pitch">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_foot_pitch.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="l_foot_pitch_joint">
+      <parent link="l_knee"/>
+      <child link="l_foot_pitch"/>
+      <origin xyz="0.0 0.0 -0.206" rpy="0 0 0"/>
+      <axis xyz="0.0 1.0 0.0"/>
+      <limit lower="-2.0" upper="2.0" effort="47.4" velocity="32"/>
+      <dynamics damping="2.0" />
+   </joint>
+   <link name="l_foot_roll">
+      <inertial>
+         <origin xyz="0.00757956 1.139e-05 -0.03942379" rpy="2.3433878067998437 -0.0008879622578734647 1.569836156558178"/>
+         <mass value="1.5526793"/>
+         <inertia ixx="0.005416700784880941" iyy="0.004963623876621819" izz="0.0028013153384972476" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_foot_roll">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_foot_roll.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+
+      <collision>
+        <origin xyz="-0.0187 0 -0.07975" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.2 0.101 0.012"/>
+        </geometry>
+      </collision>
+   </link>
+   <joint type="revolute" name="l_foot_roll_joint">
+      <parent link="l_foot_pitch"/>
+      <child link="l_foot_roll"/>
+      <origin xyz="0.07875 0.0 0.0" rpy="0 0 0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="-1.0" upper="1.0" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="r_hip_pitch">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="1.8670971"/>
+         <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r_hip_pitch">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_hip_pitch.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="r_hip_pitch_joint">
+      <parent link="pelvis"/>
+      <child link="r_hip_pitch"/>
+      <origin xyz="0.0 -0.0965 -0.112" rpy="0.0 0.0 0.0"/>
+      <axis xyz="0.0 1.0 0.0"/>
+      <limit lower="-1.3" upper="1.3" effort="47.4" velocity="32"/>
+      <dynamics damping="2.0" />
+   </joint>
+   <link name="r_hip_roll">
+      <inertial>
+         <origin xyz="-0.01740501 1.764e-05 -0.05845559" rpy="0.0004863223254489439 0.19610377555273417 0.0010392456801208367"/>
+         <mass value="2.00459959"/>
+         <inertia ixx="0.006611571483374219" iyy="0.006331359985392611" izz="0.0028985185312331704" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r_hip_roll">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_hip_roll.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="r_hip_roll_joint">
+      <parent link="r_hip_pitch"/>
+      <child link="r_hip_roll"/>
+      <origin xyz="-0.07875 0.0 0.0" rpy="0 0 0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="-1.5" upper="0.4" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="r_hip_yaw">
+      <inertial>
+         <origin xyz="3.205e-05 -0.0 -0.06053076999999999" rpy="0.001179318771453497 0.0002045579945115783 1.5707921576398078"/>
+         <mass value="1.8670971"/>
+         <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r_hip_yaw">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_hip_yaw.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="r_hip_yaw_joint">
+      <parent link="r_hip_roll"/>
+      <child link="r_hip_yaw"/>
+      <origin xyz="0.00715 0.0 -0.1263" rpy="0 0 0"/>
+      <axis xyz="0.0 0.0 1.0"/>
+      <limit lower="-1.0" upper="1.0" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="r_knee">
+      <inertial>
+         <origin xyz="0.0 5e-05 -0.10289321" rpy="0.0 0.0 0.0"/>
+         <mass value="0.58007416"/>
+         <inertia ixx="0.0070466" iyy="0.00513742" izz="0.00225232" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_knee">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_knee.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="r_knee_joint">
+      <parent link="r_hip_yaw"/>
+      <child link="r_knee"/>
+      <origin xyz="0.0 0.0 -0.07875" rpy="0 0 0"/>
+      <axis xyz="0.0 1.0 0.0"/>
+      <limit lower="-2.0" upper="2.0" effort="47.4" velocity="32"/>
+      <dynamics damping="2.0" />
+   </joint>
+   <link name="r_foot_pitch">
+      <inertial>
+         <origin xyz="0.01821923 -0.0 -3.205e-05" rpy="1.571975646419184 4.169155001454428e-06 1.57100088478941"/>
+         <mass value="1.8670971"/>
+         <inertia ixx="0.003633570040911599" iyy="0.0035800912854579733" izz="0.0026558286736304273" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_foot_pitch">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_foot_pitch.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="r_foot_pitch_joint">
+      <parent link="r_knee"/>
+      <child link="r_foot_pitch"/>
+      <origin xyz="0.0 0.0 -0.206" rpy="0 0 0"/>
+      <axis xyz="0.0 1.0 0.0"/>
+      <limit lower="-2.0" upper="2.0" effort="47.4" velocity="32"/>
+      <dynamics damping="2.0" />
+   </joint>
+   <link name="r_foot_roll">
+      <inertial>
+         <origin xyz="0.00757956 1.139e-05 -0.03942379" rpy="2.3433878067998437 -0.0008879622578734647 1.569836156558178"/>
+         <mass value="1.5526793"/>
+         <inertia ixx="0.005416700784880941" iyy="0.004963623876621819" izz="0.0028013153384972476" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_foot_roll">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_foot_roll.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+
+      <collision>
+        <origin xyz="-0.0187 0 -0.07975" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.2 0.101 0.012"/>
+        </geometry>
+      </collision>
+   </link>
+   <joint type="revolute" name="r_foot_roll_joint">
+      <parent link="r_foot_pitch"/>
+      <child link="r_foot_roll"/>
+      <origin xyz="0.07875 0.0 0.0" rpy="0 0 0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="-1.0" upper="1.0" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <!-- Added upper limbs -->
+   <link name="l_shoulder_pitch">
+      <inertial>
+         <origin xyz="0.0022 -0.05981 0.0" rpy="0 0 0"/>
+         <mass value="0.89824188"/>
+         <inertia ixx="0.00181720" iyy="0.00091278" izz="0.00118927" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_shoulder_pitch">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_shoulder_pitch.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="l_shoulder_pitch_joint">
+      <parent link="pelvis"/>
+      <child link="l_shoulder_pitch"/>
+      <origin xyz="-0.001404 0.1199 0.163" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5" upper="1.5" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="l_shoulder_roll">
+      <inertial>
+         <origin xyz="-0.01717369 0.00501388 -0.13591536" rpy="0 0 0"/>
+         <mass value="1.01634729"/>
+         <inertia ixx="0.00374627" iyy="0.00437525" izz="0.00097343" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_shoulder_roll">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_shoulder_roll.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="l_shoulder_roll_joint">
+      <parent link="l_shoulder_pitch"/>
+      <child link="l_shoulder_roll"/>
+      <origin xyz="0.020174 0.0765 0.0009" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="0.04" upper="2.0" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="l_elbow">
+      <inertial>
+         <origin xyz="0 -0.0113 -0.05618" rpy="0 0 0"/>
+         <mass value="0.19590289"/>
+         <inertia ixx="0.00111956" iyy="0.00122819" izz="0.00011420" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="l_elbow">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/l_elbow.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="l_elbow_joint">
+      <parent link="l_shoulder_roll"/>
+      <child link="l_elbow"/>
+      <origin xyz="-0.027502 0.0104 -0.173047" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.0" upper="1.0" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="r_shoulder_pitch">
+      <inertial>
+         <origin xyz="0.0022 0.05981 0.0" rpy="0 0 0"/>
+         <mass value="0.89824188"/>
+         <inertia ixx="0.00181720" iyy="0.00091278" izz="0.00118927" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r_shoulder_pitch">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/r_shoulder_pitch.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="r_shoulder_pitch_joint">
+      <parent link="pelvis"/>
+      <child link="r_shoulder_pitch"/>
+      <origin xyz="-0.001404 -0.1199 0.163" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.5" upper="1.5" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="r_shoulder_roll">
+      <inertial>
+         <origin xyz="-0.01717369 -0.00501388 -0.13591536" rpy="0 0 0"/>
+         <mass value="1.01634729"/>
+         <inertia ixx="0.00374627" iyy="0.00437525" izz="0.00097343" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r_shoulder_roll">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/r_shoulder_roll.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="r_shoulder_roll_joint">
+      <parent link="r_shoulder_pitch"/>
+      <child link="r_shoulder_roll"/>
+      <origin xyz="0.020174 -0.0765 0.0009" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="-2.0" upper="-0.04" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <link name="r_elbow">
+      <inertial>
+         <origin xyz="0 0.0113 -0.05618" rpy="0 0 0"/>
+         <mass value="0.19590289"/>
+         <inertia ixx="0.00111956" iyy="0.00122819" izz="0.00011420" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r_elbow">
+         <geometry>
+            <mesh filename="package://prairie_control/meshes/nemo6/r_elbow.stl"/>
+         </geometry>
+         <material name="white"/>
+      </visual>
+   </link>
+   <joint type="revolute" name="r_elbow_joint">
+      <parent link="r_shoulder_roll"/>
+      <child link="r_elbow"/>
+      <origin xyz="-0.027502 -0.0104 -0.173047" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.0" upper="1.0" effort="23.7" velocity="32"/>
+      <dynamics damping="1.0" />
+   </joint>
+   <material name="white">
+      <color rgba="1 1 1 1"/>
+   </material>
+
+   <gazebo>
+    <plugin name="gz::sim::systems::JointStatePublisher" filename="gz-sim-joint-state-publisher-system">
+      <update_rate>2000</update_rate>
+        <joint_name>l_hip_pitch_joint</joint_name>
+        <joint_name>l_hip_roll_joint</joint_name>
+        <joint_name>l_hip_yaw_joint</joint_name>
+        <joint_name>l_knee_joint</joint_name>
+        <joint_name>l_foot_pitch_joint</joint_name>
+        <joint_name>l_foot_roll_joint</joint_name>
+        <joint_name>r_hip_pitch_joint</joint_name>
+        <joint_name>r_hip_roll_joint</joint_name>
+        <joint_name>r_hip_yaw_joint</joint_name>
+        <joint_name>r_knee_joint</joint_name>
+        <joint_name>r_foot_pitch_joint</joint_name>
+        <joint_name>r_foot_roll_joint</joint_name>
+        <joint_name>l_shoulder_pitch_joint</joint_name>
+        <joint_name>l_shoulder_roll_joint</joint_name>
+        <joint_name>l_elbow_joint</joint_name>
+        <joint_name>r_shoulder_pitch_joint</joint_name>
+        <joint_name>r_shoulder_roll_joint</joint_name>
+        <joint_name>r_elbow_joint</joint_name>
+    </plugin>        ('share/' + package_name + '/meshes/nemo4b', glob('meshes/nemo4b/*')),
+  </gazebo>
+
+  <gazebo>
+    <plugin name="gz::sim::systems::JointTrajectoryController" filename="gz-sim-joint-trajectory-controller-system">
+      <joint_name>l_hip_pitch_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>35</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>l_hip_roll_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>25</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>l_hip_yaw_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>25</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>l_knee_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>35</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>l_foot_pitch_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>35</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>l_foot_roll_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>25</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>r_hip_pitch_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>35</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>r_hip_roll_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>25</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>r_hip_yaw_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>25</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>r_knee_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>35</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>r_foot_pitch_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>35</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>r_foot_roll_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>25</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>l_shoulder_pitch_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>5</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>l_shoulder_roll_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>5</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>l_elbow_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>5</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>r_shoulder_pitch_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>5</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>r_shoulder_roll_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>5</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+
+      <joint_name>r_elbow_joint</joint_name>
+      <use_header_start_time>false</use_header_start_time>
+      <position_p_gain>5</position_p_gain>
+      <position_d_gain>0</position_d_gain>
+      <velocity_p_gain>0</velocity_p_gain>
+      <velocity_d_gain>0</velocity_d_gain>
+    </plugin>
+    <plugin
+       filename="gz-sim-pose-publisher-system"
+       name="gz::sim::systems::PosePublisher">
+       <publish_link_pose>true</publish_link_pose>
+       <use_pose_vector_msg>true</use_pose_vector_msg>
+    </plugin>
+    <plugin
+       filename="gz-sim-odometry-publisher-system"
+       name="gz::sim::systems::OdometryPublisher">
+       <odom_publish_frequency>10000</odom_publish_frequency>
+       <robot_base_frame>h1/pelvis</robot_base_frame>
+       <dimensions>3</dimensions>
+    </plugin>
+
+  </gazebo>
+  <gazebo reference="pelvis">
+    <sensor name="imu_sensor" type="imu">
+       <always_on>1</always_on>
+       <update_rate>1000</update_rate>
+       <visualize>true</visualize>
+       <topic>imu</topic>
+       <plugin
+        filename="gz-sim-imu-system"
+        name="gz::sim::systems::Imu">
+        </plugin>
+    </sensor>
+  </gazebo>
+</robot>

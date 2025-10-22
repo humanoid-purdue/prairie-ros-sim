@@ -164,7 +164,6 @@ void MotorManager::update() {
     // Go through each joint and set the commands for each controller
 
     if (safe) {
-        std::cout << joint_state[1].des_p << "    " << joint_state[1].kp << std::endl;
         // 0: l_hip_pitch
         assignMotorCmd(joint_state[0], pelvis.raw_motor[2], 1.0);
         assignMotorCmd(joint_state[0], pelvis.raw_motor[1], -1.0);
