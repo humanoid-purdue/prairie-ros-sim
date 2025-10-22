@@ -1,6 +1,5 @@
 import mujoco as mj
 import numpy as np
-from mujoco_utils import MujocoUtils
 
 
 def get_max_clip_in_floor(frame, corners, robot_center, threshold):
