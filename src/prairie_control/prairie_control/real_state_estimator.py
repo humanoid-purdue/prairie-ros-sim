@@ -84,7 +84,7 @@ class real_state_est(Node):
         obs_msg.joint_pos = self.joint_pos.tolist()
         obs_msg.joint_vel = self.joint_vel.tolist()
 
-        self.get_logger().info(f"Publishing real_state_observation: lin_acc={obs_msg.lin_acc}, ang_vel={obs_msg.ang_vel}")
+        # self.get_logger().info(f"Publishing real_state_observation: lin_acc={obs_msg.lin_acc}, ang_vel={obs_msg.ang_vel}")
 
         self.obs_publisher.publish(obs_msg)
 

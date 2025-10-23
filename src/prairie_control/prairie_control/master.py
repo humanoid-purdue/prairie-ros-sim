@@ -73,7 +73,10 @@ class master(Node):
 
         self.gz_mirror_jtp = None
 
-        self.ctrl = xbox.XboxController()
+        try:
+            self.ctrl = xbox.XboxController()
+        except RuntimeError:
+            self.ctrl = None
 
         self.start_time_gradual_hold = time.time()
 
@@ -113,6 +116,7 @@ class master(Node):
         self.joint_pub.publish(real_jtp)
 
     def update_xbox(self):
+        if not self.ctrl: return
         self.ctrl.update()
         if self.ctrl.state2 == 1 and self.state2 != 1:
             self.start_stand_pd()

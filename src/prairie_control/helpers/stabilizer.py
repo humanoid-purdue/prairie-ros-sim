@@ -1,7 +1,5 @@
 import mujoco as mj
 import numpy as np
-from mujoco import viewer
-
 
 def body_pos(model, data, body_name):
     bid = mj.mj_name2id(model, mj.mjtObj.mjOBJ_BODY, body_name)
@@ -29,9 +27,8 @@ def get_max_clip_in_floor(frame, corners, robot_center, threshold):
 class Stabilizer:
 
     def __init__(self):
-        self.model = mj.MjModel.from_xml_path("models/nemo/nemo5_nostl.xml")
+        self.model = mj.MjModel.from_xml_path("src/prairie_control/urdf/nemo5.xml")
         self.data = mj.MjData(self.model)
-        self.viewer = viewer.launch_passive(self.model, self.data)
         self.kp = 3
 
         self.m = np.sum(self.model.body_mass)
@@ -107,4 +104,3 @@ class Stabilizer:
         self.pitch_torque = self.calculate_pitch_torque(pz_req[0])
         self.roll_torque = self.calculate_roll_torque(pz_req[1])
         self.hip_yaw_pos = calculate_hip_yaw_pos(acceleration)
-        self.viewer.sync()
