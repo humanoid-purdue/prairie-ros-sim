@@ -466,7 +466,7 @@
       <joint_name>l_knee_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
       <position_p_gain>35</position_p_gain>
-      <position_d_gain>0</position_d_gain>
+      <position_d_gain>4</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
@@ -508,7 +508,7 @@
       <joint_name>r_knee_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
       <position_p_gain>35</position_p_gain>
-      <position_d_gain>0</position_d_gain>
+      <position_d_gain>4</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
