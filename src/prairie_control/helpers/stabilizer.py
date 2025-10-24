@@ -61,8 +61,7 @@ class Stabilizer:
         foot_normal = np.cross(corners[1] - corners[0], corners[2] - corners[0])
         foot_normal /= np.linalg.norm(foot_normal)
         z_hat = -foot_normal
-        torso_forward = np.array([1.0, 0.0, 0.0])
-        x_hat = torso_forward - np.dot(torso_forward, z_hat) * z_hat
+        x_hat = np.array([z_hat[2], 0.0, -z_hat[0]])
         x_hat /= np.linalg.norm(x_hat)
         y_hat = np.cross(z_hat, x_hat)
         y_hat /= np.linalg.norm(y_hat)
