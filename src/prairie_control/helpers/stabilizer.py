@@ -59,8 +59,8 @@ class Stabilizer:
         ids = [mj.mj_name2id(self.model, mj.mjtObj.mjOBJ_GEOM, f"{foot_prefix}_foot_{i}") for i in range(1, 5)]
         corners = np.stack([self.data.geom_xpos[i] for i in ids])
         foot_normal = np.cross(corners[1] - corners[0], corners[2] - corners[0])
-        foot_normal /= np.linalg.norm(foot_normal)
         z_hat = -foot_normal
+        z_hat /= np.linalg.norm(z_hat)
         x_hat = np.array([z_hat[2], 0.0, -z_hat[0]])
         x_hat /= np.linalg.norm(x_hat)
         y_hat = np.cross(z_hat, x_hat)
