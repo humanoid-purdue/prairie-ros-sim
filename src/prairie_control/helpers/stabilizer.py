@@ -17,7 +17,7 @@ def calculate_hip_yaw_pos(accel):
 def get_max_clip_in_floor(frame, corners, robot_center, threshold):
     error = None
     for corner in corners:
-        transformed_corner = frame.T @ (corner - robot_center)
+        transformed_corner = frame @ (corner - robot_center)
         if transformed_corner[2] < threshold:
             if not error:
                 error = transformed_corner[2]
@@ -66,7 +66,7 @@ class Stabilizer:
         x_hat /= np.linalg.norm(x_hat)
         y_hat = np.cross(z_hat, x_hat)
         y_hat /= np.linalg.norm(y_hat)
-        frame = np.column_stack([x_hat, y_hat, z_hat])
+        frame = np.vstack([x_hat, y_hat, z_hat])
         return frame, corners
 
     def estimate_floor_frame_from_feet(self, robot_center):
@@ -97,9 +97,9 @@ class Stabilizer:
         mj.mj_step(self.model, self.data)
         robot_center = self.calculate_robot_center()
         frame = self.estimate_floor_frame_from_feet(robot_center)
-        com = frame.T @ (self.com - robot_center)
+        com = frame @ (self.com - robot_center)
         com = np.array([com[0], com[1], com[2] + 0.14])
-        desired_com = frame.T @ np.array([desired_com_offset, 0, 0])
+        desired_com = frame @ np.array([desired_com_offset, 0, 0])
         omega2 = self.g / com[2]
         desired_accel_x = (-50 * (com[0] - desired_com[0])) / self.m
         desired_accel_y = (-50 * (com[1] - desired_com[1])) / self.m
