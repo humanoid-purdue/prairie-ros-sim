@@ -5,6 +5,9 @@ def body_pos(model, data, body_name):
     bid = mj.mj_name2id(model, mj.mjtObj.mjOBJ_BODY, body_name)
     return data.xpos[bid]
 
+def lin_interp(t, t_total, start, end):
+    return start + (t / t_total) * (end - start)
+
 def calculate_hip_yaw_pos(accel):
     accel /= np.linalg.norm(accel)
     yaw = np.arctan2(accel[1], accel[2])
