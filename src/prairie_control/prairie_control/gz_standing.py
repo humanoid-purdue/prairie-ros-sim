@@ -107,6 +107,8 @@ class gz_standing(Node):
             tau_delta[self.ids["r_foot_pitch_joint"]] = self.stabilizer.get_pitch_torque()
             tau_delta[self.ids["l_foot_roll_joint"]] = self.stabilizer.get_roll_torque()
             tau_delta[self.ids["r_foot_roll_joint"]] = self.stabilizer.get_roll_torque()
+            tau_delta[self.ids["l_knee_joint"]] = -4 * self.obs["joint_velocity"][self.ids["l_knee_joint"]]
+            tau_delta[self.ids["r_knee_joint"]] = -4 * self.obs["joint_velocity"][self.ids["r_knee_joint"]]
             if t > SIT_TIME + TRANSITION_TIME:
                 pos_t[self.ids["l_hip_yaw_joint"]] = self.stabilizer.get_hip_yaw_pos()
                 pos_t[self.ids["r_hip_yaw_joint"]] = self.stabilizer.get_hip_yaw_pos()
