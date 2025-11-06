@@ -15,7 +15,7 @@ MotorController::MotorController() : rclcpp::Node("motor_controller"), count_(0)
     publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
     timer_update = this->create_wall_timer(100us, std::bind(&MotorController::update_motor, this));
     timer_publish = this->create_wall_timer(500us, std::bind(&MotorController::publish_jointstate, this));
-    trajectory_subscriber_ = this->create_subscription<trajectory_msgs::msg::JointTrajectory>(
+    trajectory_subscriber_ = this->create_subscription<gz_sim_interfaces::msg::MotorCmd>(
         "/real_joint_trajectories", 10,
         std::bind(&MotorController::trajectoryCallback, this, std::placeholders::_1)
     );
@@ -25,33 +25,22 @@ MotorController::MotorController() : rclcpp::Node("motor_controller"), count_(0)
     motor_manager.set_q_offsets(pelvis_offsets, left_offsets, right_offsets);
 }
 
-void MotorController::trajectoryCallback(const trajectory_msgs::msg::JointTrajectory::SharedPtr msg)
+void MotorController::trajectoryCallback(const gz_sim_interfaces::msg::MotorCmd::SharedPtr msg)
 {
     std::stringstream ss;
     for (int i = 0; i < 12; i++) {
-        ss << msg->points[0].positions[i] << " ";
+        ss << msg->positions[i] << " ";
     }
     //RCLCPP_INFO(this->get_logger(), "Trajectory positions: %s", ss.str().c_str());
-    float kp = 10.0;
-    float kd = 1.0;
-    bool all_zero = true;
+
     for (int i = 0; i < 12; i++) {
-        if (msg ->points[0].positions[i] != 0.0 || msg->points[0].velocities[i] != 0.0) {
-            all_zero = false;
-        }
-    }
-    if (all_zero) {
-        kp = 0.0;
-        kd = 0.0;
-    }
-    for (int i = 0; i < 12; i++) {
-        motor_manager.joint_state[i].kp = kp;
-        motor_manager.joint_state[i].kd = kd;
+        motor_manager.joint_state[i].kp = msg->kp[i];
+        motor_manager.joint_state[i].kd = msg->kd[i];
         //if (i == 2 && !all_zero) {
         //    motor_manager.joint_state[i].kp = 4.0;
         //}
-        motor_manager.joint_state[i].des_p = msg->points[0].positions[i];
-        motor_manager.joint_state[i].des_d = msg->points[0].velocities[i];
+        motor_manager.joint_state[i].des_p = msg->positions[i];
+        motor_manager.joint_state[i].des_d = msg->velocities[i];
     }
 }
 

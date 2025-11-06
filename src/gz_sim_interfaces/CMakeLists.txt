@@ -17,6 +17,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RawObservation.msg"
   "msg/KeyboardCmd.msg"
   "msg/MasterState.msg"
+  "msg/MotorCmd.msg"
   DEPENDENCIES builtin_interfaces
  )
 
