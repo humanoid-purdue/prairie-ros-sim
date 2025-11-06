@@ -12,6 +12,9 @@ using namespace std::chrono_literals;
 
 MotorController::MotorController() : rclcpp::Node("motor_controller"), count_(0), motor_manager()
 {
+    current_positions_.resize(12, 0.0);
+    current_velocities_.resize(12, 0.0);
+
     publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
     timer_update = this->create_wall_timer(100us, std::bind(&MotorController::update_motor, this));
     timer_publish = this->create_wall_timer(500us, std::bind(&MotorController::publish_jointstate, this));
@@ -27,18 +30,56 @@ MotorController::MotorController() : rclcpp::Node("motor_controller"), count_(0)
 
 void MotorController::trajectoryCallback(const gz_sim_interfaces::msg::MotorCmd::SharedPtr msg)
 {
+    const std::map<std::string, std::pair<float, float>> joint_limits= {
+        {"l_hip_pitch_joint", {-1.3, 1.3}},
+        {"l_hip_roll_joint", {-0.4, 1.5}},
+        {"l_hip_yaw_joint", {-1.0, 1.0}},
+        {"l_knee_joint", {-0.3, 2.0}},
+        {"l_foot_pitch_joint", {-2.0, 2.0}},
+        {"l_foot_roll_joint", {-1.0, 1.0}},
+        {"r_hip_pitch_joint", {-1.3, 1.3}},
+        {"r_hip_roll_joint", {-1.5, 0.4}},
+        {"r_hip_yaw_joint", {-1.0, 1.0}},
+        {"r_knee_joint", {-0.3, 2.0}},
+        {"r_foot_pitch_joint", {-2.0, 2.0}},
+        {"r_foot_roll_joint", {-1.0, 1.0}}
+    };
+
+    const float SOFT_LIMIT_MARGIN = 0.174533f; // ~10 degrees
+    const float VEL_SOFT_LIMIT = 10.0f;
+    const float VEL_HARD_LIMIT = 15.0f;
+
     std::stringstream ss;
     for (int i = 0; i < 12; i++) {
         ss << msg->positions[i] << " ";
     }
     //RCLCPP_INFO(this->get_logger(), "Trajectory positions: %s", ss.str().c_str());
 
+    for (int i = 0; i < (int)msg->joint_names.size(); i++) {
+        const std::string& joint_name = msg->joint_names[i];
+
+        auto it = joint_limits.find(joint_name);
+        if (it != joint_limits.end()) {
+            double real_pos = current_positions_[i];
+            double real_vel = current_velocities_[i];
+            auto lims = it->second;
+            if (real_pos <= lims.first || 
+                real_pos >= lims.second ||
+                std::abs(real_vel) >= VEL_HARD_LIMIT) {
+                msg->kp[i] = 0.0;
+                msg->kd[i] = 0.0;
+            } else if(real_pos <= lims.first + SOFT_LIMIT_MARGIN ||
+                      real_pos >= lims.second - SOFT_LIMIT_MARGIN ||
+                      std::abs(real_vel) >= VEL_SOFT_LIMIT) {
+                msg->kp[i] /= 2.0;
+                msg->kd[i] /= 2.0;
+            }
+        }
+    }
+
     for (int i = 0; i < 12; i++) {
         motor_manager.joint_state[i].kp = msg->kp[i];
         motor_manager.joint_state[i].kd = msg->kd[i];
-        //if (i == 2 && !all_zero) {
-        //    motor_manager.joint_state[i].kp = 4.0;
-        //}
         motor_manager.joint_state[i].des_p = msg->positions[i];
         motor_manager.joint_state[i].des_d = msg->velocities[i];
     }
@@ -129,6 +170,11 @@ void MotorController::publish_jointstate()
     message.name[17] = "r_elbow_joint";
     message.position[17] = 0.0;
     message.velocity[17] = 0.0;
+
+    for (int i = 0; i < 12; i++) {
+        current_positions_[i] = message.position[i];
+        current_velocities_[i] = message.velocity[i];
+    }
 
     publisher_->publish(message);
 

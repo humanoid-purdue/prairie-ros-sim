@@ -162,10 +162,10 @@ class master(Node):
 
         mcmd.positions = jtp.points[0].positions
         mcmd.velocities = jtp.points[0].velocities
-        mcmd.torques = [0.] * 18
 
         mcmd.kp = [10.] * 18
         mcmd.kd = [1.] * 18
+        mcmd.torques = [0.] * 18
 
         return mcmd
 

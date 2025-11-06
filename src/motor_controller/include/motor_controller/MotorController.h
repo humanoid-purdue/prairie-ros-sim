@@ -23,6 +23,9 @@ private:
     rclcpp::TimerBase::SharedPtr timer_publish;
     size_t count_;
     MotorManager motor_manager;
+
+    std::vector<double> current_positions_;
+    std::vector<double> current_velocities_;
 };
 
 #endif  // MOTOR_CONTROLLER_HPP_
