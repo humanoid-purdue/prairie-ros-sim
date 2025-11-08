@@ -55,9 +55,10 @@ void MotorController::trajectoryCallback(const gz_sim_interfaces::msg::MotorCmd:
     }
     //RCLCPP_INFO(this->get_logger(), "Trajectory positions: %s", ss.str().c_str());
 
+    float shutdown_fac = 1.0;
+
     for (int i = 0; i < (int)msg->joint_names.size(); i++) {
         const std::string& joint_name = msg->joint_names[i];
-
         auto it = joint_limits.find(joint_name);
         if (it != joint_limits.end()) {
             double real_pos = current_positions_[i];
@@ -66,8 +67,7 @@ void MotorController::trajectoryCallback(const gz_sim_interfaces::msg::MotorCmd:
             if (real_pos <= lims.first || 
                 real_pos >= lims.second ||
                 std::abs(real_vel) >= VEL_HARD_LIMIT) {
-                msg->kp[i] = 0.0;
-                msg->kd[i] = 0.0;
+                    shutdown_fac = 0.0;
             } else if(real_pos <= lims.first + SOFT_LIMIT_MARGIN ||
                       real_pos >= lims.second - SOFT_LIMIT_MARGIN ||
                       std::abs(real_vel) >= VEL_SOFT_LIMIT) {
@@ -77,9 +77,19 @@ void MotorController::trajectoryCallback(const gz_sim_interfaces::msg::MotorCmd:
         }
     }
 
+    //int double_arr[6] = {0, 3, 4, 6, 9, 10};
+
     for (int i = 0; i < 12; i++) {
-        motor_manager.joint_state[i].kp = msg->kp[i];
-        motor_manager.joint_state[i].kd = msg->kd[i];
+        if (i == 0 || i == 3 || i == 4 || i == 6 || i == 9 || i == 10) {
+            motor_manager.joint_state[i].kp = msg->kp[i] * shutdown_fac * 0.5;
+            motor_manager.joint_state[i].kd = msg->kd[i] * shutdown_fac * 0.5;
+            motor_manager.joint_state[i].tau = msg->torques[i] * shutdown_fac * 0.5;
+        }
+        else {
+            motor_manager.joint_state[i].kp = msg->kp[i] * shutdown_fac;
+            motor_manager.joint_state[i].kd = msg->kd[i] * shutdown_fac;
+            motor_manager.joint_state[i].tau = msg->torques[i] * shutdown_fac;
+        }
         motor_manager.joint_state[i].des_p = msg->positions[i];
         motor_manager.joint_state[i].des_d = msg->velocities[i];
     }

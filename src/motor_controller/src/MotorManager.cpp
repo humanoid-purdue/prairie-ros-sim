@@ -72,20 +72,7 @@ SingleMotorManager::~SingleMotorManager() {
 }
 
 float SingleMotorManager::find_q(float cur_q, float des_q) {
-    float min_sep = 10.0;
-    float min_offset = 0.0;
-    for (int i = -6; i < 7; i++) {
-        for (int j = -5; j < 6; j++) {
-            float probe_q = std::fmod((6.33 * M_PI / 6) * i, 2.0f * M_PI) + j * 2 * M_PI;
-            //float probe_q = 6.33 * M_PI / 3;
-            float probe_sep = std::abs(cur_q + probe_q - des_q);
-            if (probe_sep < min_sep) {
-                min_sep = probe_sep;
-                min_offset = probe_q;
-            }
-        }
-    }
-    return min_offset;
+    return cur_q - des_q;
 }
 
 // float SingleMotorManager::find_q(float cur_q, float des_q) {

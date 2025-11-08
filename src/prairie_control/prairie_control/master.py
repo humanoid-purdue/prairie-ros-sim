@@ -53,6 +53,12 @@ class master(Node):
             qos_profile
         )
 
+        self.real_policy = self.create_subscription(
+            JointTrajectory, '/real_policy_jtp',
+            self.gz_policy_callback,
+            qos_profile
+        )
+
         self.gz_mirror = self.create_subscription(
             JointTrajectory, '/gz_mirror_jtp',
             self.gz_mirror_callback,
@@ -73,6 +79,8 @@ class master(Node):
         self.gz_stand_jtp = None
 
         self.gz_mirror_jtp = None
+
+        self.real_jtp = None
 
         try:
             self.ctrl = xbox.XboxController()
@@ -105,6 +113,9 @@ class master(Node):
 
     def gz_mirror_callback(self, msg):
         self.gz_mirror_jtp = msg
+
+    def real_policy_callback(self, msg):
+        self.real_jtp = msg 
 
     def timer_callback(self):
         self.update_xbox()
@@ -142,21 +153,25 @@ class master(Node):
         return
     
     def default_real_pd(self):
-        print(self.state2)
+        #print(self.state2)
+        disable = False
         if self.state2 == 1:
             pos_t = self.stand_pd()
             jtp = self.pos_t2traj(pos_t)
 
         elif self.state2 == 2 and self.gz_mirror_jtp is not None:
             jtp = self.gz_mirror_jtp
+        elif self.state2 == 3 and self.real_jtp is not None:
+            jtp = self.real_jtp
         else:
             pos_t = np.zeros([18])
             jtp = self.pos_t2traj(pos_t)
+            disable = True
 
-        mcmd = self.jtp2mcmd(jtp)
+        mcmd = self.jtp2mcmd(jtp, disable = disable)
         return mcmd
     
-    def jtp2mcmd(self, jtp):
+    def jtp2mcmd(self, jtp, disable = False):
         mcmd = MotorCmd()
 
         mcmd.joint_names = jtp.joint_names
@@ -164,9 +179,20 @@ class master(Node):
         mcmd.positions = jtp.points[0].positions
         mcmd.velocities = jtp.points[0].velocities
 
-        mcmd.kp = [10.] * 18
-        mcmd.kd = [1.] * 18
-        mcmd.torques = [0.] * 18
+        if disable:
+            mcmd.kp = [0.] * 18
+            mcmd.kd = [0.] * 18
+            mcmd.torques = [0.] * 18
+        else:
+            mcmd.kp = [35., 25., 25., 35., 35., 25.,
+                       35., 25., 25., 35., 35., 25.,
+                       15., 15., 15.,
+                       15., 15., 15.]
+            mcmd.kd = [2., 1., 1., 2., 2., 1.,
+                       2., 1., 1., 2., 2., 1.,
+                       1., 1., 1., 1.,
+                       1., 1., 1., 1.]
+            mcmd.torques = [0.] * 18
 
         return mcmd
 
