@@ -25,7 +25,7 @@ class master(Node):
         qos_profile = QoSProfile(depth=10)
 
         # two jtp publishers
-
+        
         self.state1 = 0
         self.state2 = 0
 
@@ -133,6 +133,7 @@ class master(Node):
         master_state.state1 = self.ctrl.state1
         master_state.state2 = self.ctrl.state2
         self.master_pub.publish(master_state)
+        
         return
     
     def default_real_pd(self):
