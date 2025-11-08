@@ -9,7 +9,7 @@ from rclpy.qos import QoSProfile
 from builtin_interfaces.msg import Duration, Time
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
-from gz_sim_interfaces.msg import StateObservationReduced, MasterState
+from gz_sim_interfaces.msg import StateObservationReduced, MasterState, MotorCmd
 from geometry_msgs.msg import Twist
 
 helper_path = os.path.join(
@@ -30,7 +30,8 @@ class master(Node):
         self.state2 = 0
 
         self.gz_pub = self.create_publisher(JointTrajectory, 'joint_trajectories', qos_profile)
-        self.joint_pub = self.create_publisher(JointTrajectory, '/real_joint_trajectories', qos_profile)
+        # self.joint_pub = self.create_publisher(JointTrajectory, '/real_joint_trajectories', qos_profile)
+        self.joint_pub = self.create_publisher(MotorCmd, '/real_joint_trajectories', qos_profile)
         
         self.master_pub = self.create_publisher(MasterState, 'master_state', qos_profile)
 
@@ -73,7 +74,10 @@ class master(Node):
 
         self.gz_mirror_jtp = None
 
-        self.ctrl = xbox.XboxController()
+        try:
+            self.ctrl = xbox.XboxController()
+        except RuntimeError:
+            self.ctrl = None
 
         self.start_time_gradual_hold = time.time()
 
@@ -113,6 +117,7 @@ class master(Node):
         self.joint_pub.publish(real_jtp)
 
     def update_xbox(self):
+        if not self.ctrl: return
         self.ctrl.update()
         if self.ctrl.state2 == 1 and self.state2 != 1:
             self.start_stand_pd()
@@ -141,18 +146,43 @@ class master(Node):
         if self.state2 == 1:
             pos_t = self.stand_pd()
             jtp = self.pos_t2traj(pos_t)
+
         elif self.state2 == 2 and self.gz_mirror_jtp is not None:
             jtp = self.gz_mirror_jtp
         else:
             pos_t = np.zeros([18])
             jtp = self.pos_t2traj(pos_t)
-        return jtp
+
+        mcmd = self.jtp2mcmd(jtp)
+        return mcmd
+    
+    def jtp2mcmd(self, jtp):
+        mcmd = MotorCmd()
+
+        mcmd.joint_names = jtp.joint_names
+
+        mcmd.positions = jtp.points[0].positions
+        mcmd.velocities = jtp.points[0].velocities
+
+        mcmd.kp = [10.] * 18
+        mcmd.kd = [1.] * 18
+        mcmd.torques = [0.] * 18
+
+        return mcmd
+
+    def pos_t2mcmd(self, pos_t):
+        mcmd = MotorCmd()
+        mcmd.joint_names = utils.JOINT_LIST_COMPLETE
+
+        mcmd.positions = pos_t.tolist()
+        mcmd.velocities = [0.] * 18
+
+        return mcmd
 
     def pos_t2traj(self, pos_t):
         joint_traj = JointTrajectory()
         jtp = JointTrajectoryPoint()
         jtp2 = JointTrajectoryPoint()
-
         
         now = self.get_clock().now()
         joint_traj.header.stamp = now.to_msg()

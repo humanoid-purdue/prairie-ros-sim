@@ -56,3 +56,5 @@ CATKIN_IGNORE
 
 /src/prairie2-venv
 /.idea
+/install/
+/install/
