@@ -5,12 +5,9 @@ import os
 import sys
 from ament_index_python.packages import get_package_share_directory
 from rclpy.qos import QoSProfile
-from builtin_interfaces.msg import Duration, Time
+from builtin_interfaces.msg import Duration
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from sensor_msgs.msg import JointState
 from gz_sim_interfaces.msg import StateObservationReduced, MasterState
-from gz_sim_interfaces.msg import KeyboardCmd
-from geometry_msgs.msg import Twist
 
 helper_path = os.path.join(get_package_share_directory('prairie_control'), "helpers")
 sys.path.append(helper_path)
