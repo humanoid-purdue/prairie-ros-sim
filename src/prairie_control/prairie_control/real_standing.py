@@ -8,7 +8,7 @@ from rclpy.qos import QoSProfile
 from builtin_interfaces.msg import Duration, Time
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
-from gz_sim_interfaces.msg import StateObservationReduced
+from gz_sim_interfaces.msg import StateObservationReduced, MasterState
 from gz_sim_interfaces.msg import KeyboardCmd
 from geometry_msgs.msg import Twist
 
@@ -26,21 +26,32 @@ JOINT_LIST_COMPLETE = ["l_hip_pitch_joint", "l_hip_roll_joint", "l_hip_yaw_joint
 BASE_COM = np.array([-0.04, 0, 0.4])
 COM_OFFSET = np.array([0.0, 0.0, 0.0])
 STANDING_COM = BASE_COM + COM_OFFSET
+STAND_TIME = 3
 
-
-class gz_standing(Node):
+class real_standing(Node):
     def __init__(self):
-        super().__init__('gz_standing')
+        super().__init__('real_standing')
         qos_profile = QoSProfile(depth=10)
 
         # Read IMU data and publish JTP
 
         self.state_subscriber = self.create_subscription(
             StateObservationReduced,
-            '/gz_state_observation',
+            '/real_state_observation',
             self.state_callback,
             qos_profile
         )
+
+        self.master_subscriber = self.create_subscription(
+            MasterState,
+            '/master_state',
+            self.master_callback,
+            qos_profile
+        )
+
+        self.start_time = None
+        self.start_com = None
+        self.start_standing = False
 
         self.num_joints = len(JOINT_LIST_COMPLETE)
         self.ids = {name: index for index, name in enumerate(JOINT_LIST_COMPLETE)}
@@ -52,6 +63,10 @@ class gz_standing(Node):
 
     def state_callback(self, msg):
         self.obs = utils.fill_obs_dict(msg)
+        return
+
+    def master_callback(self, msg):
+        self.start_standing = msg.start_standing
         return
 
     def timer_callback(self):
@@ -75,9 +90,16 @@ class gz_standing(Node):
         pos_t = np.zeros(self.num_joints)
 
         if self.obs != {}:
-            pos_t = self.obs["joint_position"]
-            self.stabilizer.update_simulation(self.obs["joint_position"], self.obs["joint_velocity"])
-            tau_delta = self.stabilizer.calculate_joint_torques(STANDING_COM)
+            pos_t = self.obs['joint_position']
+            self.stabilizer.update_simulation(self.obs['joint_position'], self.obs['joint_velocity'])
+            t = self.obs['time']
+            if self.start_standing and not self.start_time:
+                self.start_time = t
+                self.start_com = self.stabilizer.get_relative_com()
+            desired_com = STANDING_COM
+            if self.start_standing and t < self.start_time + STAND_TIME:
+                desired_com = self.start_com + ((t - self.start_time) / STAND_TIME) * (STANDING_COM - self.start_com)
+            tau_delta = self.stabilizer.calculate_joint_torques(desired_com)
 
 
         jtp.positions = pos_t.tolist()
@@ -96,7 +118,7 @@ class gz_standing(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    node = gz_standing()
+    node = real_standing()
 
     rclpy.spin(node)
     node.destroy_node()

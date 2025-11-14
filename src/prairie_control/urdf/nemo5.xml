@@ -156,46 +156,28 @@
   </body>
 </worldbody>
 <actuator>
-  <position kp="35.0" class="robot" name="l_hip_pitch" joint="l_hip_pitch" inheritrange="1"/>
-  <position kp="25.0" class="robot" name="l_hip_roll" joint="l_hip_roll" inheritrange="1"/>
-  <position kp="25.0" class="robot" name="l_hip_yaw" joint="l_hip_yaw" inheritrange="1"/>
-  <position kp="35.0" class="robot" name="l_knee" joint="l_knee" inheritrange="1"/>
+  <motor class="robot" name="l_hip_pitch" joint="l_hip_pitch"/>
+  <motor class="robot" name="l_hip_roll" joint="l_hip_roll"/>
+  <motor class="robot" name="l_hip_yaw" joint="l_hip_yaw"/>
+  <motor class="robot" name="l_knee" joint="l_knee"/>
   <motor class="robot" name="l_foot_pitch" joint="l_foot_pitch"/>
   <motor class="robot" name="l_foot_roll" joint="l_foot_roll"/>
 
-  <position kp="35.0" class="robot" name="r_hip_pitch" joint="r_hip_pitch" inheritrange="1"/>
-  <position kp="25.0" class="robot" name="r_hip_roll" joint="r_hip_roll" inheritrange="1"/>
-  <position kp="25.0" class="robot" name="r_hip_yaw" joint="r_hip_yaw" inheritrange="1"/>
-  <position kp="35.0" class="robot" name="r_knee" joint="r_knee" inheritrange="1"/>
+  <motor class="robot" name="r_hip_pitch" joint="r_hip_pitch"/>
+  <motor class="robot" name="r_hip_roll" joint="r_hip_roll"/>
+  <motor class="robot" name="r_hip_yaw" joint="r_hip_yaw"/>
+  <motor class="robot" name="r_knee" joint="r_knee"/>
   <motor class="robot" name="r_foot_pitch" joint="r_foot_pitch"/>
   <motor class="robot" name="r_foot_roll" joint="r_foot_roll"/>
 
-  <position kp="5.0" class="robot" name="l_shoulder_pitch" joint="l_shoulder_pitch" inheritrange="1"/>
-  <position kp="5.0" class="robot" name="l_shoulder_roll" joint="l_shoulder_roll" inheritrange="1"/>
-  <position kp="5.0" class="robot" name="l_elbow" joint="l_elbow" inheritrange="1"/>
+  <motor class="robot" name="l_shoulder_pitch" joint="l_shoulder_pitch"/>
+  <motor class="robot" name="l_shoulder_roll" joint="l_shoulder_roll"/>
+  <motor class="robot" name="l_elbow" joint="l_elbow"/>
 
-  <position kp="5.0" class="robot" name="r_shoulder_pitch" joint="r_shoulder_pitch" inheritrange="1"/>
-  <position kp="5.0" class="robot" name="r_shoulder_roll" joint="r_shoulder_roll" inheritrange="1"/>
-  <position kp="5.0" class="robot" name="r_elbow" joint="r_elbow" inheritrange="1"/>
+  <motor class="robot" name="r_shoulder_pitch" joint="r_shoulder_pitch"/>
+  <motor class="robot" name="r_shoulder_roll" joint="r_shoulder_roll"/>
+  <motor class="robot" name="r_elbow" joint="r_elbow"/>
 </actuator>
-
-<keyframe>
-    <key name="home" qpos="0 0 0.63   1 0 0 0
-    -0.698132 0 0 1.22173 -0.523599 0
-    -0.698132 0 0 1.22173 -0.523599 0
-    0 0.05 0
-    0 -0.05 0" />
-    <key name="sit"  qpos="-0.03 0 0.52   1 0 -0.045 0
-    -0.9673 0 0 2.13 -1.0735 0
-    -0.9673 0 0 2.13 -1.0735 0
-    0 0.05 0
-    0 0.05 0"/>
-    <key name="stand" qpos="0 0 0.63   1 0 0 0
-    -1.06169705 0 0 1.22173 -0.08 0
-    -1.06169705 0 0 1.22173 -0.08 0
-    0 0.05 0
-    0 -0.05 0" />
-</keyframe>
 
 <sensor>
     <gyro site="imu" name="gyro"/>
