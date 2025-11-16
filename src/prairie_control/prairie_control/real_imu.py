@@ -53,7 +53,6 @@ class real_imu(Node):
 
         imu_msg.header = h
 
-        self.get_logger().info(f"IMU Accel: {lin_acc}, Gyro: {ang_vel}")
 
         self.state_pub.publish(imu_msg)
 

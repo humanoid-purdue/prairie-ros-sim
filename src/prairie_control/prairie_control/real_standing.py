@@ -54,7 +54,7 @@ class real_standing(Node):
         self.ids = {name: index for index, name in enumerate(JOINT_LIST_COMPLETE)}
         self.stabilizer = Stabilizer()
 
-        self.joint_pub = self.create_publisher(JointTrajectory, 'gz_standing_jtp', qos_profile)
+        self.joint_pub = self.create_publisher(JointTrajectory, '/real_standing_jtp', qos_profile)
         self.timer = self.create_timer(0.002, self.timer_callback)
         self.obs = {}
 

@@ -68,14 +68,18 @@ void MotorController::trajectoryCallback(const gz_sim_interfaces::msg::MotorCmd:
                 real_pos >= lims.second ||
                 std::abs(real_vel) >= VEL_HARD_LIMIT) {
                     shutdown_fac = 0.0;
+                    RCLCPP_INFO(this->get_logger(), "Hard Limit Exceeded");
             } else if(real_pos <= lims.first + SOFT_LIMIT_MARGIN ||
                       real_pos >= lims.second - SOFT_LIMIT_MARGIN ||
                       std::abs(real_vel) >= VEL_SOFT_LIMIT) {
                 msg->kp[i] /= 2.0;
                 msg->kd[i] /= 2.0;
+                RCLCPP_INFO(this->get_logger(), "Soft Limit Exceeded");
             }
         }
     }
+
+    shutdown_fac = 1.0;
 
     //int double_arr[6] = {0, 3, 4, 6, 9, 10};
 
@@ -92,6 +96,10 @@ void MotorController::trajectoryCallback(const gz_sim_interfaces::msg::MotorCmd:
         }
         motor_manager.joint_state[i].des_p = msg->positions[i];
         motor_manager.joint_state[i].des_d = msg->velocities[i];
+        if (msg->torques[i] != 0) {
+        RCLCPP_INFO(this->get_logger(), "Send tau: %f", msg->torques[i]);
+
+        }
     }
 }
 

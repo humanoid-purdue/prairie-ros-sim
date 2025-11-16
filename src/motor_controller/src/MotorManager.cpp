@@ -94,7 +94,7 @@ float SingleMotorManager::find_q(float cur_q, float des_q) {
             
 
      }
-     return min_offset;
+     return des_q -cur_q;
 }
 
 void SingleMotorManager::set_q_offsets(float q[6]) {
@@ -123,9 +123,9 @@ void MotorManager::assignMotorCmd(struct JointStateStruct &data, struct RawMotor
     double test_tau = data.tau + data.kp * (data.des_p - data.current_q) + data.kd * (data.des_d - data.current_dq);
     double kp = data.kp / (gear_ratio * gear_ratio);
     double kd = data.kd / (gear_ratio * gear_ratio);
-    if (abs(test_tau) > 23) {
-        kp = kp * 23 / abs(test_tau);
-        kd = kd * 23 / abs(test_tau);
+    if (abs(test_tau) > 20) {
+        kp = kp * 20 / abs(test_tau);
+        kd = kd * 20 / abs(test_tau);
     }
     raw.kp = kp;
     raw.kd = kd;

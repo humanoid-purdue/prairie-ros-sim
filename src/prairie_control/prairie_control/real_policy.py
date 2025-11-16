@@ -60,7 +60,7 @@ class real_policy(Node):
             qos_profile
         )
 
-        self.joint_pub = self.create_publisher(JointTrajectory, 'gz_policy_jtp', qos_profile)
+        self.joint_pub = self.create_publisher(JointTrajectory, 'real_policy_jtp', qos_profile)
         self.timer = self.create_timer(0.02, self.timer_callback)
         self.obs = {}
 
@@ -72,7 +72,7 @@ class real_policy(Node):
         return 
     
     def master_callback(self, msg):
-        self.state = msg.state1
+        self.state = msg.state2
         vel = np.array([msg.ly, msg.lx]) * np.array([0.4, -0.3])
         angvel = np.array([msg.rx]) * -0.8
         current_cmd = np.hstack((vel, angvel))
@@ -83,7 +83,7 @@ class real_policy(Node):
     def timer_callback(self):
         if self.obs == {}:
             return
-        if self.state == 0:
+        if self.state != 3:
             self.wpn.reinit(t = self.obs['time'])
         action = self.wpn.apply_net(
             self.obs["joint_position"], 

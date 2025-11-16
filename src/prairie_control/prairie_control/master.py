@@ -56,13 +56,13 @@ class master(Node):
 
         self.real_policy = self.create_subscription(
             JointTrajectory, '/real_policy_jtp',
-            self.gz_policy_callback,
+            self.real_policy_callback,
             qos_profile
         )
 
         self.real_standing = self.create_subscription(
             JointTrajectory, '/real_standing_jtp',
-            self.real_policy_callback,
+            self.real_standing_callback,
             qos_profile
         )
 
@@ -210,6 +210,7 @@ class master(Node):
 
         mcmd.positions = jtp.points[0].positions
         mcmd.velocities = jtp.points[0].velocities
+        mcmd.torques = jtp.points[0].effort
 
         if disable:
             mcmd.kp = [0.] * 18
@@ -219,15 +220,14 @@ class master(Node):
             if kp is not None:
                 mcmd.kp = kp
             else:
-                mcmd.kp = [35., 25., 25., 35., 35., 25.,
-                        35., 25., 25., 35., 35., 25.,
+                mcmd.kp = [40., 30., 30., 40., 40., 30.,
+                        40., 30., 30., 40., 40., 30.,
                         15., 15., 15.,
                         15., 15., 15.]
-            mcmd.kd = [2., 1., 1., 2., 2., 1.,
-                       2., 1., 1., 2., 2., 1.,
+            mcmd.kd = [3., 1.5, 1.5, 3., 3., 1.5,
+                       3., 1.5, 1.5, 3., 3., 1.5,
                        1., 1., 1., 1.,
                        1., 1., 1., 1.]
-            mcmd.torques = [0.] * 18
 
         return mcmd
 
