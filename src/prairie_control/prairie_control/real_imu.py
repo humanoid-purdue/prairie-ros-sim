@@ -11,6 +11,7 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import Imu
 from gz_sim_interfaces.msg import StateObservationReduced
 from geometry_msgs.msg import Twist, Vector3
+from std_msgs.msg import Header
 
 helper_path = os.path.join(
             get_package_share_directory('prairie_control'),
@@ -45,6 +46,12 @@ class real_imu(Node):
         ang_vel.y = gyro[1]
         ang_vel.z = gyro[2]
         imu_msg.angular_velocity = ang_vel
+
+        h = Header()
+        h.stamp.sec = int(time.time())
+        h.stamp.nanosec = int((time.time() % 1) * 1e9)
+
+        imu_msg.header = h
 
         self.get_logger().info(f"IMU Accel: {lin_acc}, Gyro: {ang_vel}")
 

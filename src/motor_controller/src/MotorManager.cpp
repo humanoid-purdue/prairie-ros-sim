@@ -71,31 +71,31 @@ void SingleMotorManager::printMotorData() {
 SingleMotorManager::~SingleMotorManager() {
 }
 
+//float SingleMotorManager::find_q(float cur_q, float des_q) {
+//    return -1* (des_q - cur_q);
+//}
+
 float SingleMotorManager::find_q(float cur_q, float des_q) {
-    return cur_q - des_q;
-}
-
-// float SingleMotorManager::find_q(float cur_q, float des_q) {
-//     float min_sep = 10.0;
-//     float min_offset = 0.0;
-//     for (int i = -6; i <= 6; i++) {
-//         float full_offset = i * (M_PI / 3.0f);
+     float min_sep = 10.0;
+     float min_offset = 0.0;
+     for (int i = -6; i <= 6; i++) {
+         float full_offset = i * (M_PI / 3.0f);
         
-//         for (int j = -6; j < 6; j++) {
-//             float inner_offset = (6.33f * M_PI / 3.0f) * j;
-//             float total_offset = std::fmod(inner_offset + full_offset, M_PI * 2.0f);
+         for (int j = -6; j < 6; j++) {
+             float inner_offset = (6.33f * M_PI / 3.0f) * j;
+             float total_offset = std::fmod(inner_offset + full_offset, M_PI * 2.0f);
 
-//             float probe_sep = std::abs(cur_q + total_offset - des_q);
-//             if (probe_sep < min_sep) {
-//                 min_sep = probe_sep;
-//                 min_offset = total_offset;
-//             }
-//         }
+             float probe_sep = std::abs(cur_q + total_offset - des_q);
+             if (probe_sep < min_sep) {
+                 min_sep = probe_sep;
+                 min_offset = total_offset;
+             }
+         }
             
 
-//     }
-//     return min_offset;
-// }
+     }
+     return min_offset;
+}
 
 void SingleMotorManager::set_q_offsets(float q[6]) {
     std::cout << "------------------------" << std::endl;
