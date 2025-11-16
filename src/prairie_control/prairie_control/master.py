@@ -28,6 +28,7 @@ class master(Node):
         
         self.state1 = 0
         self.state2 = 0
+        self.prev_state2 = 0
 
         self.gz_pub = self.create_publisher(JointTrajectory, 'joint_trajectories', qos_profile)
         # self.joint_pub = self.create_publisher(JointTrajectory, '/real_joint_trajectories', qos_profile)
@@ -59,6 +60,12 @@ class master(Node):
             qos_profile
         )
 
+        self.real_standing = self.create_subscription(
+            JointTrajectory, '/real_standing_jtp',
+            self.real_policy_callback,
+            qos_profile
+        )
+
         self.gz_mirror = self.create_subscription(
             JointTrajectory, '/gz_mirror_jtp',
             self.gz_mirror_callback,
@@ -81,6 +88,8 @@ class master(Node):
         self.gz_mirror_jtp = None
 
         self.real_jtp = None
+
+        self.real_standing_jtp = None
 
         try:
             self.ctrl = xbox.XboxController()
@@ -117,6 +126,9 @@ class master(Node):
     def real_policy_callback(self, msg):
         self.real_jtp = msg 
 
+    def real_standing_callback(self, msg):
+        self.real_standing_jtp = msg
+
     def timer_callback(self):
         self.update_xbox()
         if self.gz_stand_jtp is not None and self.state1 == 0:
@@ -139,6 +151,7 @@ class master(Node):
         ry = self.ctrl.right_stick[1]
 
         self.state1 = self.ctrl.state1
+        self.prev_state2 = self.state2
         self.state2 = self.ctrl.state2
 
         master_state = MasterState()
@@ -148,19 +161,38 @@ class master(Node):
         master_state.ry = ry
         master_state.state1 = self.ctrl.state1
         master_state.state2 = self.ctrl.state2
+
+        if self.prev_state2 != 2 and self.state2 == 2:
+            master_state.start_standing = True
+        else:
+            master_state.start_standing = False
+
         self.master_pub.publish(master_state)
         
         return
     
+    def display_torque(self, jtp):
+        torque_list = jtp.points[0].effort
+        torque_str = "Torques: "
+        for t in torque_list:
+            torque_str += f"{t:.2f} "
+        self.get_logger().info(torque_str)
+        return
+
     def default_real_pd(self):
         #print(self.state2)
         disable = False
+        kp = None
         if self.state2 == 1:
             pos_t = self.stand_pd()
             jtp = self.pos_t2traj(pos_t)
-
-        elif self.state2 == 2 and self.gz_mirror_jtp is not None:
-            jtp = self.gz_mirror_jtp
+            if self.real_standing_jtp is not None:
+                self.display_torque(self.real_standing_jtp)
+        #elif self.state2 == 2 and self.gz_mirror_jtp is not None:
+        #    jtp = self.gz_mirror_jtp
+        elif self.state2 == 2 and self.real_standing_jtp is not None:
+            jtp = self.real_standing_jtp
+            kp = [0.] * 18
         elif self.state2 == 3 and self.real_jtp is not None:
             jtp = self.real_jtp
         else:
@@ -168,10 +200,10 @@ class master(Node):
             jtp = self.pos_t2traj(pos_t)
             disable = True
 
-        mcmd = self.jtp2mcmd(jtp, disable = disable)
+        mcmd = self.jtp2mcmd(jtp, disable = disable, kp = kp)
         return mcmd
     
-    def jtp2mcmd(self, jtp, disable = False):
+    def jtp2mcmd(self, jtp, disable = False, kp = None):
         mcmd = MotorCmd()
 
         mcmd.joint_names = jtp.joint_names
@@ -184,10 +216,13 @@ class master(Node):
             mcmd.kd = [0.] * 18
             mcmd.torques = [0.] * 18
         else:
-            mcmd.kp = [35., 25., 25., 35., 35., 25.,
-                       35., 25., 25., 35., 35., 25.,
-                       15., 15., 15.,
-                       15., 15., 15.]
+            if kp is not None:
+                mcmd.kp = kp
+            else:
+                mcmd.kp = [35., 25., 25., 35., 35., 25.,
+                        35., 25., 25., 35., 35., 25.,
+                        15., 15., 15.,
+                        15., 15., 15.]
             mcmd.kd = [2., 1., 1., 2., 2., 1.,
                        2., 1., 1., 2., 2., 1.,
                        1., 1., 1., 1.,

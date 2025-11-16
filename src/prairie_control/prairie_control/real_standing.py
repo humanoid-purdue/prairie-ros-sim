@@ -23,7 +23,7 @@ JOINT_LIST_COMPLETE = ["l_hip_pitch_joint", "l_hip_roll_joint", "l_hip_yaw_joint
 BASE_COM = np.array([-0.04, 0, 0.4])
 COM_OFFSET = np.array([0.0, 0.0, 0.0])
 STANDING_COM = BASE_COM + COM_OFFSET
-STAND_TIME = 3
+STAND_TIME = 2.0
 
 class real_standing(Node):
     def __init__(self):
@@ -47,7 +47,7 @@ class real_standing(Node):
         )
 
         self.start_time = None
-        self.start_com = None
+        self.start_com = STANDING_COM
         self.start_standing = False
 
         self.num_joints = len(JOINT_LIST_COMPLETE)
@@ -90,7 +90,7 @@ class real_standing(Node):
             pos_t = self.obs['joint_position']
             self.stabilizer.update_simulation(self.obs['joint_position'], self.obs['joint_velocity'])
             t = self.obs['time']
-            if self.start_standing and not self.start_time:
+            if self.start_standing:
                 self.start_time = t
                 self.start_com = self.stabilizer.get_relative_com()
             desired_com = STANDING_COM
