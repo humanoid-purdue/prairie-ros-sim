@@ -67,4 +67,5 @@ class MotorManager {
         MotorManager();
         ~MotorManager();
         void update();
+        int error_codes[18];
 };

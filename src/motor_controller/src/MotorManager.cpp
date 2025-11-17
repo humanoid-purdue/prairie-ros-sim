@@ -31,7 +31,7 @@ SingleMotorManager::SingleMotorManager(std::string port){
 
 void SingleMotorManager::update() {
     for (int i = 0; i < 6; i++) {
-        if (motor_error[i] == -1) {
+        if (motor_error[i] != 0) {
             cmd[i].kp = 0.0;
             cmd[i].kd = 0.0;
             cmd[i].tau = 0.0;
@@ -47,10 +47,10 @@ void SingleMotorManager::update() {
         }
         raw_q_motor[i] = data[i].q + q_offsets[i];
         raw_dq_motor[i] = data[i].dq;
-        motor_error[i] = 0;
-        if (data[i].merror != 0) {
-            motor_error[i] = -1;
-        }
+        motor_error[i] = data[i].merror;
+        //if (data[i].merror != 0) {
+        //    motor_error[i] = data[i].merror;
+        //}
         if (data[i].temp >= 100) {
             motor_error[i] = -1;
         }   
@@ -200,9 +200,12 @@ void MotorManager::update() {
     right.update();
     safe = true;
     for (int i = 0; i < 6; i++) {
-        if (left.motor_error[i] == -1 || pelvis.motor_error[i] == -1 || right.motor_error[i] == -1) {
+        if (left.motor_error[i] != 0 || pelvis.motor_error[i] != 0 || right.motor_error[i] != 0) {
             safe = false;
         }
+        error_codes[i] = pelvis.motor_error[i];
+        error_codes[i + 6] = left.motor_error[i];
+        error_codes[i + 12] = right.motor_error[i];
     }
     // Go through each of the 18 joints and update the joint state
 
