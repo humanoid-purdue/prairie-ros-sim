@@ -123,9 +123,10 @@ void MotorManager::assignMotorCmd(struct JointStateStruct &data, struct RawMotor
     double test_tau = data.tau + data.kp * (data.des_p - data.current_q) + data.kd * (data.des_d - data.current_dq);
     double kp = data.kp / (gear_ratio * gear_ratio);
     double kd = data.kd / (gear_ratio * gear_ratio);
-    if (abs(test_tau) > 20) {
-        kp = kp * 20 / abs(test_tau);
-        kd = kd * 20 / abs(test_tau);
+    double max_tau = 20.;
+    if (abs(test_tau) > max_tau) {
+        kp = kp * max_tau / abs(test_tau);
+        kd = kd * max_tau / abs(test_tau);
     }
     raw.kp = kp;
     raw.kd = kd;

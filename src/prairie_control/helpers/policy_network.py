@@ -28,20 +28,24 @@ home_pose = np.array([-0.698132,
                         0, 0.05, 0,
     0, -0.05, 0])
 
-kp = jnp.array([35., 25., 25., 35., 35., 25.,
-                        35., 25., 25., 35., 35., 25.,
-                        15., 15., 15.,
-                        15., 15., 15.])
+#kp = jnp.array([35., 25., 25., 35., 35., 25.,
+#                        35., 25., 25., 35., 35., 25.,
+#                        15., 15., 15.,
+#                        15., 15., 15.])
+kp = jnp.array([120., 70., 70., 120., 120., 70.,
+                120., 70., 70., 120., 120., 70.,
+                15., 15., 15.,
+                15., 15., 15.])
 kd = jnp.array([2., 1., 1., 2., 2., 1.,
                        2., 1., 1., 2., 2., 1.,
-                       1., 1., 1., 1.,
-                       1., 1., 1., 1.])
+                       1., 1., 1.,
+                       1., 1., 1.,])
 
 a = 20.
 tau_limit = jnp.array([2 * a, a ,a , 2 * a, 2 * a, a,
                       2 * a, a ,a , 2 * a, 2 * a, a,
-                      a, a, a, a,
-                      a, a, a, a])
+                      a, a, a,
+                      a, a, a])
 
 
 network_factory_params = {
@@ -100,7 +104,7 @@ def scale_action(action, joint_pos, joint_vel):
 class walk_policy():
     def __init__(self, t = 0.0):
         make_inference_fn = makeIFN()
-        saved_params = model.load_params(policy_path + '/walk_policy_trans_acc_low_pd')
+        saved_params = model.load_params(policy_path + '/walk_policy_highgain')
         inference_fn = make_inference_fn(saved_params)
         self.jit_inference_fn = jax.jit(inference_fn)
         self.rng = jax.random.PRNGKey(0)

@@ -195,6 +195,10 @@ class master(Node):
             kp = [0.] * 18
         elif self.state2 == 3 and self.real_jtp is not None:
             jtp = self.real_jtp
+            kp = [120., 70., 70., 120., 120., 70.,
+                120., 70., 70., 120., 120., 70.,
+                15., 15., 15.,
+                15., 15., 15.]
         else:
             pos_t = np.zeros([18])
             jtp = self.pos_t2traj(pos_t)
@@ -226,8 +230,8 @@ class master(Node):
                         15., 15., 15.]
             mcmd.kd = [2., 1., 1., 2., 2., 1.,
                        2., 1., 1., 2., 2., 1.,
-                       1., 1., 1., 1.,
-                       1., 1., 1., 1.]
+                       1., 1., 1.,
+                       1., 1., 1.,]
 
         return mcmd
 
