@@ -2,6 +2,7 @@ import mujoco as mj
 from scipy.spatial.transform import Rotation
 import os
 import sys
+from contact_force_solver import ContactForceSolver
 from ament_index_python.packages import get_package_share_directory
 
 helper_path = os.path.join(get_package_share_directory('prairie_control'), "helpers")
@@ -29,6 +30,8 @@ class Stabilizer:
         self.left_foot_id = mj.mj_name2id(self.model, mj.mjtObj.mjOBJ_BODY, "l_foot_roll")
         self.left_site = mj.mj_name2id(self.model, mj.mjtObj.mjOBJ_SITE, "left_foot")
         self.right_site = mj.mj_name2id(self.model, mj.mjtObj.mjOBJ_SITE, "right_foot")
+
+        self.solver = ContactForceSolver()
 
     def get_jacobian(self, site):
         """
@@ -161,8 +164,8 @@ class Stabilizer:
         left_force_to_accel = self.construct_force_to_accel_matrix(floor_frame, inertia_matrix, left=True)
         right_force_to_accel = self.construct_force_to_accel_matrix(floor_frame, inertia_matrix, left=False)
         force_to_accel = left_force_to_accel + right_force_to_accel
-        desired_accel = np.hstack((desired_linear_accel - GRAVITY, desired_angular_accel)).reshape((6, 1))
-        return np.linalg.pinv(force_to_accel) @ desired_accel
+        desired_accel = np.hstack((desired_linear_accel - GRAVITY, desired_angular_accel))
+        return self.solver.solve(force_to_accel, desired_accel)
 
     def update_simulation(self, joint_pos, joint_vel):
         """
@@ -226,8 +229,8 @@ class Stabilizer:
 
         # Compute desired contact forces and map to joint torques
         contact_forces = self.compute_desired_contact_forces(floor_frame, desired_linear_accel, desired_angular_accel)
-        left_force = np.concatenate((floor_frame.T @ contact_forces[:3, 0], floor_frame.T @ contact_forces[3:6, 0]))
-        right_force = np.concatenate((floor_frame.T @ contact_forces[6:9, 0], floor_frame.T @ contact_forces[9:, 0]))
+        left_force = np.concatenate((floor_frame.T @ contact_forces[:3], floor_frame.T @ contact_forces[3:6]))
+        right_force = np.concatenate((floor_frame.T @ contact_forces[6:9], floor_frame.T @ contact_forces[9:]))
         joint_torques = -(jac_left.T @ left_force + jac_right.T @ right_force)
         return joint_torques[6:]
 
