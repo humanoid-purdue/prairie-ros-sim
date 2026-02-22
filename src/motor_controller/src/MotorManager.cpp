@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <cmath>
 
-SingleMotorManager::SingleMotorManager(std::string port){
+SingleMotorManager::SingleMotorManager(std::string port, int id) {
     try {
         serial = std::make_unique<SerialPort>(port);
         serial_init = true;
@@ -21,9 +21,11 @@ SingleMotorManager::SingleMotorManager(std::string port){
         cmd[i].motorType = MotorType::GO_M8010_6;
         data[i].motorType = MotorType::GO_M8010_6;
         cmd[i].mode = queryMotorMode(MotorType::GO_M8010_6,MotorMode::FOC);
-        cmd[i].id   = i;
-        cmd[i].kp   = 0.0;
-        cmd[i].kd   = 0.0;
+        if (i == 5) {
+            cmd[i].id = id;
+        }
+        cmd[i].kp = 0.0;
+        cmd[i].kd = 0.0;
         cmd[i].tau = 0.0;
         q_offsets[i] = 0.0;
     }
@@ -31,7 +33,7 @@ SingleMotorManager::SingleMotorManager(std::string port){
 
 void SingleMotorManager::update() {
     for (int i = 0; i < 6; i++) {
-        if (motor_error[i] == -1) {
+        if (motor_error[i] != 0) {
             cmd[i].kp = 0.0;
             cmd[i].kd = 0.0;
             cmd[i].tau = 0.0;
@@ -47,10 +49,10 @@ void SingleMotorManager::update() {
         }
         raw_q_motor[i] = data[i].q + q_offsets[i];
         raw_dq_motor[i] = data[i].dq;
-        motor_error[i] = 0;
-        if (data[i].merror != 0) {
-            motor_error[i] = -1;
-        }
+        motor_error[i] = data[i].merror;
+        //if (data[i].merror != 0) {
+        //    motor_error[i] = data[i].merror;
+        //}
         if (data[i].temp >= 100) {
             motor_error[i] = -1;
         }   
@@ -71,44 +73,31 @@ void SingleMotorManager::printMotorData() {
 SingleMotorManager::~SingleMotorManager() {
 }
 
+//float SingleMotorManager::find_q(float cur_q, float des_q) {
+//    return -1* (des_q - cur_q);
+//}
+
 float SingleMotorManager::find_q(float cur_q, float des_q) {
-    float min_sep = 10.0;
-    float min_offset = 0.0;
-    for (int i = -6; i < 7; i++) {
-        for (int j = -5; j < 6; j++) {
-            float probe_q = std::fmod((6.33 * M_PI / 6) * i, 2.0f * M_PI) + j * 2 * M_PI;
-            //float probe_q = 6.33 * M_PI / 3;
-            float probe_sep = std::abs(cur_q + probe_q - des_q);
-            if (probe_sep < min_sep) {
-                min_sep = probe_sep;
-                min_offset = probe_q;
-            }
-        }
-    }
-    return min_offset;
-}
-
-// float SingleMotorManager::find_q(float cur_q, float des_q) {
-//     float min_sep = 10.0;
-//     float min_offset = 0.0;
-//     for (int i = -6; i <= 6; i++) {
-//         float full_offset = i * (M_PI / 3.0f);
+     float min_sep = 10.0;
+     float min_offset = 0.0;
+     for (int i = -6; i <= 6; i++) {
+         float full_offset = i * (M_PI / 3.0f);
         
-//         for (int j = -6; j < 6; j++) {
-//             float inner_offset = (6.33f * M_PI / 3.0f) * j;
-//             float total_offset = std::fmod(inner_offset + full_offset, M_PI * 2.0f);
+         for (int j = -6; j < 6; j++) {
+             float inner_offset = (6.33f * M_PI / 3.0f) * j;
+             float total_offset = std::fmod(inner_offset + full_offset, M_PI * 2.0f);
 
-//             float probe_sep = std::abs(cur_q + total_offset - des_q);
-//             if (probe_sep < min_sep) {
-//                 min_sep = probe_sep;
-//                 min_offset = total_offset;
-//             }
-//         }
+             float probe_sep = std::abs(cur_q + total_offset - des_q);
+             if (probe_sep < min_sep) {
+                 min_sep = probe_sep;
+                 min_offset = total_offset;
+             }
+         }
             
 
-//     }
-//     return min_offset;
-// }
+     }
+     return des_q -cur_q;
+}
 
 void SingleMotorManager::set_q_offsets(float q[6]) {
     std::cout << "------------------------" << std::endl;
@@ -118,15 +107,47 @@ void SingleMotorManager::set_q_offsets(float q[6]) {
     }
 }
 
-MotorManager::MotorManager() :
-    pelvis("/dev/ttyUSB0"),
-    left("/dev/ttyUSB1"),
-    right("/dev/ttyUSB2")
-{
+MotorManager::mapUSB(std::string port) {
+    std::unique_ptr<SerialPort> serial = std::make_unique<SerialPort>(port);
+    MotorCmd cmd;
+    MotorData data;
+    cmd.motorType = MotorType::GO_M8010_6;
+    data.motorType = MotorType::GO_M8010_6;
+    cmd.mode = queryMotorMode(MotorType::GO_M8010_6,MotorMode::FOC);
+    cmd.kp = 0.0;
+    cmd.kd = 0.0;
+    cmd.q = 0.0;
+    cmd.dq = 0.0;
+    for (int id : PART_IDS) {
+        cmd.id = id
+        serial -> sendRecv(&cmd, &data);
+        if (data.merror == 0) {
+            std::cout << "id found: " << id << std::endl;
+            if (id == PELVIS_ID) {
+                std::cout << "Assigning to pelvis: " << port << std::endl;
+                pelvis = SingleMotorManager(port, PELVIS_ID)
+            }
+            if (id == LEFT_ID) {
+                std::cout << "Assigning to left: " << port << std::endl;
+                left = SingleMotorManager(port, LEFT_ID)
+            }
+            if (id == RIGHT_ID) {
+                std::cout << "Assigning to right: " << port << std::endl;
+                right = SingleMotorManager(port, RIGHT_ID)
+            }
+            return;
+        }
+    }
+    std::cout << "Could not identify robot part for port: " << port << std::endl;
+}
+
+MotorManager::MotorManager() {
+    mapUSB("/dev/ttyUSB0");
+    mapUSB("/dev/ttyUSB1");
+    mapUSB("/dev/ttyUSB2");
     gear_ratio = queryGearRatio(MotorType::GO_M8010_6);
     safe = false;
     // unsafe means that reading is still engaged but no motor cmds will be sent
-
 }
 
 MotorManager::~MotorManager() {
@@ -136,9 +157,10 @@ void MotorManager::assignMotorCmd(struct JointStateStruct &data, struct RawMotor
     double test_tau = data.tau + data.kp * (data.des_p - data.current_q) + data.kd * (data.des_d - data.current_dq);
     double kp = data.kp / (gear_ratio * gear_ratio);
     double kd = data.kd / (gear_ratio * gear_ratio);
-    if (abs(test_tau) > 23) {
-        kp = kp * 23 / abs(test_tau);
-        kd = kd * 23 / abs(test_tau);
+    double max_tau = 20.;
+    if (abs(test_tau) > max_tau) {
+        kp = kp * max_tau / abs(test_tau);
+        kd = kd * max_tau / abs(test_tau);
     }
     raw.kp = kp;
     raw.kd = kd;
@@ -213,9 +235,12 @@ void MotorManager::update() {
     right.update();
     safe = true;
     for (int i = 0; i < 6; i++) {
-        if (left.motor_error[i] == -1 || pelvis.motor_error[i] == -1 || right.motor_error[i] == -1) {
+        if (left.motor_error[i] != 0 || pelvis.motor_error[i] != 0 || right.motor_error[i] != 0) {
             safe = false;
         }
+        error_codes[i] = pelvis.motor_error[i];
+        error_codes[i + 6] = left.motor_error[i];
+        error_codes[i + 12] = right.motor_error[i];
     }
     // Go through each of the 18 joints and update the joint state
 

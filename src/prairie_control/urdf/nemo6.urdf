@@ -444,84 +444,84 @@
     <plugin name="gz::sim::systems::JointTrajectoryController" filename="gz-sim-joint-trajectory-controller-system">
       <joint_name>l_hip_pitch_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>35</position_p_gain>
+      <position_p_gain>120</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>l_hip_roll_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>25</position_p_gain>
+      <position_p_gain>70</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>l_hip_yaw_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>25</position_p_gain>
+      <position_p_gain>70</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>l_knee_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>35</position_p_gain>
+      <position_p_gain>120</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>l_foot_pitch_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>35</position_p_gain>
+      <position_p_gain>120</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>l_foot_roll_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>25</position_p_gain>
+      <position_p_gain>70</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>r_hip_pitch_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>35</position_p_gain>
+      <position_p_gain>120</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>r_hip_roll_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>25</position_p_gain>
+      <position_p_gain>70</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>r_hip_yaw_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>25</position_p_gain>
+      <position_p_gain>70</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>r_knee_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>35</position_p_gain>
+      <position_p_gain>120</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>r_foot_pitch_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>35</position_p_gain>
+      <position_p_gain>120</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>
 
       <joint_name>r_foot_roll_joint</joint_name>
       <use_header_start_time>false</use_header_start_time>
-      <position_p_gain>25</position_p_gain>
+      <position_p_gain>70</position_p_gain>
       <position_d_gain>0</position_d_gain>
       <velocity_p_gain>0</velocity_p_gain>
       <velocity_d_gain>0</velocity_d_gain>

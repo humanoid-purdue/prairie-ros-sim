@@ -28,6 +28,25 @@ home_pose = np.array([-0.698132,
                         0, 0.05, 0,
     0, -0.05, 0])
 
+#kp = jnp.array([35., 25., 25., 35., 35., 25.,
+#                        35., 25., 25., 35., 35., 25.,
+#                        15., 15., 15.,
+#                        15., 15., 15.])
+kp = jnp.array([120., 70., 70., 120., 120., 70.,
+                120., 70., 70., 120., 120., 70.,
+                15., 15., 15.,
+                15., 15., 15.])
+kd = jnp.array([2., 1., 1., 2., 2., 1.,
+                       2., 1., 1., 2., 2., 1.,
+                       1., 1., 1.,
+                       1., 1., 1.,])
+
+a = 20.
+tau_limit = jnp.array([2 * a, a ,a , 2 * a, 2 * a, a,
+                      2 * a, a ,a , 2 * a, 2 * a, a,
+                      a, a, a,
+                      a, a, a])
+
 
 network_factory_params = {
     "emb_dim":64,
@@ -63,10 +82,29 @@ def tanh2Action(action: jnp.ndarray):
 
     return pos_sp
 
+def scale_action(action, joint_pos, joint_vel):
+    # Return closest action (joint positions) such that
+    # torque = kp*(action - joint_pos) - kd*joint_vel lies within +/- tau_limit
+    a = jnp.asarray(action)
+    q = jnp.asarray(joint_pos)
+    dq = jnp.asarray(joint_vel)
+
+    # Compute feasible action interval per joint
+    # x_min <= action <= x_max ensures |torque| <= tau_limit
+    eps = 1e-8
+    kp_safe = jnp.maximum(kp, eps)
+    x_min = q + (-tau_limit + kd * dq) / kp_safe
+    x_max = q + ( tau_limit + kd * dq) / kp_safe
+
+    # Clamp to nearest feasible action
+    a_clamped = jnp.clip(a, x_min, x_max)
+    return a_clamped
+    
+
 class walk_policy():
     def __init__(self, t = 0.0):
         make_inference_fn = makeIFN()
-        saved_params = model.load_params(policy_path + '/walk_policy_trans_acc_low_pd')
+        saved_params = model.load_params(policy_path + '/walk_policy_highgain')
         inference_fn = make_inference_fn(saved_params)
         self.jit_inference_fn = jax.jit(inference_fn)
         self.rng = jax.random.PRNGKey(0)
@@ -123,4 +161,5 @@ class walk_policy():
         raw_action, _ = self.jit_inference_fn(net_obs, act_rng)
         self.prev_action = raw_action
         act = tanh2Action(raw_action)
+        act = scale_action(act, joint_pos, joint_vel)
         return act
