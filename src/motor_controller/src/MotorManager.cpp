@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <cmath>
 
-SingleMotorManager::SingleMotorManager(std::string port){
+SingleMotorManager::SingleMotorManager(std::string port, int id) {
     try {
         serial = std::make_unique<SerialPort>(port);
         serial_init = true;
@@ -21,9 +21,11 @@ SingleMotorManager::SingleMotorManager(std::string port){
         cmd[i].motorType = MotorType::GO_M8010_6;
         data[i].motorType = MotorType::GO_M8010_6;
         cmd[i].mode = queryMotorMode(MotorType::GO_M8010_6,MotorMode::FOC);
-        cmd[i].id   = i;
-        cmd[i].kp   = 0.0;
-        cmd[i].kd   = 0.0;
+        if (i == 5) {
+            cmd[i].id = id;
+        }
+        cmd[i].kp = 0.0;
+        cmd[i].kd = 0.0;
         cmd[i].tau = 0.0;
         q_offsets[i] = 0.0;
     }
@@ -105,15 +107,47 @@ void SingleMotorManager::set_q_offsets(float q[6]) {
     }
 }
 
-MotorManager::MotorManager() :
-    pelvis("/dev/ttyUSB0"),
-    left("/dev/ttyUSB1"),
-    right("/dev/ttyUSB2")
-{
+MotorManager::mapUSB(std::string port) {
+    std::unique_ptr<SerialPort> serial = std::make_unique<SerialPort>(port);
+    MotorCmd cmd;
+    MotorData data;
+    cmd.motorType = MotorType::GO_M8010_6;
+    data.motorType = MotorType::GO_M8010_6;
+    cmd.mode = queryMotorMode(MotorType::GO_M8010_6,MotorMode::FOC);
+    cmd.kp = 0.0;
+    cmd.kd = 0.0;
+    cmd.q = 0.0;
+    cmd.dq = 0.0;
+    for (int id : PART_IDS) {
+        cmd.id = id
+        serial -> sendRecv(&cmd, &data);
+        if (data.merror == 0) {
+            std::cout << "id found: " << id << std::endl;
+            if (id == PELVIS_ID) {
+                std::cout << "Assigning to pelvis: " << port << std::endl;
+                pelvis = SingleMotorManager(port, PELVIS_ID)
+            }
+            if (id == LEFT_ID) {
+                std::cout << "Assigning to left: " << port << std::endl;
+                left = SingleMotorManager(port, LEFT_ID)
+            }
+            if (id == RIGHT_ID) {
+                std::cout << "Assigning to right: " << port << std::endl;
+                right = SingleMotorManager(port, RIGHT_ID)
+            }
+            return;
+        }
+    }
+    std::cout << "Could not identify robot part for port: " << port << std::endl;
+}
+
+MotorManager::MotorManager() {
+    mapUSB("/dev/ttyUSB0");
+    mapUSB("/dev/ttyUSB1");
+    mapUSB("/dev/ttyUSB2");
     gear_ratio = queryGearRatio(MotorType::GO_M8010_6);
     safe = false;
     // unsafe means that reading is still engaged but no motor cmds will be sent
-
 }
 
 MotorManager::~MotorManager() {

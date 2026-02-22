@@ -2,6 +2,12 @@
 #include "unitreeMotor/unitreeMotor.h"
 #include <string>
 #include <memory>
+#include <list>
+
+constexpr PELVIS_ID = 5
+constexpr LEFT_ID = 6
+constexpr RIGHT_ID = 7
+constexpr std::list<int> PART_IDS = {PELVIS_ID, LEFT_ID, RIGHT_ID};
 
 struct RawMotorStruct {
     float kp = 0.0;
@@ -34,7 +40,7 @@ class SingleMotorManager {
         float raw_q_motor[6];
         float raw_dq_motor[6];
         int motor_error[6];
-        SingleMotorManager(std::string port = "/dev/ttyUSB0");
+        SingleMotorManager(std::string port = "/dev/ttyUSB0", int id);
         ~SingleMotorManager();
         void update();
         void printMotorData();
@@ -64,6 +70,7 @@ class MotorManager {
     public:
         void set_q_offsets(float pelvis_des_q[6], float left_des_q[6], float right_des_q[6]);
         struct JointStateStruct joint_state[12];
+        void mapUSB(std::string port);
         MotorManager();
         ~MotorManager();
         void update();
