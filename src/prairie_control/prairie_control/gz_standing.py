@@ -3,11 +3,15 @@ from rclpy.node import Node
 import numpy as np
 import os
 import sys
+import time
 from ament_index_python.packages import get_package_share_directory
 from rclpy.qos import QoSProfile
-from builtin_interfaces.msg import Duration
+from builtin_interfaces.msg import Duration, Time
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from sensor_msgs.msg import JointState
 from gz_sim_interfaces.msg import StateObservationReduced
+from gz_sim_interfaces.msg import KeyboardCmd
+from geometry_msgs.msg import Twist
 
 helper_path = os.path.join(get_package_share_directory('prairie_control'), "helpers")
 sys.path.append(helper_path)
@@ -20,9 +24,6 @@ JOINT_LIST_COMPLETE = ["l_hip_pitch_joint", "l_hip_roll_joint", "l_hip_yaw_joint
                        "r_foot_roll_joint",
                        "l_shoulder_pitch_joint", "l_shoulder_roll_joint", "l_elbow_joint",
                        "r_shoulder_pitch_joint", "r_shoulder_roll_joint", "r_elbow_joint"]
-BASE_COM = np.array([-0.04, 0, 0.4])
-COM_OFFSET = np.array([0.0, 0.0, 0.0])
-STANDING_COM = BASE_COM + COM_OFFSET
 
 
 class gz_standing(Node):
@@ -31,6 +32,12 @@ class gz_standing(Node):
         qos_profile = QoSProfile(depth=10)
 
         # Read IMU data and publish JTP
+
+        self.stand_pos = np.array([
+            -1.06169705, 0, 0, 1.22173, -0.08, 0,
+            -1.06169705, 0, 0, 1.22173, -0.08, 0,
+            0, 0.05, 0, 0, -0.05, 0
+        ])
 
         self.state_subscriber = self.create_subscription(
             StateObservationReduced,
@@ -69,13 +76,20 @@ class gz_standing(Node):
         jtp2.time_from_start.nanosec = 0
 
         tau_delta = np.zeros(self.num_joints)
-        pos_t = np.zeros(self.num_joints)
+        pos_t = self.stand_pos.copy()
 
         if self.obs != {}:
-            pos_t = self.obs["joint_position"]
-            self.stabilizer.update_simulation(self.obs["joint_position"], self.obs["joint_velocity"])
-            tau_delta = self.stabilizer.calculate_joint_torques(STANDING_COM)
-
+            pos_t[self.ids["l_foot_pitch_joint"]] = self.obs["joint_position"][self.ids["l_foot_pitch_joint"]]
+            pos_t[self.ids["r_foot_pitch_joint"]] = self.obs["joint_position"][self.ids["r_foot_pitch_joint"]]
+            pos_t[self.ids["l_foot_roll_joint"]] = self.obs["joint_position"][self.ids["l_foot_roll_joint"]]
+            pos_t[self.ids["r_foot_roll_joint"]] = self.obs["joint_position"][self.ids["r_foot_roll_joint"]]
+            self.stabilizer.step(self.obs["joint_position"], self.obs["linear_acceleration"], 0.22)
+            tau_delta[self.ids["l_foot_pitch_joint"]] = self.stabilizer.get_pitch_torque()
+            tau_delta[self.ids["r_foot_pitch_joint"]] = self.stabilizer.get_pitch_torque()
+            tau_delta[self.ids["l_foot_roll_joint"]] = self.stabilizer.get_roll_torque()
+            tau_delta[self.ids["r_foot_roll_joint"]] = self.stabilizer.get_roll_torque()
+            pos_t[self.ids["l_hip_yaw_joint"]] = self.stabilizer.get_hip_yaw_pos()
+            pos_t[self.ids["r_hip_yaw_joint"]] = self.stabilizer.get_hip_yaw_pos()
 
         jtp.positions = pos_t.tolist()
         jtp.velocities = [0.] * self.num_joints

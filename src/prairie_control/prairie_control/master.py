@@ -9,7 +9,7 @@ from rclpy.qos import QoSProfile
 from builtin_interfaces.msg import Duration, Time
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
-from gz_sim_interfaces.msg import StateObservationReduced, MasterState, MotorCmd
+from gz_sim_interfaces.msg import StateObservationReduced, MasterState
 from geometry_msgs.msg import Twist
 
 helper_path = os.path.join(
@@ -25,14 +25,12 @@ class master(Node):
         qos_profile = QoSProfile(depth=10)
 
         # two jtp publishers
-        
+
         self.state1 = 0
         self.state2 = 0
-        self.prev_state2 = 0
 
         self.gz_pub = self.create_publisher(JointTrajectory, 'joint_trajectories', qos_profile)
-        # self.joint_pub = self.create_publisher(JointTrajectory, '/real_joint_trajectories', qos_profile)
-        self.joint_pub = self.create_publisher(MotorCmd, '/real_joint_trajectories', qos_profile)
+        self.joint_pub = self.create_publisher(JointTrajectory, '/real_joint_trajectories', qos_profile)
         
         self.master_pub = self.create_publisher(MasterState, 'master_state', qos_profile)
 
@@ -51,18 +49,6 @@ class master(Node):
         self.gz_policy = self.create_subscription(
             JointTrajectory, '/gz_policy_jtp',
             self.gz_policy_callback,
-            qos_profile
-        )
-
-        self.real_policy = self.create_subscription(
-            JointTrajectory, '/real_policy_jtp',
-            self.real_policy_callback,
-            qos_profile
-        )
-
-        self.real_standing = self.create_subscription(
-            JointTrajectory, '/real_standing_jtp',
-            self.real_standing_callback,
             qos_profile
         )
 
@@ -87,14 +73,7 @@ class master(Node):
 
         self.gz_mirror_jtp = None
 
-        self.real_jtp = None
-
-        self.real_standing_jtp = None
-
-        try:
-            self.ctrl = xbox.XboxController()
-        except RuntimeError:
-            self.ctrl = None
+        self.ctrl = xbox.XboxController()
 
         self.start_time_gradual_hold = time.time()
 
@@ -123,12 +102,6 @@ class master(Node):
     def gz_mirror_callback(self, msg):
         self.gz_mirror_jtp = msg
 
-    def real_policy_callback(self, msg):
-        self.real_jtp = msg 
-
-    def real_standing_callback(self, msg):
-        self.real_standing_jtp = msg
-
     def timer_callback(self):
         self.update_xbox()
         if self.gz_stand_jtp is not None and self.state1 == 0:
@@ -140,7 +113,6 @@ class master(Node):
         self.joint_pub.publish(real_jtp)
 
     def update_xbox(self):
-        if not self.ctrl: return
         self.ctrl.update()
         if self.ctrl.state2 == 1 and self.state2 != 1:
             self.start_stand_pd()
@@ -151,7 +123,6 @@ class master(Node):
         ry = self.ctrl.right_stick[1]
 
         self.state1 = self.ctrl.state1
-        self.prev_state2 = self.state2
         self.state2 = self.ctrl.state2
 
         master_state = MasterState()
@@ -161,93 +132,26 @@ class master(Node):
         master_state.ry = ry
         master_state.state1 = self.ctrl.state1
         master_state.state2 = self.ctrl.state2
-
-        if self.prev_state2 != 2 and self.state2 == 2:
-            master_state.start_standing = True
-        else:
-            master_state.start_standing = False
-
         self.master_pub.publish(master_state)
-        
         return
     
-    def display_torque(self, jtp):
-        torque_list = jtp.points[0].effort
-        torque_str = "Torques: "
-        for t in torque_list:
-            torque_str += f"{t:.2f} "
-        self.get_logger().info(torque_str)
-        return
-
     def default_real_pd(self):
-        #print(self.state2)
-        disable = False
-        kp = None
+        print(self.state2)
         if self.state2 == 1:
             pos_t = self.stand_pd()
             jtp = self.pos_t2traj(pos_t)
-            if self.real_standing_jtp is not None:
-                self.display_torque(self.real_standing_jtp)
-        #elif self.state2 == 2 and self.gz_mirror_jtp is not None:
-        #    jtp = self.gz_mirror_jtp
-        elif self.state2 == 2 and self.real_standing_jtp is not None:
-            jtp = self.real_standing_jtp
-            kp = [0.] * 18
-        elif self.state2 == 3 and self.real_jtp is not None:
-            jtp = self.real_jtp
-            kp = [120., 70., 70., 120., 120., 70.,
-                120., 70., 70., 120., 120., 70.,
-                15., 15., 15.,
-                15., 15., 15.]
+        elif self.state2 == 2 and self.gz_mirror_jtp is not None:
+            jtp = self.gz_mirror_jtp
         else:
             pos_t = np.zeros([18])
             jtp = self.pos_t2traj(pos_t)
-            disable = True
-
-        mcmd = self.jtp2mcmd(jtp, disable = disable, kp = kp)
-        return mcmd
-    
-    def jtp2mcmd(self, jtp, disable = False, kp = None):
-        mcmd = MotorCmd()
-
-        mcmd.joint_names = jtp.joint_names
-
-        mcmd.positions = jtp.points[0].positions
-        mcmd.velocities = jtp.points[0].velocities
-        mcmd.torques = jtp.points[0].effort
-
-        if disable:
-            mcmd.kp = [0.] * 18
-            mcmd.kd = [0.] * 18
-            mcmd.torques = [0.] * 18
-        else:
-            if kp is not None:
-                mcmd.kp = kp
-            else:
-                mcmd.kp = [35., 25., 25., 35., 35., 25.,
-                        35., 25., 25., 35., 35., 25.,
-                        15., 15., 15.,
-                        15., 15., 15.]
-            mcmd.kd = [2., 1., 1., 2., 2., 1.,
-                       2., 1., 1., 2., 2., 1.,
-                       1., 1., 1.,
-                       1., 1., 1.,]
-
-        return mcmd
-
-    def pos_t2mcmd(self, pos_t):
-        mcmd = MotorCmd()
-        mcmd.joint_names = utils.JOINT_LIST_COMPLETE
-
-        mcmd.positions = pos_t.tolist()
-        mcmd.velocities = [0.] * 18
-
-        return mcmd
+        return jtp
 
     def pos_t2traj(self, pos_t):
         joint_traj = JointTrajectory()
         jtp = JointTrajectoryPoint()
         jtp2 = JointTrajectoryPoint()
+
         
         now = self.get_clock().now()
         joint_traj.header.stamp = now.to_msg()

@@ -14,7 +14,6 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
-find_package(gz_sim_interfaces REQUIRED)
 
 
 if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64") 
@@ -33,7 +32,6 @@ ament_target_dependencies(motor_controller
   rclcpp
   sensor_msgs
   trajectory_msgs
-  gz_sim_interfaces
 )
 
 # uncomment the following section in order to fill in
