@@ -22,7 +22,7 @@ SingleMotorManager::SingleMotorManager(std::string port, int section_id) {
         data[i].motorType = MotorType::GO_M8010_6;
         cmd[i].mode = queryMotorMode(MotorType::GO_M8010_6,MotorMode::FOC);
         if (i == 5) {
-            cmd[i].id = id;
+            cmd[i].id = section_id;
         }
         else {
             cmd[i].id = i
