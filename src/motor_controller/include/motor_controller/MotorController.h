@@ -5,7 +5,6 @@
 #include "MotorManager.h"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "gz_sim_interfaces/msg/motor_cmd.hpp"
 
 class MotorController : public rclcpp::Node
 {
@@ -15,17 +14,14 @@ public:
 private:
     void update_motor();
     void publish_jointstate();
-    void trajectoryCallback(const gz_sim_interfaces::msg::MotorCmd::SharedPtr msg);
+    void trajectoryCallback(const trajectory_msgs::msg::JointTrajectory::SharedPtr msg);
 
-    rclcpp::Subscription<gz_sim_interfaces::msg::MotorCmd>::SharedPtr trajectory_subscriber_;
+    rclcpp::Subscription<trajectory_msgs::msg::JointTrajectory>::SharedPtr trajectory_subscriber_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_update;
     rclcpp::TimerBase::SharedPtr timer_publish;
     size_t count_;
     MotorManager motor_manager;
-
-    std::vector<double> current_positions_;
-    std::vector<double> current_velocities_;
 };
 
 #endif  // MOTOR_CONTROLLER_HPP_

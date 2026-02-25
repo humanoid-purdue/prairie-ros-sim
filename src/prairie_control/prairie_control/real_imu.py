@@ -8,10 +8,9 @@ from ament_index_python.packages import get_package_share_directory
 from rclpy.qos import QoSProfile
 from builtin_interfaces.msg import Duration, Time
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from sensor_msgs.msg import Imu
+from sensor_msgs.msg import JointState
 from gz_sim_interfaces.msg import StateObservationReduced
-from geometry_msgs.msg import Twist, Vector3
-from std_msgs.msg import Header
+from geometry_msgs.msg import Twist
 
 helper_path = os.path.join(
             get_package_share_directory('prairie_control'),
@@ -26,33 +25,21 @@ class real_imu(Node):
         qos_profile = QoSProfile(depth=10)
 
         # one publiser for StateObservationReduced
-        self.state_pub = self.create_publisher(Imu, '/imu_observation', qos_profile)
+        self.state_pub = self.create_publisher(StateObservationReduced, '/imu_observation', qos_profile)
 
         self.imu = imu_wrapper.imu_wrapper()
 
         self.timer = self.create_timer(0.005, self.timer_callback)
 
     def timer_callback(self):
-        imu_msg = Imu()
+        imu_msg = StateObservationReduced()
 
         accel, gyro = self.imu.read_accel_gyro()
-        lin_acc = Vector3()
-        lin_acc.x = accel[0]
-        lin_acc.y = accel[1]
-        lin_acc.z = accel[2]
-        imu_msg.linear_acceleration = lin_acc
-        ang_vel = Vector3()
-        ang_vel.x = gyro[0]
-        ang_vel.y = gyro[1]
-        ang_vel.z = gyro[2]
-        imu_msg.angular_velocity = ang_vel
 
-        h = Header()
-        h.stamp.sec = int(time.time())
-        h.stamp.nanosec = int((time.time() % 1) * 1e9)
+        imu_msg.lin_acc = accel.tolist()
+        imu_msg.ang_vel = gyro.tolist()
 
-        imu_msg.header = h
-
+        #self.get_logger().info(f"IMU Accel: {imu_msg.lin_acc}, Gyro: {imu_msg.ang_vel}")
 
         self.state_pub.publish(imu_msg)
 

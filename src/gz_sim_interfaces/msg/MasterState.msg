@@ -4,4 +4,3 @@ float64 rx
 float64 ry
 int32 state1
 int32 state2
-bool start_standing

@@ -8,7 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 from rclpy.qos import QoSProfile
 from builtin_interfaces.msg import Duration, Time
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from sensor_msgs.msg import JointState, Imu
+from sensor_msgs.msg import JointState
 from gz_sim_interfaces.msg import StateObservationReduced
 from geometry_msgs.msg import Twist
 
@@ -19,8 +19,8 @@ helper_path = os.path.join(
 sys.path.append(helper_path)
 import utils
 
-ACC_ALPHA = 0.2
-ANG_ALPHA = 0.2
+ACC_ALPHA = 0.4
+ANG_ALPHA = 0.4
 POS_ALPHA = 0.1
 VEL_ALPHA = 0.2
 
@@ -31,7 +31,7 @@ class real_state_est(Node):
 
         # Subscribe to real_imu and the joint state publisher
         self.imu_subscriber = self.create_subscription(
-            Imu,
+            StateObservationReduced,
             '/imu_observation',
             self.imu_callback,
             qos_profile
@@ -57,12 +57,8 @@ class real_state_est(Node):
 
 
     def imu_callback(self, msg):
-        lin_acc = np.array([msg.linear_acceleration.x ,
-                            msg.linear_acceleration.y ,
-                            msg.linear_acceleration.z ])
-        ang_vel = np.array([msg.angular_velocity.x, 
-                            msg.angular_velocity.y, 
-                            msg.angular_velocity.z ])
+        lin_acc = np.array(msg.lin_acc)
+        ang_vel = np.array(msg.ang_vel)
         self.lin_acc = self.lin_acc * ACC_ALPHA + lin_acc * (1 - ACC_ALPHA)
         self.ang_vel = self.ang_vel * ANG_ALPHA + ang_vel * (1 - ANG_ALPHA)
 
@@ -88,7 +84,7 @@ class real_state_est(Node):
         obs_msg.joint_pos = self.joint_pos.tolist()
         obs_msg.joint_vel = self.joint_vel.tolist()
 
-        # self.get_logger().info(f"Publishing real_state_observation: lin_acc={obs_msg.lin_acc}, ang_vel={obs_msg.ang_vel}")
+        self.get_logger().info(f"Publishing real_state_observation: lin_acc={obs_msg.lin_acc}, ang_vel={obs_msg.ang_vel}")
 
         self.obs_publisher.publish(obs_msg)
 
