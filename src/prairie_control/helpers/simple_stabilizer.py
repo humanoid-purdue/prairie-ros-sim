@@ -2,6 +2,10 @@ import mujoco as mj
 import numpy as np
 
 
+def body_pos(model, data, body_name):
+    bid = mj.mj_name2id(model, mj.mjtObj.mjOBJ_BODY, body_name)
+    return data.xpos[bid]
+
 def get_max_clip_in_floor(frame, corners, robot_center, threshold):
     error = None
     for corner in corners:
@@ -39,8 +43,8 @@ class SimpleStabilizer:
         return self.kp * torque
 
     def calculate_robot_center(self):
-        l_foot_center = MujocoUtils.body_pos(self.model, self.data, "l_foot_pitch")
-        r_foot_center = MujocoUtils.body_pos(self.model, self.data, "r_foot_pitch")
+        l_foot_center = body_pos(self.model, self.data, "l_foot_pitch")
+        r_foot_center = body_pos(self.model, self.data, "r_foot_pitch")
         return [l_foot_center[0], (r_foot_center[1] + l_foot_center[1]) / 2, l_foot_center[2]]
 
     def calculate_hip_yaw_pos(self, sensor_data):
