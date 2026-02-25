@@ -7,12 +7,12 @@
 #include <stdexcept>
 #include <cmath>
 
-SingleMotorManager::SingleMotorManager(std::string port, int section_id) {
+SingleMotorManager::SingleMotorManager(std::string port, int id) {
     try {
         serial = std::make_unique<SerialPort>(port);
         serial_init = true;
     } catch (const std::exception &e) {
-        std::cout << "No USB found on port " << port << std::endl;
+        std::cout << "No usb found on port " << port << std::endl;
     }
     for (int i = 0; i < 6; i++) {
         motor_error[i] = -1;
@@ -22,10 +22,7 @@ SingleMotorManager::SingleMotorManager(std::string port, int section_id) {
         data[i].motorType = MotorType::GO_M8010_6;
         cmd[i].mode = queryMotorMode(MotorType::GO_M8010_6,MotorMode::FOC);
         if (i == 5) {
-            cmd[i].id = section_id;
-        }
-        else {
-            cmd[i].id = i
+            cmd[i].id = id;
         }
         cmd[i].kp = 0.0;
         cmd[i].kd = 0.0;
@@ -111,47 +108,37 @@ void SingleMotorManager::set_q_offsets(float q[6]) {
 }
 
 MotorManager::mapUSB(std::string port) {
-    try {
-        serial = std::make_unique<SerialPort>(port);
-    } catch (const std::exception &e) {
-        std::cout << "mapUSB: No USB found on port " << port << std::endl;
-        return;
-    }
-    const int PELVIS_ID = 5
-    const int LEFT_ID = 6
-    const int RIGHT_ID = 7
+    std::unique_ptr<SerialPort> serial = std::make_unique<SerialPort>(port);
     MotorCmd cmd;
     MotorData data;
-    for (int id : {PELVIS_ID, LEFT_ID, RIGHT_ID}) {
-        cmd.motorType = MotorType::GO_M8010_6;
-        data.motorType = MotorType::GO_M8010_6;
-        cmd.mode = queryMotorMode(MotorType::GO_M8010_6,MotorMode::FOC);
-        cmd.kp = 0.0;
-        cmd.kd = 0.0;
-        cmd.q = 0.0;
-        cmd.dq = 0.0;
+    cmd.motorType = MotorType::GO_M8010_6;
+    data.motorType = MotorType::GO_M8010_6;
+    cmd.mode = queryMotorMode(MotorType::GO_M8010_6,MotorMode::FOC);
+    cmd.kp = 0.0;
+    cmd.kd = 0.0;
+    cmd.q = 0.0;
+    cmd.dq = 0.0;
+    for (int id : PART_IDS) {
         cmd.id = id
         serial -> sendRecv(&cmd, &data);
         if (data.merror == 0) {
-            std::cout << "mapUSB: Motor " << id << " detected on port " << port << std::endl;
+            std::cout << "id found: " << id << std::endl;
             if (id == PELVIS_ID) {
-                std::cout << "mapUSB: " << port << " identified as pelvis" << std::endl;
+                std::cout << "Assigning to pelvis: " << port << std::endl;
                 pelvis = SingleMotorManager(port, PELVIS_ID)
-                return;
             }
             if (id == LEFT_ID) {
-                std::cout << "mapUSB: " << port << " identified as left leg" << std::endl;
+                std::cout << "Assigning to left: " << port << std::endl;
                 left = SingleMotorManager(port, LEFT_ID)
-                return;
             }
             if (id == RIGHT_ID) {
-                std::cout << "mapUSB: " << port << " identified as right leg" << std::endl;
+                std::cout << "Assigning to right: " << port << std::endl;
                 right = SingleMotorManager(port, RIGHT_ID)
-                return;
             }
+            return;
         }
     }
-    std::cout << "mapUSB: Could not identify robot section for port " << port << std::endl;
+    std::cout << "Could not identify robot part for port: " << port << std::endl;
 }
 
 MotorManager::MotorManager() {
