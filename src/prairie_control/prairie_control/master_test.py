@@ -37,7 +37,7 @@ class master(Node):
             qos_profile
         )
 
-        self.joint_pos = np.zeros([18])
+        self.joint_pos = None
 
         self.start_pos = None
 
@@ -56,12 +56,13 @@ class master(Node):
                         0, -0.05, 0])
 
     def joint_state_callback(self, msg):
+        if not self.joint_pos: self.joint_pos = np.zeros([18])
         for i in range(12):
             self.joint_pos[i] = msg.position[i]
 
     def timer_callback(self):
         pos_t = None
-        if time.time() > START_TIME:
+        if time.time() > START_TIME and self.joint_pos is not None:
             if self.start_pos is None:
                 self.start_pos = self.joint_pos.copy()
                 print("master_test: STARTING MOVEMENT...")
@@ -75,7 +76,7 @@ class master(Node):
         mcmd.joint_names = utils.JOINT_LIST_COMPLETE
         mcmd.velocities = [0.] * 18
         mcmd.torques = [0.] * 18
-        if pos_t:
+        if pos_t is not None:
             mcmd.positions = pos_t.tolist()
             mcmd.kp = [35., 25., 25., 35., 35., 25.,
                        35., 25., 25., 35., 35., 25.,
@@ -90,13 +91,6 @@ class master(Node):
             mcmd.kp = [0.] * 18
             mcmd.kd = [0.] * 18
         return mcmd
-
-    def stand_pd(self):
-        if time.time() < START_TIME: return None
-        if self.start_pos is None: self.start_pos = self.joint_pos.copy()
-        time_coeff = min((time.time() - START_TIME) / TIME_TO_HOME, 1.0)
-        pos_t = self.start_pos + time_coeff * (self.home_pose - self.start_pos)
-        return pos_t
     
 def main(args=None):
     rclpy.init(args=args)
