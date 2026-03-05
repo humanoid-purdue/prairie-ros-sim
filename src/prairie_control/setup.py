@@ -44,6 +44,7 @@ setup(
             'real_imu = prairie_control.real_imu:main',
             'real_state_estimator = prairie_control.real_state_estimator:main',
             'master = prairie_control.master:main',
+            'master_test = prairie_control.master_test:main',
         ],
     },
 )
