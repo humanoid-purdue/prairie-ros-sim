@@ -25,7 +25,7 @@ SingleMotorManager::SingleMotorManager(std::string port, int section_id) {
             cmd[i].id = section_id;
         }
         else {
-            cmd[i].id = i
+            cmd[i].id = i;
         }
         cmd[i].kp = 0.0;
         cmd[i].kd = 0.0;
@@ -110,16 +110,17 @@ void SingleMotorManager::set_q_offsets(float q[6]) {
     }
 }
 
-MotorManager::mapUSB(std::string port) {
+void MotorManager::mapUSB(std::string port) {
+    std::unique_ptr<SerialPort> serial;
     try {
         serial = std::make_unique<SerialPort>(port);
     } catch (const std::exception &e) {
         std::cout << "mapUSB: No USB found on port " << port << std::endl;
         return;
     }
-    const int PELVIS_ID = 5
-    const int LEFT_ID = 6
-    const int RIGHT_ID = 7
+    const int PELVIS_ID = 5;
+    const int LEFT_ID = 6;
+    const int RIGHT_ID = 7;
     MotorCmd cmd;
     MotorData data;
     for (int id : {PELVIS_ID, LEFT_ID, RIGHT_ID}) {
@@ -130,23 +131,23 @@ MotorManager::mapUSB(std::string port) {
         cmd.kd = 0.0;
         cmd.q = 0.0;
         cmd.dq = 0.0;
-        cmd.id = id
+        cmd.id = id;
         serial -> sendRecv(&cmd, &data);
         if (data.merror == 0) {
             std::cout << "mapUSB: Motor " << id << " detected on port " << port << std::endl;
             if (id == PELVIS_ID) {
                 std::cout << "mapUSB: " << port << " identified as pelvis" << std::endl;
-                pelvis = SingleMotorManager(port, PELVIS_ID)
+                pelvis = std::make_unique<SingleMotorManager>(port, PELVIS_ID);
                 return;
             }
             if (id == LEFT_ID) {
                 std::cout << "mapUSB: " << port << " identified as left leg" << std::endl;
-                left = SingleMotorManager(port, LEFT_ID)
+                left = std::make_unique<SingleMotorManager>(port, LEFT_ID);
                 return;
             }
             if (id == RIGHT_ID) {
                 std::cout << "mapUSB: " << port << " identified as right leg" << std::endl;
-                right = SingleMotorManager(port, RIGHT_ID)
+                right = std::make_unique<SingleMotorManager>(port, RIGHT_ID);
                 return;
             }
         }
@@ -158,6 +159,9 @@ MotorManager::MotorManager() {
     mapUSB("/dev/ttyUSB0");
     mapUSB("/dev/ttyUSB1");
     mapUSB("/dev/ttyUSB2");
+    if (!pelvis || !left || !right) {
+        throw std::runtime_error("MotorManager: Missing motors");
+    }
     gear_ratio = queryGearRatio(MotorType::GO_M8010_6);
     safe = false;
     // unsafe means that reading is still engaged but no motor cmds will be sent
@@ -171,7 +175,7 @@ void MotorManager::assignMotorCmd(struct JointStateStruct &data, struct RawMotor
     double kp = data.kp / (gear_ratio * gear_ratio);
     double kd = data.kd / (gear_ratio * gear_ratio);
     double max_tau = 20.;
-    if (abs(test_tau) > max_tau) {
+    if (std::abs(test_tau) > max_tau) {
         kp = kp * max_tau / abs(test_tau);
         kd = kd * max_tau / abs(test_tau);
     }
@@ -189,9 +193,9 @@ void MotorManager::set_q_offsets(float pelvis_dq[6], float left_dq[6], float rig
     // Go through each joint and determine what the approximate
     // q in motor q space is and find minimum pi based offset for that.
     // The motor q space would be in increments of 6.33 * p/3 radians modulo 2 pi
-    pelvis.set_q_offsets(pelvis_dq);
-    left.set_q_offsets(left_dq);
-    right.set_q_offsets(right_dq);
+    pelvis->set_q_offsets(pelvis_dq);
+    left->set_q_offsets(left_dq);
+    right->set_q_offsets(right_dq);
 }
 
 void MotorManager::update() {
@@ -200,125 +204,125 @@ void MotorManager::update() {
 
     if (safe) {
         // 0: l_hip_pitch
-        assignMotorCmd(joint_state[0], pelvis.raw_motor[2], 1.0);
-        assignMotorCmd(joint_state[0], pelvis.raw_motor[1], -1.0);
+        assignMotorCmd(joint_state[0], pelvis->raw_motor[2], 1.0);
+        assignMotorCmd(joint_state[0], pelvis->raw_motor[1], -1.0);
 
         // 1: l_hip_roll
-        assignMotorCmd(joint_state[1], pelvis.raw_motor[0], -1.0);
+        assignMotorCmd(joint_state[1], pelvis->raw_motor[0], -1.0);
 
         // 2: l_hip_yaw
-        assignMotorCmd(joint_state[2], left.raw_motor[0], -1.0);
+        assignMotorCmd(joint_state[2], left->raw_motor[0], -1.0);
 
         // 3: l_knee
-        assignMotorCmd(joint_state[3], left.raw_motor[1], 1.0);
-        assignMotorCmd(joint_state[3], left.raw_motor[2], -1.0);
+        assignMotorCmd(joint_state[3], left->raw_motor[1], 1.0);
+        assignMotorCmd(joint_state[3], left->raw_motor[2], -1.0);
 
         // 4: l_ankle_pitch
-        assignMotorCmd(joint_state[4], left.raw_motor[3], -1.0);
-        assignMotorCmd(joint_state[4], left.raw_motor[4], 1.0);
+        assignMotorCmd(joint_state[4], left->raw_motor[3], -1.0);
+        assignMotorCmd(joint_state[4], left->raw_motor[4], 1.0);
 
         // 5: l_ankle_roll
-        assignMotorCmd(joint_state[5], left.raw_motor[5], 1.0);
+        assignMotorCmd(joint_state[5], left->raw_motor[5], 1.0);
 
         // 6: r_hip_pitch
-        assignMotorCmd(joint_state[6], pelvis.raw_motor[4], 1.0);
-        assignMotorCmd(joint_state[6], pelvis.raw_motor[5], -1.0);
+        assignMotorCmd(joint_state[6], pelvis->raw_motor[4], 1.0);
+        assignMotorCmd(joint_state[6], pelvis->raw_motor[5], -1.0);
 
         // 7: r_hip_roll
-        assignMotorCmd(joint_state[7], pelvis.raw_motor[3], -1.0);
+        assignMotorCmd(joint_state[7], pelvis->raw_motor[3], -1.0);
 
         // 8: r_hip_yaw
-        assignMotorCmd(joint_state[8], right.raw_motor[0], -1.0);
+        assignMotorCmd(joint_state[8], right->raw_motor[0], -1.0);
 
         // 9: r_knee
-        assignMotorCmd(joint_state[9], right.raw_motor[1], -1.0);
-        assignMotorCmd(joint_state[9], right.raw_motor[2], 1.0);
+        assignMotorCmd(joint_state[9], right->raw_motor[1], -1.0);
+        assignMotorCmd(joint_state[9], right->raw_motor[2], 1.0);
 
         // 10: r_ankle_pitch
-        assignMotorCmd(joint_state[10], right.raw_motor[3], 1.0);
-        assignMotorCmd(joint_state[10], right.raw_motor[4], -1.0);
+        assignMotorCmd(joint_state[10], right->raw_motor[3], 1.0);
+        assignMotorCmd(joint_state[10], right->raw_motor[4], -1.0);
 
         // 11: r_ankle_roll
-        assignMotorCmd(joint_state[11], right.raw_motor[5], 1.0);
+        assignMotorCmd(joint_state[11], right->raw_motor[5], 1.0);
     }
 
 
-    left.update();
-    pelvis.update();
-    right.update();
+    left->update();
+    pelvis->update();
+    right->update();
     safe = true;
     for (int i = 0; i < 6; i++) {
-        if (left.motor_error[i] != 0 || pelvis.motor_error[i] != 0 || right.motor_error[i] != 0) {
+        if (left->motor_error[i] != 0 || pelvis->motor_error[i] != 0 || right->motor_error[i] != 0) {
             safe = false;
         }
-        error_codes[i] = pelvis.motor_error[i];
-        error_codes[i + 6] = left.motor_error[i];
-        error_codes[i + 12] = right.motor_error[i];
+        error_codes[i] = pelvis->motor_error[i];
+        error_codes[i + 6] = left->motor_error[i];
+        error_codes[i + 12] = right->motor_error[i];
     }
     // Go through each of the 18 joints and update the joint state
 
     // 0: l_hip_pitch
     joint_state[0].current_q = (
-        pelvis.raw_q_motor[2] + pelvis.raw_q_motor[1] * -1) / (2 * gear_ratio);
+        pelvis->raw_q_motor[2] + pelvis->raw_q_motor[1] * -1) / (2 * gear_ratio);
     joint_state[0].current_dq = (
-        pelvis.raw_dq_motor[2] + pelvis.raw_dq_motor[1] * -1) / (2 * gear_ratio);
+        pelvis->raw_dq_motor[2] + pelvis->raw_dq_motor[1] * -1) / (2 * gear_ratio);
 
     // 1: l_hip_roll
-    joint_state[1].current_q = pelvis.raw_q_motor[0] * -1 / gear_ratio;
-    joint_state[1].current_dq = pelvis.raw_dq_motor[0] * -1 / gear_ratio;
+    joint_state[1].current_q = pelvis->raw_q_motor[0] * -1 / gear_ratio;
+    joint_state[1].current_dq = pelvis->raw_dq_motor[0] * -1 / gear_ratio;
 
     // 2: l_hip_yaw
-    joint_state[2].current_q = left.raw_q_motor[0] * -1 / gear_ratio;
-    joint_state[2].current_dq = left.raw_dq_motor[0] * -1 / gear_ratio;
+    joint_state[2].current_q = left->raw_q_motor[0] * -1 / gear_ratio;
+    joint_state[2].current_dq = left->raw_dq_motor[0] * -1 / gear_ratio;
 
     // 3: l_knee
     joint_state[3].current_q = (
-        left.raw_q_motor[1] + left.raw_q_motor[2] * -1) / (2 * gear_ratio);
+        left->raw_q_motor[1] + left->raw_q_motor[2] * -1) / (2 * gear_ratio);
     joint_state[3].current_dq = (
-        left.raw_dq_motor[1] + left.raw_dq_motor[2] * -1) / (2 * gear_ratio);
+        left->raw_dq_motor[1] + left->raw_dq_motor[2] * -1) / (2 * gear_ratio);
     
     // 4: l_ankle_pitch
 
     joint_state[4].current_q = (
-        left.raw_q_motor[4] + left.raw_q_motor[3] * -1) / (2 * gear_ratio);
+        left->raw_q_motor[4] + left->raw_q_motor[3] * -1) / (2 * gear_ratio);
     joint_state[4].current_dq = (
-        left.raw_dq_motor[4] + left.raw_dq_motor[3] * -1) / (2 * gear_ratio);
+        left->raw_dq_motor[4] + left->raw_dq_motor[3] * -1) / (2 * gear_ratio);
 
     // 5: l_ankle_roll
 
-    joint_state[5].current_q = left.raw_q_motor[5] / gear_ratio;
-    joint_state[5].current_dq = left.raw_dq_motor[5] / gear_ratio;
+    joint_state[5].current_q = left->raw_q_motor[5] / gear_ratio;
+    joint_state[5].current_dq = left->raw_dq_motor[5] / gear_ratio;
 
     // 6: r_hip_pitch
 
     joint_state[6].current_q = (
-        pelvis.raw_q_motor[4] + pelvis.raw_q_motor[5] * -1) / (2 * gear_ratio);
+        pelvis->raw_q_motor[4] + pelvis->raw_q_motor[5] * -1) / (2 * gear_ratio);
     joint_state[6].current_dq = (
-        pelvis.raw_dq_motor[4] + pelvis.raw_dq_motor[5] * -1) / (2 * gear_ratio);
+        pelvis->raw_dq_motor[4] + pelvis->raw_dq_motor[5] * -1) / (2 * gear_ratio);
 
     // 7: r_hip_roll
 
-    joint_state[7].current_q = pelvis.raw_q_motor[3] * -1 / gear_ratio;
-    joint_state[7].current_dq = pelvis.raw_dq_motor[3] * -1 / gear_ratio;
+    joint_state[7].current_q = pelvis->raw_q_motor[3] * -1 / gear_ratio;
+    joint_state[7].current_dq = pelvis->raw_dq_motor[3] * -1 / gear_ratio;
 
     // 8: r_hip_yaw
     
-    joint_state[8].current_q = right.raw_q_motor[0] * -1 / gear_ratio;
-    joint_state[8].current_dq = right.raw_dq_motor[0] * -1 / gear_ratio;
+    joint_state[8].current_q = right->raw_q_motor[0] * -1 / gear_ratio;
+    joint_state[8].current_dq = right->raw_dq_motor[0] * -1 / gear_ratio;
 
     // 9: r_knee
     joint_state[9].current_q = (
-        right.raw_q_motor[2] + right.raw_q_motor[1] * -1) / (2 * gear_ratio);
+        right->raw_q_motor[2] + right->raw_q_motor[1] * -1) / (2 * gear_ratio);
     joint_state[9].current_dq = (
-        right.raw_dq_motor[2] + right.raw_dq_motor[1] * -1) / (2 * gear_ratio);
+        right->raw_dq_motor[2] + right->raw_dq_motor[1] * -1) / (2 * gear_ratio);
 
     // 10: r_ankle_pitch
     joint_state[10].current_q = (
-        right.raw_q_motor[3] + right.raw_q_motor[4] * -1) / (2 * gear_ratio);
+        right->raw_q_motor[3] + right->raw_q_motor[4] * -1) / (2 * gear_ratio);
     joint_state[10].current_dq = (
-        right.raw_dq_motor[3] + right.raw_dq_motor[4] * -1) / (2 * gear_ratio);
+        right->raw_dq_motor[3] + right->raw_dq_motor[4] * -1) / (2 * gear_ratio);
 
     // 11: r_ankle_roll
-    joint_state[11].current_q = right.raw_q_motor[5] / gear_ratio;
-    joint_state[11].current_dq = right.raw_dq_motor[5] / gear_ratio;
+    joint_state[11].current_q = right->raw_q_motor[5] / gear_ratio;
+    joint_state[11].current_dq = right->raw_dq_motor[5] / gear_ratio;
 }
