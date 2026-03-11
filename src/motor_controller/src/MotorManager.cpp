@@ -279,8 +279,8 @@ void MotorManager::update() {
         assignMotorCmd(joint_state[9], right->raw_motor[2], 1.0);
 
         // 10: r_ankle_pitch
-        assignMotorCmd(joint_state[10], right->raw_motor[3], 1.0);
-        assignMotorCmd(joint_state[10], right->raw_motor[4], -1.0);
+        assignMotorCmd(joint_state[10], right->raw_motor[3], -1.0);
+        assignMotorCmd(joint_state[10], right->raw_motor[4], 1.0);
 
         // 11: r_ankle_roll
         assignMotorCmd(joint_state[11], right->raw_motor[5], 1.0);
@@ -358,9 +358,9 @@ void MotorManager::update() {
 
     // 10: r_ankle_pitch
     joint_state[10].current_q = (
-        right->raw_q_motor[3] + right->raw_q_motor[4] * -1) / (2 * gear_ratio);
+        right->raw_q_motor[3] * -1 + right->raw_q_motor[4]) / (2 * gear_ratio);
     joint_state[10].current_dq = (
-        right->raw_dq_motor[3] + right->raw_dq_motor[4] * -1) / (2 * gear_ratio);
+        right->raw_dq_motor[3] * -1 + right->raw_dq_motor[4]) / (2 * gear_ratio);
 
     // 11: r_ankle_roll
     joint_state[11].current_q = right->raw_q_motor[5] / gear_ratio;
