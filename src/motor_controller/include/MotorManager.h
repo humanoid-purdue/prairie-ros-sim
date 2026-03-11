@@ -39,6 +39,8 @@ class SingleMotorManager {
         void update();
         void printMotorData();
         void set_q_offsets(float q[6]);
+        MotorData * getData();
+        MotorCmd * getCmd();
 };
 
 class MotorManager {

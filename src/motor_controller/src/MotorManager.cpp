@@ -62,6 +62,14 @@ void SingleMotorManager::update() {
     }
 }
 
+MotorData * SingleMotorManager::getData() {
+    return data;
+}
+
+MotorCmd * SingleMotorManager::getCmd() {
+    return cmd;
+}
+
 void SingleMotorManager::printMotorData() {
     std::cout << "==================================================" << std::endl;
     for (int i = 0; i < 6; i++) {
@@ -126,6 +134,10 @@ void MotorManager::mapUSB(std::string port) {
     for (int id : {PELVIS_ID, LEFT_ID, RIGHT_ID}) {
         cmd.motorType = MotorType::GO_M8010_6;
         data.motorType = MotorType::GO_M8010_6;
+        data.q = 9999;
+        data.dq = 9999;
+        data.temp = -1;
+        data.merror = -1;
         cmd.mode = queryMotorMode(MotorType::GO_M8010_6,MotorMode::FOC);
         cmd.kp = 0.0;
         cmd.kd = 0.0;
@@ -200,8 +212,36 @@ void MotorManager::set_q_offsets(float pelvis_dq[6], float left_dq[6], float rig
 
 void MotorManager::update() {
 
-    // Go through each joint and set the commands for each controller
+    // Debug block
+    for (int i = 0; i < 3; i++) {
+        MotorData * data;
+        MotorCmd * cmd;
+        std::cout << "====================================================" << std::endl;
+        if (i == 0) {
+            data = pelvis->getData();
+            cmd = pelvis->getCmd();
+            std::cout << "PELVIS" << std::endl << std::endl;
+        }
+        if (i == 1) {
+            data = left->getData();
+            cmd = left->getCmd();
+            std::cout << "LEFT LEG" << std::endl << std::endl;
+        }
+        if (i == 2) {
+            data = right->getData();
+            cmd = right->getCmd();
+            std::cout << "RIGHT LEG" << std::endl << std::endl;
+        }
+        for (int i = 0; i < 6; i++) {
+            std::cout << "  Motor ID: " << cmd[i].id << std::endl;
+            std::cout << "      q: " << data[i].q << std::endl;
+            std::cout << "      merror: " << data[i].merror << std::endl;
+            std::cout << std::endl;
+        }
+        std::cout << "====================================================" << std::endl;
+    }
 
+    // Go through each joint and set the commands for each controller
     if (safe) {
         // 0: l_hip_pitch
         assignMotorCmd(joint_state[0], pelvis->raw_motor[2], 1.0);
