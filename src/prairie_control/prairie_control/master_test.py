@@ -21,7 +21,7 @@ import utils
 TIME_TO_HOME = 2.0 #Seconds
 START_TIME = 5.0 #Seconds
 
-class master(Node):
+class master_test(Node):
     def __init__(self):
         super().__init__('master_test')
         qos_profile = QoSProfile(depth=10)
