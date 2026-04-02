@@ -18,8 +18,8 @@ helper_path = os.path.join(
 sys.path.append(helper_path)
 import utils
 
-TIME_TO_HOME = 2.0 #Seconds
-START_TIME = 5.0 #Seconds
+TIME_TO_HOME = 5.0 #Seconds
+START_TIME = 10.0 #Seconds
 
 class master_test(Node):
     def __init__(self):
@@ -36,6 +36,8 @@ class master_test(Node):
             self.joint_state_callback,
             qos_profile
         )
+
+        self.start_time = START_TIME + time.time()
 
         self.joint_pos = None
 
@@ -56,17 +58,17 @@ class master_test(Node):
                         0, -0.05, 0])
 
     def joint_state_callback(self, msg):
-        if not self.joint_pos: self.joint_pos = np.zeros([18])
+        if self.joint_pos is None: self.joint_pos = np.zeros([18])
         for i in range(12):
             self.joint_pos[i] = msg.position[i]
 
     def timer_callback(self):
         pos_t = None
-        if time.time() > START_TIME and self.joint_pos is not None:
+        if time.time() > self.start_time and self.joint_pos is not None:
             if self.start_pos is None:
                 self.start_pos = self.joint_pos.copy()
                 print("master_test: STARTING MOVEMENT...")
-            time_coeff = min((time.time() - START_TIME) / TIME_TO_HOME, 1.0)
+            time_coeff = min((time.time() - self.start_time) / TIME_TO_HOME, 1.0)
             pos_t = self.start_pos + time_coeff * (self.home_pose - self.start_pos)
         mcmd = self.pos_t2mcmd(pos_t)
         self.joint_pub.publish(mcmd)
@@ -82,6 +84,7 @@ class master_test(Node):
                        35., 25., 25., 35., 35., 25.,
                        15., 15., 15.,
                        15., 15., 15.]
+            mcmd = [5.] * 18
             mcmd.kd = [2., 1., 1., 2., 2., 1.,
                        2., 1., 1., 2., 2., 1.,
                        1., 1., 1.,

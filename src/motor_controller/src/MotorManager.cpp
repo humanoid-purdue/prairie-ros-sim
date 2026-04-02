@@ -90,7 +90,6 @@ SingleMotorManager::~SingleMotorManager() {
 
 float SingleMotorManager::find_q(float cur_q, float des_q) {
      float min_sep = 10.0;
-     float min_offset = 0.0;
      for (int i = -6; i <= 6; i++) {
          float full_offset = i * (M_PI / 3.0f);
         
@@ -101,7 +100,6 @@ float SingleMotorManager::find_q(float cur_q, float des_q) {
              float probe_sep = std::abs(cur_q + total_offset - des_q);
              if (probe_sep < min_sep) {
                  min_sep = probe_sep;
-                 min_offset = total_offset;
              }
          }
             
@@ -213,7 +211,7 @@ void MotorManager::set_q_offsets(float pelvis_dq[6], float left_dq[6], float rig
 void MotorManager::update() {
 
     // Debug block
-    for (int i = 0; i < 3; i++) {
+    /*for (int i = 0; i < 3; i++) {
         MotorData * data;
         MotorCmd * cmd;
         std::cout << "====================================================" << std::endl;
@@ -239,7 +237,7 @@ void MotorManager::update() {
             std::cout << std::endl;
         }
         std::cout << "====================================================" << std::endl;
-    }
+    }*/
 
     // Go through each joint and set the commands for each controller
     if (safe) {
