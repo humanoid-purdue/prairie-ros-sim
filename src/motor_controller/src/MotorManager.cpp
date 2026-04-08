@@ -181,24 +181,31 @@ MotorManager::~MotorManager() {
 }
 
 void MotorManager::assignMotorCmd(struct JointStateStruct &data, struct RawMotorStruct &raw, float mult) {
+    if (mult != 1 || mult != -1) throw std::runtime_error("mult must be 1 or -1 when assigning motor command");
     double test_tau = data.tau + data.kp * (data.des_p - data.current_q) + data.kd * (data.des_d - data.current_dq);
-    // Safety: clipping large differences to prevent high torques
+    // Clipping large differences to prevent high torques
     double max_diff = 0.2;
-    if (data.des_p - data.current_q > max_diff) {
-        data.des_p = data.current_q + max_diff;
+    if (std::abs(data.des_p - data.current_q) > max_diff) {
+        if (data.des_p - data.current_q < 0) data.des_p = data.current_q - max_diff;
+        else data.des_p = data.current_q + max_diff;
     }
-    double kp = data.kp / (gear_ratio * gear_ratio);
-    double kd = data.kd / (gear_ratio * gear_ratio);
-    double max_tau = 20.;
+    double max_tau = 23.;
+    double kp = data.kp;
+    double kd = data.kd;
     if (std::abs(test_tau) > max_tau) {
         kp = kp * max_tau / abs(test_tau);
         kd = kd * max_tau / abs(test_tau);
     }
-    raw.kp = kp;
-    raw.kd = kd;
+    double tau = data.tau;
+    if (std::abs(tau) > max_tau) {
+        if (data.tau < 0) tau = -max_tau;
+        else tau = max_tau;
+    }
+    raw.kp = kp / (gear_ratio * gear_ratio);
+    raw.kd = kd / (gear_ratio * gear_ratio);
     raw.des_p = data.des_p * mult * gear_ratio;
     raw.des_d = data.des_d * mult * gear_ratio;
-    raw.tau = data.tau * mult * gear_ratio;
+    raw.tau = tau * mult / gear_ratio;
 }
 
 void MotorManager::set_q_offsets(float pelvis_dq[6], float left_dq[6], float right_dq[6]) {
