@@ -182,6 +182,11 @@ MotorManager::~MotorManager() {
 
 void MotorManager::assignMotorCmd(struct JointStateStruct &data, struct RawMotorStruct &raw, float mult) {
     double test_tau = data.tau + data.kp * (data.des_p - data.current_q) + data.kd * (data.des_d - data.current_dq);
+    // Safety: clipping large differences to prevent high torques
+    double max_diff = 0.2;
+    if (data.des_p - data.current_q > max_diff) {
+        data.des_p = data.current_q + max_diff;
+    }
     double kp = data.kp / (gear_ratio * gear_ratio);
     double kd = data.kd / (gear_ratio * gear_ratio);
     double max_tau = 20.;
