@@ -7,12 +7,18 @@
 #include <stdexcept>
 #include <cmath>
 
-SingleMotorManager::SingleMotorManager(std::string port, int section_id) {
-    try {
-        serial = std::make_unique<SerialPort>(port);
-        serial_init = true;
-    } catch (const std::exception &e) {
-        std::cout << "No USB found on port " << port << std::endl;
+SingleMotorManager::SingleMotorManager(std::string port, int section_id, bool missing_motors) {
+    if (missing_motors) {
+        serial_init = false;
+    }
+    else {
+        try {
+            serial = std::make_unique<SerialPort>(port);
+            serial_init = true;
+        } catch (const std::exception &e) {
+            std::cout << "No USB found on port " << port << std::endl;
+            serial_init = false;
+        }
     }
     for (int i = 0; i < 6; i++) {
         motor_error[i] = -1;
@@ -105,7 +111,7 @@ float SingleMotorManager::find_q(float cur_q, float des_q) {
             
 
      }
-     return des_q -cur_q;
+     return des_q - cur_q;
 }
 
 void SingleMotorManager::set_q_offsets(float q[6]) {
@@ -169,8 +175,17 @@ MotorManager::MotorManager() {
     mapUSB("/dev/ttyUSB0");
     mapUSB("/dev/ttyUSB1");
     mapUSB("/dev/ttyUSB2");
-    if (!pelvis || !left || !right) {
-        throw std::runtime_error("MotorManager: Missing motors");
+    if (!pelvis) {
+        std::cout << "MotorManager: pelvis not found: missing motors" << std::endl;
+        pelvis = std::make_unique<SingleMotorManager>("", 5, true);
+    }
+    if (!right) {
+        std::cout << "MotorManager: right leg not found: missing motors" << std::endl;
+        pelvis = std::make_unique<SingleMotorManager>("", 7, true);
+    }
+    if (!left) {
+        std::cout << "MotorManager: left leg not found: missing motors" << std::endl;
+        pelvis = std::make_unique<SingleMotorManager>("", 6, true);
     }
     gear_ratio = queryGearRatio(MotorType::GO_M8010_6);
     safe = false;

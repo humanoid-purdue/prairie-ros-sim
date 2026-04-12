@@ -34,7 +34,7 @@ class SingleMotorManager {
         float raw_q_motor[6];
         float raw_dq_motor[6];
         int motor_error[6];
-        SingleMotorManager(std::string port = "/dev/ttyUSB0", int section_id = 5);
+        SingleMotorManager(std::string port = "/dev/ttyUSB0", int section_id = 5, bool missing_motors = false);
         ~SingleMotorManager();
         void update();
         void printMotorData();
