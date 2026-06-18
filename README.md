@@ -57,14 +57,6 @@ ros2 topic pub /joint_trajectory_controller/joint_trajectory trajectory_msgs/msg
 }'
 ```
 
-### Xbox Controls
+### master_gzlink controls
 
-#### Gazebo Simulation
-- Press A: Switch Gazebo to standing controller
-- Press B: Switch Gazebo to policy network
-
-#### Real Control
-- Press X: Disable robot (motors off)
-- Press Y: Interpolate from current position to home position
-- Press LB: Activate standing controller
-- Press RB: Activate policy network
+See [docs/master_gzlink_controls.md](docs/master_gzlink_controls.md) for the high-level control scheme, Xbox mapping, launch arguments, and topics to inspect.

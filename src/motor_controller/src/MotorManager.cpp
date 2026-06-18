@@ -36,6 +36,10 @@ SingleMotorManager::SingleMotorManager(std::string port, int section_id, bool mi
         cmd[i].kp = 0.0;
         cmd[i].kd = 0.0;
         cmd[i].tau = 0.0;
+        data[i].q = 0.0;
+        data[i].dq = 0.0;
+        data[i].temp = 0;
+        data[i].merror = serial_init ? 0 : -1;
         q_offsets[i] = 0.0;
     }
 }
@@ -181,11 +185,11 @@ MotorManager::MotorManager() {
     }
     if (!right) {
         std::cout << "MotorManager: right leg not found: missing motors" << std::endl;
-        pelvis = std::make_unique<SingleMotorManager>("", 7, true);
+        right = std::make_unique<SingleMotorManager>("", 7, true);
     }
     if (!left) {
         std::cout << "MotorManager: left leg not found: missing motors" << std::endl;
-        pelvis = std::make_unique<SingleMotorManager>("", 6, true);
+        left = std::make_unique<SingleMotorManager>("", 6, true);
     }
     gear_ratio = queryGearRatio(MotorType::GO_M8010_6);
     safe = false;
@@ -196,7 +200,7 @@ MotorManager::~MotorManager() {
 }
 
 void MotorManager::assignMotorCmd(struct JointStateStruct &data, struct RawMotorStruct &raw, float mult) {
-    if (mult != 1 || mult != -1) throw std::runtime_error("mult must be 1 or -1 when assigning motor command");
+    if (mult != 1 && mult != -1) throw std::runtime_error("mult must be 1 or -1 when assigning motor command");
     double test_tau = data.tau + data.kp * (data.des_p - data.current_q) + data.kd * (data.des_d - data.current_dq);
     // Clipping large differences to prevent high torques
     double max_diff = 0.2;

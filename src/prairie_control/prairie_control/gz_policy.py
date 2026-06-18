@@ -9,7 +9,7 @@ from rclpy.qos import QoSProfile
 from builtin_interfaces.msg import Duration, Time
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from sensor_msgs.msg import JointState
-from gz_sim_interfaces.msg import StateObservationReduced, MasterState
+from gz_sim_interfaces.msg import PrairieState, StateObservationReduced
 from geometry_msgs.msg import Twist
 
 helper_path = os.path.join(
@@ -19,8 +19,6 @@ helper_path = os.path.join(
 sys.path.append(helper_path)
 import policy_network, utils
 from utils import JOINT_LIST_COMPLETE
-
-FILT = 0.9
 
 class gz_policy(Node):
     def __init__(self):
@@ -49,14 +47,14 @@ class gz_policy(Node):
             qos_profile
         )
 
-        self.state = 0
+        self.state = PrairieState.MODE_STAND
 
         self.cmd = np.array([0.0, 0.0, 0.0])
 
-        self.master_subscriber = self.create_subscription(
-            MasterState,
-            '/master_state',
-            self.master_callback,
+        self.prairie_state_subscriber = self.create_subscription(
+            PrairieState,
+            '/prairie/state',
+            self.prairie_state_callback,
             qos_profile
         )
 
@@ -71,19 +69,15 @@ class gz_policy(Node):
         self.obs = utils.fill_obs_dict(msg)
         return 
     
-    def master_callback(self, msg):
-        self.state = msg.state1
-        vel = np.array([msg.ly, msg.lx]) * np.array([0.4, -0.3])
-        angvel = np.array([msg.rx]) * -0.8
-        current_cmd = np.hstack((vel, angvel))
-        self.cmd = self.cmd * FILT + current_cmd * (1 - FILT)
-
+    def prairie_state_callback(self, msg):
+        self.state = msg.sim_mode
+        self.cmd = np.array([msg.vx, msg.vy, msg.yaw_rate])
         return
     
     def timer_callback(self):
         if self.obs == {}:
             return
-        if self.state == 0:
+        if self.state != PrairieState.MODE_WALK:
             self.wpn.reinit(t = self.obs['time'])
         action = self.wpn.apply_net(
             self.obs["joint_position"], 

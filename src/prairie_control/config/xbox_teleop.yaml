@@ -1,0 +1,15 @@
+prairie_teleop:
+  ros__parameters:
+    axis_left_x: 0
+    axis_left_y: 1
+    axis_right_x: 3
+    button_a: 0
+    button_b: 1
+    button_x: 2
+    button_y: 3
+    button_lb: 4
+    button_rb: 5
+    vx_scale: 0.4
+    vy_scale: -0.3
+    yaw_rate_scale: -0.8
+    deadzone: 0.1

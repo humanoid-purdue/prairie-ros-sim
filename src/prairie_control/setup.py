@@ -4,6 +4,10 @@ from glob import glob
 
 package_name = 'prairie_control'
 
+
+def files_only(pattern):
+    return [path for path in glob(pattern) if os.path.isfile(path)]
+
 setup(
     name=package_name,
     version='0.0.0',
@@ -12,7 +16,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/urdf', glob('urdf/*')),
+        ('share/' + package_name + '/urdf', files_only('urdf/*')),
         ('share/' + package_name + '/meshes/nemo4b', glob('meshes/nemo4b/*')),
         ('share/' + package_name + '/meshes/nemo6', glob('meshes/nemo6/*')),
         ('share/' + package_name + '/rviz', glob('rviz/*')),
@@ -43,6 +47,9 @@ setup(
             'real_policy = prairie_control.real_policy:main',
             'real_imu = prairie_control.real_imu:main',
             'real_state_estimator = prairie_control.real_state_estimator:main',
+            'prairie_teleop = prairie_control.prairie_teleop:main',
+            'prairie_supervisor = prairie_control.prairie_supervisor:main',
+            'prairie_command_mux = prairie_control.prairie_command_mux:main',
             'master = prairie_control.master:main',
             'master_test = prairie_control.master_test:main',
         ],

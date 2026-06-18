@@ -7,7 +7,7 @@ from ament_index_python.packages import get_package_share_directory
 from rclpy.qos import QoSProfile
 from builtin_interfaces.msg import Duration
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from gz_sim_interfaces.msg import StateObservationReduced, MasterState
+from gz_sim_interfaces.msg import PrairieState, StateObservationReduced
 
 helper_path = os.path.join(get_package_share_directory('prairie_control'), "helpers")
 sys.path.append(helper_path)
@@ -39,10 +39,10 @@ class real_standing(Node):
             qos_profile
         )
 
-        self.master_subscriber = self.create_subscription(
-            MasterState,
-            '/master_state',
-            self.master_callback,
+        self.prairie_state_subscriber = self.create_subscription(
+            PrairieState,
+            '/prairie/state',
+            self.prairie_state_callback,
             qos_profile
         )
 
@@ -62,8 +62,8 @@ class real_standing(Node):
         self.obs = utils.fill_obs_dict(msg)
         return
 
-    def master_callback(self, msg):
-        self.start_standing = msg.start_standing
+    def prairie_state_callback(self, msg):
+        self.start_standing = msg.real_start_standing
         return
 
     def timer_callback(self):

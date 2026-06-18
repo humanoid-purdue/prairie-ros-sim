@@ -7,6 +7,14 @@
   <maintainer email="ludwigtaycheeying@gmail.com">savvy</maintainer>
   <license>TODO: License declaration</license>
 
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>builtin_interfaces</exec_depend>
+  <exec_depend>gz_sim_interfaces</exec_depend>
+  <exec_depend>joy</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
