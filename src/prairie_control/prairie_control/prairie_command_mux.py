@@ -148,6 +148,14 @@ class PrairieCommandMux(Node):
                 "missing /real_standing_jtp; disabling real command",
             )
             return self.disabled_mcmd()
+        if self.state.real_mode == MODE_MIRROR:
+            if self.gz_mirror_jtp is not None:
+                return self.jtp_to_mcmd(self.gz_mirror_jtp)
+            self.warn_throttled(
+                "real_mirror_missing",
+                "missing /gz_mirror_jtp; disabling real command",
+            )
+            return self.disabled_mcmd()
         if self.state.real_mode == MODE_WALK:
             if self.real_policy_jtp is not None:
                 return self.jtp_to_mcmd(self.real_policy_jtp, kp=WALK_REAL_KP)

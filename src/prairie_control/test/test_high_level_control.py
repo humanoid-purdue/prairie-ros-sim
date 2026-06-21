@@ -3,6 +3,7 @@ from prairie_control.control_modes import (
     DOMAIN_SIM,
     MODE_DISABLED,
     MODE_HOME,
+    MODE_MIRROR,
     MODE_STAND,
     MODE_WALK,
     CommandIntent,
@@ -38,12 +39,29 @@ def test_joy_mapper_maps_buttons_and_axes():
     assert command.vy == 0.0
     assert command.yaw_rate == 0.0
 
+    command = mapper.update([0.0, 0.0, 0.0, 0.0], [0, 0, 0, 0, 1, 0])
 
-def test_supervisor_accepts_safe_real_sequence_and_refuses_walk_from_disabled():
+    assert command.domain == DOMAIN_REAL
+    assert command.mode == MODE_MIRROR
+
+    command = mapper.update([0.0, 0.0, 0.0, 0.0], [0, 0, 0, 0, 0, 1])
+
+    assert command.domain == DOMAIN_REAL
+    assert command.mode == MODE_MIRROR
+
+
+def test_supervisor_accepts_real_mirror_sequence_and_refuses_real_walk():
     supervisor = SupervisorCore()
 
     state, accepted, reason = supervisor.update(
         CommandIntent(domain=DOMAIN_REAL, mode=MODE_WALK)
+    )
+    assert not accepted
+    assert "real policy mode is disabled" in reason
+    assert state.real_mode == MODE_DISABLED
+
+    state, accepted, reason = supervisor.update(
+        CommandIntent(domain=DOMAIN_REAL, mode=MODE_MIRROR)
     )
     assert not accepted
     assert "refusing real transition" in reason
@@ -55,6 +73,24 @@ def test_supervisor_accepts_safe_real_sequence_and_refuses_walk_from_disabled():
     assert accepted
     assert state.real_mode == MODE_HOME
 
+    state, accepted, _ = supervisor.update(
+        CommandIntent(domain=DOMAIN_REAL, mode=MODE_MIRROR)
+    )
+    assert accepted
+    assert state.real_mode == MODE_MIRROR
+
+    state, accepted, reason = supervisor.update(
+        CommandIntent(domain=DOMAIN_REAL, mode=MODE_WALK)
+    )
+    assert not accepted
+    assert "real policy mode is disabled" in reason
+    assert state.real_mode == MODE_MIRROR
+
+
+def test_supervisor_can_allow_real_walk_when_explicitly_enabled():
+    supervisor = SupervisorCore(allow_real_walk=True)
+
+    supervisor.update(CommandIntent(domain=DOMAIN_REAL, mode=MODE_HOME))
     state, accepted, _ = supervisor.update(
         CommandIntent(domain=DOMAIN_REAL, mode=MODE_STAND)
     )

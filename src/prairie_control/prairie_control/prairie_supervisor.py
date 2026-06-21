@@ -6,6 +6,7 @@ from gz_sim_interfaces.msg import MasterState, PrairieCommand, PrairieState
 
 from .control_modes import (
     MODE_HOME,
+    MODE_MIRROR,
     MODE_STAND,
     MODE_WALK,
     CommandIntent,
@@ -16,7 +17,10 @@ from .control_modes import (
 class PrairieSupervisor(Node):
     def __init__(self):
         super().__init__("prairie_supervisor")
-        self.core = SupervisorCore()
+        self.declare_parameter("allow_real_walk", False)
+        self.core = SupervisorCore(
+            allow_real_walk=self.get_parameter("allow_real_walk").value
+        )
         self.last_warn_time = 0.0
         self.state_pub = self.create_publisher(PrairieState, "/prairie/state", 10)
         self.master_pub = self.create_publisher(MasterState, "/master_state", 10)
@@ -83,6 +87,8 @@ class PrairieSupervisor(Node):
             return 2
         if mode == MODE_WALK:
             return 3
+        if mode == MODE_MIRROR:
+            return 0
         return 0
 
 

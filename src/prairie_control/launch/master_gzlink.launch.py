@@ -64,7 +64,8 @@ def generate_launch_description():
             package='prairie_control',
             executable='prairie_supervisor',
             name='prairie_supervisor',
-            output='screen'),
+            output='screen',
+            parameters=[{'allow_real_walk': False}]),
         Node(
             package='prairie_control',
             executable='prairie_command_mux',
@@ -115,12 +116,6 @@ def generate_launch_description():
             package='prairie_control',
             executable='real_standing',
             name='real_standing',
-            output='screen',
-            condition=IfCondition(use_hardware)),
-        Node(
-            package='prairie_control',
-            executable='real_policy',
-            name='real_policy',
             output='screen',
             condition=IfCondition(use_hardware)),
     ])

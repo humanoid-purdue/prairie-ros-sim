@@ -24,6 +24,9 @@ Real hardware nodes are only started when explicitly enabled:
 ros2 launch prairie_control master_gzlink.launch.py use_hardware:=true
 ```
 
+This launch is intended for Gazebo-link control. It does not start the
+`real_policy` node, and the supervisor refuses real `WALK` commands by default.
+
 ## Control Pipeline
 
 The launch file splits user input, state supervision, and command routing into separate nodes:
@@ -65,16 +68,19 @@ These only matter when `use_hardware:=true`.
 | --- | --- |
 | `X` | Disable motors. Publishes zero gains and zero torque. |
 | `Y` | Home. Interpolates from current joint positions to the home pose. |
-| `LB` | Stand. Uses the real standing controller output. |
-| `RB` | Walk. Uses the real policy controller output. |
+| `LB` | Mirror Gazebo. Sends `/gz_mirror_jtp` to `/real_joint_trajectories`. |
+| `RB` | Unused. |
 
 The supervisor enforces the safe real-mode sequence:
 
 ```text
-DISABLED -> HOME -> STAND -> WALK
+DISABLED -> HOME -> MIRROR
 ```
 
-`X` can always return to `DISABLED`. `LB` can return from `WALK` to `STAND`. Unsafe out-of-order transitions are refused with a throttled warning.
+`X` can always return to `DISABLED`. Unsafe out-of-order transitions are
+refused with a throttled warning. If `/gz_mirror_jtp` is missing while real
+mirror mode is selected, the mux publishes disabled motor commands instead of a
+stale mirror command.
 
 ## Topics To Inspect
 
@@ -86,6 +92,7 @@ ros2 topic echo /prairie/state
 ros2 topic hz /joint_trajectories
 ros2 topic hz /gz_policy_jtp
 ros2 topic hz /gz_standing_jtp
+ros2 topic hz /gz_mirror_jtp
 ```
 
 For Gazebo-only runs, `/real_joint_trajectories` may still be published by the mux, but no motor controller should be running unless `use_hardware:=true`.

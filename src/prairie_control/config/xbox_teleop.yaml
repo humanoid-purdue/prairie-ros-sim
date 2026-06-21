@@ -8,7 +8,7 @@ prairie_teleop:
     button_x: 2
     button_y: 3
     button_lb: 4
-    button_rb: 5
+    button_rb: -1
     vx_scale: 0.4
     vy_scale: -0.3
     yaw_rate_scale: -0.8

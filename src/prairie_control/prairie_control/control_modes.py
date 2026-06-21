@@ -55,7 +55,7 @@ class TeleopConfig:
     button_x: int = 2
     button_y: int = 3
     button_lb: int = 4
-    button_rb: int = 5
+    button_rb: int = -1
     vx_scale: float = 0.4
     vy_scale: float = -0.3
     yaw_rate_scale: float = -0.8
@@ -103,16 +103,15 @@ class JoyMapper:
 
     def update(self, axes: Sequence[float], buttons: Sequence[int]) -> CommandIntent:
         config = self.config
-        pressed = {
-            config.button_a: (DOMAIN_SIM, MODE_STAND),
-            config.button_b: (DOMAIN_SIM, MODE_WALK),
-            config.button_x: (DOMAIN_REAL, MODE_DISABLED),
-            config.button_y: (DOMAIN_REAL, MODE_HOME),
-            config.button_lb: (DOMAIN_REAL, MODE_STAND),
-            config.button_rb: (DOMAIN_REAL, MODE_WALK),
-        }
+        bindings = [
+            (config.button_a, (DOMAIN_SIM, MODE_STAND)),
+            (config.button_b, (DOMAIN_SIM, MODE_WALK)),
+            (config.button_x, (DOMAIN_REAL, MODE_DISABLED)),
+            (config.button_y, (DOMAIN_REAL, MODE_HOME)),
+            (config.button_lb, (DOMAIN_REAL, MODE_MIRROR)),
+        ]
 
-        for button_index, command in pressed.items():
+        for button_index, command in bindings:
             if self._rising_edge(buttons, button_index):
                 self.last_domain, self.last_mode = command
 
@@ -133,9 +132,10 @@ class JoyMapper:
 
 
 class SupervisorCore:
-    def __init__(self):
+    def __init__(self, allow_real_walk: bool = False):
         self.state = ControlState()
         self._last_mode_command: Optional[Tuple[int, int]] = None
+        self.allow_real_walk = allow_real_walk
 
     def update(self, command: CommandIntent) -> Tuple[ControlState, bool, Optional[str]]:
         self.state.real_start_standing = False
@@ -146,7 +146,6 @@ class SupervisorCore:
         command_key = (command.domain, command.mode)
         if command_key == self._last_mode_command:
             return self.state, True, None
-        self._last_mode_command = command_key
 
         if command.mode == MODE_ESTOP:
             self.state.sim_mode = MODE_STAND
@@ -154,13 +153,23 @@ class SupervisorCore:
             self.state.vx = 0.0
             self.state.vy = 0.0
             self.state.yaw_rate = 0.0
+            self._last_mode_command = command_key
             return self.state, True, None
 
         if command.domain == DOMAIN_SIM:
-            return self._apply_sim(command.mode)
-        if command.domain == DOMAIN_REAL:
-            return self._apply_real(command.mode)
-        return self.state, False, f"unknown command domain {command.domain}"
+            state, accepted, reason = self._apply_sim(command.mode)
+        elif command.domain == DOMAIN_REAL:
+            state, accepted, reason = self._apply_real(command.mode)
+        else:
+            state, accepted, reason = (
+                self.state,
+                False,
+                f"unknown command domain {command.domain}",
+            )
+
+        if accepted:
+            self._last_mode_command = command_key
+        return state, accepted, reason
 
     def _apply_sim(self, mode: int) -> Tuple[ControlState, bool, Optional[str]]:
         if mode in (MODE_STAND, MODE_WALK, MODE_MIRROR):
@@ -178,10 +187,19 @@ class SupervisorCore:
         if mode == MODE_HOME and current == MODE_DISABLED:
             self.state.real_mode = MODE_HOME
             return self.state, True, None
-        if mode == MODE_STAND and current in (MODE_HOME, MODE_WALK):
+        if mode == MODE_STAND and current in (MODE_HOME, MODE_WALK, MODE_MIRROR):
             self.state.real_mode = MODE_STAND
             self.state.real_start_standing = True
             return self.state, True, None
+        if mode == MODE_MIRROR and current in (MODE_HOME, MODE_STAND):
+            self.state.real_mode = MODE_MIRROR
+            return self.state, True, None
+        if mode == MODE_WALK and not self.allow_real_walk:
+            return (
+                self.state,
+                False,
+                "refusing real WALK because real policy mode is disabled",
+            )
         if mode == MODE_WALK and current == MODE_STAND:
             self.state.real_mode = MODE_WALK
             return self.state, True, None
