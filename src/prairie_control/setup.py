@@ -48,6 +48,8 @@ setup(
             'real_imu = prairie_control.real_imu:main',
             'real_state_estimator = prairie_control.real_state_estimator:main',
             'prairie_teleop = prairie_control.prairie_teleop:main',
+            'prairie_keyboard_teleop = '
+            'prairie_control.prairie_keyboard_teleop:main',
             'prairie_supervisor = prairie_control.prairie_supervisor:main',
             'prairie_command_mux = prairie_control.prairie_command_mux:main',
             'master = prairie_control.master:main',

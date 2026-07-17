@@ -2,6 +2,7 @@ from prairie_control.control_modes import (
     DOMAIN_REAL,
     DOMAIN_SIM,
     MODE_DISABLED,
+    MODE_ESTOP,
     MODE_HOME,
     MODE_MIRROR,
     MODE_STAND,
@@ -9,6 +10,8 @@ from prairie_control.control_modes import (
     CommandIntent,
     DEFAULT_REAL_KD,
     JoyMapper,
+    KeyboardConfig,
+    KeyboardMapper,
     SupervisorCore,
     TeleopConfig,
     WALK_REAL_KP,
@@ -48,6 +51,72 @@ def test_joy_mapper_maps_buttons_and_axes():
 
     assert command.domain == DOMAIN_REAL
     assert command.mode == MODE_MIRROR
+
+
+def test_keyboard_mapper_maps_held_movement_keys():
+    mapper = KeyboardMapper(
+        KeyboardConfig(vx_scale=0.4, vy_scale=0.3, yaw_rate_scale=0.8)
+    )
+
+    command = mapper.press("w")
+    command = mapper.press("A")
+    command = mapper.press("q")
+
+    assert_close(command.vx, 0.4)
+    assert_close(command.vy, 0.3)
+    assert_close(command.yaw_rate, 0.8)
+
+    command = mapper.press("s")
+    assert command.vx == 0.0
+
+    command = mapper.release("s")
+    assert_close(command.vx, 0.4)
+
+    mapper.release("w")
+    mapper.release("a")
+    mapper.release("q")
+    command = mapper.press("d")
+    command = mapper.press("e")
+
+    assert command.vx == 0.0
+    assert_close(command.vy, -0.3)
+    assert_close(command.yaw_rate, -0.8)
+
+
+def test_keyboard_mapper_maps_number_keys_to_modes():
+    mapper = KeyboardMapper()
+
+    expected_modes = {
+        "1": (DOMAIN_SIM, MODE_STAND),
+        "2": (DOMAIN_SIM, MODE_WALK),
+        "3": (DOMAIN_REAL, MODE_DISABLED),
+        "4": (DOMAIN_REAL, MODE_HOME),
+        "5": (DOMAIN_REAL, MODE_MIRROR),
+    }
+    for key, expected in expected_modes.items():
+        command = mapper.press(key)
+        assert (command.domain, command.mode) == expected
+
+    command = mapper.press("0")
+    assert command.mode == MODE_ESTOP
+
+
+def test_repeated_emergency_stop_keeps_motion_zero():
+    supervisor = SupervisorCore()
+
+    supervisor.update(
+        CommandIntent(domain=DOMAIN_SIM, mode=MODE_ESTOP, vx=0.4)
+    )
+    state, accepted, _ = supervisor.update(
+        CommandIntent(domain=DOMAIN_SIM, mode=MODE_ESTOP, yaw_rate=0.8)
+    )
+
+    assert accepted
+    assert state.sim_mode == MODE_STAND
+    assert state.real_mode == MODE_DISABLED
+    assert state.vx == 0.0
+    assert state.vy == 0.0
+    assert state.yaw_rate == 0.0
 
 
 def test_supervisor_accepts_real_mirror_sequence_and_refuses_real_walk():

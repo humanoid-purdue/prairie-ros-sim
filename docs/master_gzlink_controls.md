@@ -18,6 +18,10 @@ ros2 launch prairie_control master_gzlink.launch.py use_joy:=false
 ros2 launch prairie_control master_gzlink.launch.py use_rviz:=false
 ```
 
+Setting `use_joy:=false` starts keyboard control in place of `joy_node` and
+`prairie_teleop`. It opens a small pygame input window; keep that window focused
+while driving. If it loses focus, all movement commands are reset to zero.
+
 Real hardware nodes are only started when explicitly enabled:
 
 ```bash
@@ -32,9 +36,9 @@ This launch is intended for Gazebo-link control. It does not start the
 The launch file splits user input, state supervision, and command routing into separate nodes:
 
 ```text
-joy_node
-  -> /joy
-  -> prairie_teleop
+joy_node -> /joy -> prairie_teleop             # use_joy:=true
+                         or
+prairie_keyboard_teleop                        # use_joy:=false
   -> /prairie/user_command
   -> prairie_supervisor
   -> /prairie/state
@@ -44,6 +48,33 @@ joy_node
 ```
 
 `prairie_supervisor` owns the accepted high-level mode. `prairie_command_mux` forwards the matching controller output to Gazebo or to the real motor command topic.
+
+## Keyboard Mapping
+
+Start keyboard control with:
+
+```bash
+ros2 launch prairie_control master_gzlink.launch.py use_joy:=false
+```
+
+Movement commands remain active while each key is held. Releasing a movement
+key stops that component of motion. Opposite keys held together cancel each
+other. The pygame input window must have keyboard focus.
+
+| Key | Effect |
+| --- | --- |
+| `W` / `S` | Translate forward / backward at `0.4 m/s`. |
+| `A` / `D` | Translate left / right at `0.3 m/s`. |
+| `Q` / `E` | Yaw left / right at `0.8 rad/s`. |
+| `1` | Simulation stand mode. |
+| `2` | Simulation walk mode. |
+| `3` | Disable real motors. Only relevant with `use_hardware:=true`. |
+| `4` | Home the real robot. Only relevant with `use_hardware:=true`. |
+| `5` | Mirror Gazebo on the real robot. Only relevant with `use_hardware:=true`. |
+| `0` | Emergency stop: switch simulation to stand, disable real motors, and zero motion. |
+
+The top number row and numeric keypad are both supported. The supervisor still
+enforces the real-robot transition sequence documented below.
 
 ## Xbox Mapping
 

@@ -63,6 +63,13 @@ class TeleopConfig:
 
 
 @dataclass
+class KeyboardConfig:
+    vx_scale: float = 0.4
+    vy_scale: float = 0.3
+    yaw_rate_scale: float = 0.8
+
+
+@dataclass
 class CommandIntent:
     domain: int = DOMAIN_SIM
     mode: int = MODE_STAND
@@ -131,6 +138,58 @@ class JoyMapper:
         return _button(buttons, index) and not _button(self.previous_buttons, index)
 
 
+class KeyboardMapper:
+    """Map held movement keys and number-key mode selections to commands."""
+
+    MODE_KEYS = {
+        "0": (DOMAIN_SIM, MODE_ESTOP),
+        "1": (DOMAIN_SIM, MODE_STAND),
+        "2": (DOMAIN_SIM, MODE_WALK),
+        "3": (DOMAIN_REAL, MODE_DISABLED),
+        "4": (DOMAIN_REAL, MODE_HOME),
+        "5": (DOMAIN_REAL, MODE_MIRROR),
+    }
+    MOVEMENT_KEYS = frozenset("wasdqe")
+
+    def __init__(self, config: Optional[KeyboardConfig] = None):
+        self.config = config or KeyboardConfig()
+        self.pressed_keys = set()
+        self.last_domain = DOMAIN_SIM
+        self.last_mode = MODE_STAND
+
+    def press(self, key: str) -> CommandIntent:
+        key = key.lower()
+        if key in self.MOVEMENT_KEYS:
+            self.pressed_keys.add(key)
+        if key in self.MODE_KEYS:
+            self.last_domain, self.last_mode = self.MODE_KEYS[key]
+        return self.command()
+
+    def release(self, key: str) -> CommandIntent:
+        self.pressed_keys.discard(key.lower())
+        return self.command()
+
+    def command(self) -> CommandIntent:
+        config = self.config
+        return CommandIntent(
+            domain=self.last_domain,
+            mode=self.last_mode,
+            vx=config.vx_scale * self._direction("w", "s"),
+            vy=config.vy_scale * self._direction("a", "d"),
+            yaw_rate=config.yaw_rate_scale * self._direction("q", "e"),
+        )
+
+    def clear_movement(self) -> CommandIntent:
+        self.pressed_keys.clear()
+        return self.command()
+
+    def _direction(self, positive_key: str, negative_key: str) -> float:
+        return float(
+            (positive_key in self.pressed_keys) -
+            (negative_key in self.pressed_keys)
+        )
+
+
 class SupervisorCore:
     def __init__(self, allow_real_walk: bool = False):
         self.state = ControlState()
@@ -139,13 +198,7 @@ class SupervisorCore:
 
     def update(self, command: CommandIntent) -> Tuple[ControlState, bool, Optional[str]]:
         self.state.real_start_standing = False
-        self.state.vx = command.vx
-        self.state.vy = command.vy
-        self.state.yaw_rate = command.yaw_rate
-
         command_key = (command.domain, command.mode)
-        if command_key == self._last_mode_command:
-            return self.state, True, None
 
         if command.mode == MODE_ESTOP:
             self.state.sim_mode = MODE_STAND
@@ -154,6 +207,13 @@ class SupervisorCore:
             self.state.vy = 0.0
             self.state.yaw_rate = 0.0
             self._last_mode_command = command_key
+            return self.state, True, None
+
+        self.state.vx = command.vx
+        self.state.vy = command.vy
+        self.state.yaw_rate = command.yaw_rate
+
+        if command_key == self._last_mode_command:
             return self.state, True, None
 
         if command.domain == DOMAIN_SIM:

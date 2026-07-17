@@ -2,7 +2,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -38,7 +38,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'use_joy',
             default_value='true',
-            description='Launch joy_node and Prairie teleop'),
+            description='Use joystick input if true; use keyboard input if false'),
         DeclareLaunchArgument(
             'use_hardware',
             default_value='false',
@@ -60,6 +60,12 @@ def generate_launch_description():
             output='screen',
             parameters=[teleop_config_path],
             condition=IfCondition(use_joy)),
+        Node(
+            package='prairie_control',
+            executable='prairie_keyboard_teleop',
+            name='prairie_keyboard_teleop',
+            output='screen',
+            condition=UnlessCondition(use_joy)),
         Node(
             package='prairie_control',
             executable='prairie_supervisor',
