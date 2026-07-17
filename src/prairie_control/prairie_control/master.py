@@ -195,8 +195,8 @@ class master(Node):
             kp = [0.] * 18
         elif self.state2 == 3 and self.real_jtp is not None:
             jtp = self.real_jtp
-            kp = [120., 70., 70., 120., 120., 70.,
-                120., 70., 70., 120., 120., 70.,
+            kp = [35., 25., 25., 35., 35., 25.,
+                35., 25., 25., 35., 35., 25.,
                 15., 15., 15.,
                 15., 15., 15.]
         else:
