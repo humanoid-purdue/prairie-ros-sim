@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 from typing import List, Optional, Sequence, Tuple
 
@@ -86,6 +87,42 @@ class ControlState:
     vy: float = 0.0
     yaw_rate: float = 0.0
     real_start_standing: bool = False
+
+
+class ExponentialCommandFilter:
+    """Low-pass the motion fields of a command while preserving its mode."""
+
+    def __init__(self, time_constant: float = 0.35):
+        self.time_constant = float(time_constant)
+        if self.time_constant < 0.0:
+            raise ValueError("command filter time constant cannot be negative")
+        self.reset()
+
+    def reset(self):
+        self.vx = 0.0
+        self.vy = 0.0
+        self.yaw_rate = 0.0
+
+    def update(self, command: CommandIntent, dt: float) -> CommandIntent:
+        if command.mode == MODE_ESTOP:
+            self.reset()
+        elif self.time_constant == 0.0:
+            self.vx = command.vx
+            self.vy = command.vy
+            self.yaw_rate = command.yaw_rate
+        else:
+            alpha = 1.0 - math.exp(-max(0.0, float(dt)) / self.time_constant)
+            self.vx += alpha * (command.vx - self.vx)
+            self.vy += alpha * (command.vy - self.vy)
+            self.yaw_rate += alpha * (command.yaw_rate - self.yaw_rate)
+
+        return CommandIntent(
+            domain=command.domain,
+            mode=command.mode,
+            vx=self.vx,
+            vy=self.vy,
+            yaw_rate=self.yaw_rate,
+        )
 
 
 def _axis(axes: Sequence[float], index: int, deadzone: float) -> float:

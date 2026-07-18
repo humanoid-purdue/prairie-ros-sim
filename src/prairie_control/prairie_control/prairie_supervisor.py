@@ -10,6 +10,7 @@ from .control_modes import (
     MODE_STAND,
     MODE_WALK,
     CommandIntent,
+    ExponentialCommandFilter,
     SupervisorCore,
 )
 
@@ -18,9 +19,14 @@ class PrairieSupervisor(Node):
     def __init__(self):
         super().__init__("prairie_supervisor")
         self.declare_parameter("allow_real_walk", False)
+        self.declare_parameter("command_filter_tau", 0.35)
         self.core = SupervisorCore(
             allow_real_walk=self.get_parameter("allow_real_walk").value
         )
+        self.command_filter = ExponentialCommandFilter(
+            self.get_parameter("command_filter_tau").value
+        )
+        self.last_command_time = None
         self.last_warn_time = 0.0
         self.state_pub = self.create_publisher(PrairieState, "/prairie/state", 10)
         self.master_pub = self.create_publisher(MasterState, "/master_state", 10)
@@ -40,7 +46,11 @@ class PrairieSupervisor(Node):
             vy=msg.vy,
             yaw_rate=msg.yaw_rate,
         )
-        _, accepted, reason = self.core.update(command)
+        now = time.monotonic()
+        dt = 0.02 if self.last_command_time is None else now - self.last_command_time
+        self.last_command_time = now
+        filtered_command = self.command_filter.update(command, dt)
+        _, accepted, reason = self.core.update(filtered_command)
         if not accepted and reason:
             self.warn_throttled(reason)
         self.publish_state()

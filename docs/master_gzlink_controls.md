@@ -18,6 +18,22 @@ ros2 launch prairie_control master_gzlink.launch.py use_joy:=false
 ros2 launch prairie_control master_gzlink.launch.py use_rviz:=false
 ```
 
+Translational and yaw commands use an exponential filter for both joystick and
+keyboard control. Keyboard scales and the filter time constant are configured
+in `src/prairie_control/config/keyboard_teleop.yaml`:
+
+| Parameter | Default | Effect |
+| --- | ---: | --- |
+| `vx_scale` | `0.4` | Forward/backward speed in m/s. |
+| `vy_scale` | `0.3` | Left/right speed in m/s. |
+| `yaw_rate_scale` | `0.8` | Yaw speed in rad/s. |
+| `command_filter_tau` | `0.35` | Exponential-filter time constant in seconds. |
+
+The default `command_filter_tau` reaches about 95% of a new command after one
+second, giving acceleration and deceleration a noticeable lag. Set it to `0.0`
+to disable the filter. Mode selection and emergency stop are immediate;
+emergency stop also clears the filter state.
+
 Setting `use_joy:=false` starts keyboard control in place of `joy_node` and
 `prairie_teleop`. It opens a small pygame input window; keep that window focused
 while driving. If it loses focus, all movement commands are reset to zero.

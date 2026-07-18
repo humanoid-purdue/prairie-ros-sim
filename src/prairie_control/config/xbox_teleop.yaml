@@ -11,5 +11,5 @@ prairie_teleop:
     button_rb: 7
     vx_scale: 0.4
     vy_scale: -0.2
-    yaw_rate_scale: -0.6
+    yaw_rate_scale: -0.5
     deadzone: 0.1

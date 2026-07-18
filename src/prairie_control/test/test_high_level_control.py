@@ -9,6 +9,7 @@ from prairie_control.control_modes import (
     MODE_WALK,
     CommandIntent,
     DEFAULT_REAL_KD,
+    ExponentialCommandFilter,
     JoyMapper,
     KeyboardConfig,
     KeyboardMapper,
@@ -117,6 +118,51 @@ def test_repeated_emergency_stop_keeps_motion_zero():
     assert state.vx == 0.0
     assert state.vy == 0.0
     assert state.yaw_rate == 0.0
+
+
+def test_exponential_filter_settles_in_about_one_second():
+    command_filter = ExponentialCommandFilter(time_constant=0.35)
+    target = CommandIntent(
+        domain=DOMAIN_SIM,
+        mode=MODE_WALK,
+        vx=0.4,
+        vy=-0.3,
+        yaw_rate=0.8,
+    )
+
+    filtered = None
+    for _ in range(50):
+        filtered = command_filter.update(target, dt=0.02)
+
+    assert 0.94 * target.vx < filtered.vx < target.vx
+    assert target.vy < filtered.vy < 0.94 * target.vy
+    assert 0.94 * target.yaw_rate < filtered.yaw_rate < target.yaw_rate
+    assert filtered.domain == target.domain
+    assert filtered.mode == target.mode
+
+
+def test_exponential_filter_estop_is_immediate_and_resets_motion():
+    command_filter = ExponentialCommandFilter(time_constant=0.35)
+    command_filter.update(CommandIntent(vx=0.4), dt=0.2)
+
+    filtered = command_filter.update(
+        CommandIntent(domain=DOMAIN_SIM, mode=MODE_ESTOP, vx=0.4),
+        dt=0.02,
+    )
+
+    assert filtered.mode == MODE_ESTOP
+    assert filtered.vx == 0.0
+    assert filtered.vy == 0.0
+    assert filtered.yaw_rate == 0.0
+
+
+def test_zero_filter_time_constant_disables_filtering():
+    command_filter = ExponentialCommandFilter(time_constant=0.0)
+    target = CommandIntent(vx=0.4, vy=-0.3, yaw_rate=0.8)
+
+    filtered = command_filter.update(target, dt=0.02)
+
+    assert filtered == target
 
 
 def test_supervisor_accepts_real_mirror_sequence_and_refuses_real_walk():

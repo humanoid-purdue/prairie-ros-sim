@@ -29,6 +29,8 @@ def generate_launch_description():
     prairie_share = get_package_share_directory('prairie_control')
     default_rviz_config_path = os.path.join(prairie_share, 'rviz/robot_viewer.rviz')
     teleop_config_path = os.path.join(prairie_share, 'config/xbox_teleop.yaml')
+    keyboard_config_path = os.path.join(
+        prairie_share, 'config/keyboard_teleop.yaml')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -65,13 +67,14 @@ def generate_launch_description():
             executable='prairie_keyboard_teleop',
             name='prairie_keyboard_teleop',
             output='screen',
+            parameters=[keyboard_config_path],
             condition=UnlessCondition(use_joy)),
         Node(
             package='prairie_control',
             executable='prairie_supervisor',
             name='prairie_supervisor',
             output='screen',
-            parameters=[{'allow_real_walk': False}]),
+            parameters=[keyboard_config_path, {'allow_real_walk': False}]),
         Node(
             package='prairie_control',
             executable='prairie_command_mux',
