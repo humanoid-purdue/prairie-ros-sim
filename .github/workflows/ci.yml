@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tier0:
+    name: Tier-0 (lint + unit tests + model smoke)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync environment
+        run: uv sync --locked
+
+      # Linter check for syntax errors
+      - name: Lint (bugs only)
+        run: uv run ruff check --select E9,F63,F7,F82 --output-format github .
+
+      # Unit tests + MuJoCo model loading test
+      - name: Tests
+        run: uv run pytest -q

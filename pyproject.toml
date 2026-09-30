@@ -1,0 +1,48 @@
+[project]
+name = "prairie-ros-sim"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "mujoco>=3.14.0",
+    "numpy>=2.5.3",
+    "osqp>=1.1.3",
+    "pyyaml>=6.0.3",
+    "scipy>=1.18.1",
+]
+
+[project.scripts]
+prairie-ros-sim = "prairie_ros_sim:main"
+
+[build-system]
+requires = ["uv_build>=0.12.14,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.9",
+]
+policy = [
+    "brax>=0.14.2",
+    "flax>=0.12.10",
+    "jax>=0.11.2",
+    "jaxlib>=0.11.2",
+    "jaxopt>=0.8.5",
+]
+teleop = [
+    "pygame>=2.6.1",
+    "pynput>=1.8.2",
+]
+
+[tool.uv]
+package = false
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src/prairie_control"]
+testpaths = ["tests", "src/prairie_control/test/test_high_level_control.py"]
+norecursedirs = ["src", "build", "install", "log", ".venv", ".git"]
+
+[tool.ruff]
+target-version = "py312"
+extend-exclude = ["build", "install", "log", "src/keyboard_teleop"]
