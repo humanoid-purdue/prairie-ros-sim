@@ -1,0 +1,53 @@
+# From the repository root:
+#
+#   docker compose -f docker/compose.yaml build        # first time: ~10 min
+#   docker compose -f docker/compose.yaml run --rm dev
+#
+# Inside the container (repo is at /ws):
+#   colcon build --symlink-install && source install/setup.bash
+#   ros2 launch prairie_control master_gzlink.launch.py use_rviz:=false use_joy:=false
+#
+# GUI in the browser (any host, including macOS): start the `gui` service,
+# open http://localhost:6080/vnc.html?autoconnect=1&resize=remote, and launch
+# things from the xterm on that desktop or from a shell attached with `exec`:
+#
+#   docker compose -f docker/compose.yaml up -d gui
+#   docker compose -f docker/compose.yaml exec gui bash
+#   docker compose -f docker/compose.yaml down         # when finished
+#
+# GUI on a Linux host's own X server instead: run `xhost +local:docker` once,
+# then uncomment the DISPLAY lines in `dev` below.
+services:
+  dev: &dev
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: hrc/prairie-ros-sim:jazzy
+    # DDS discovery doesn't cross Docker's bridge network
+    network_mode: host
+    ipc: host
+    volumes:
+      - ..:/ws
+      # - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+      # - DISPLAY=${DISPLAY}
+    working_dir: /ws
+    stdin_open: true
+    tty: true
+
+  gui:
+    <<: *dev
+    # Bridge network so the noVNC port can be published; Docker Desktop ignores
+    # `ports` under host networking. All ROS nodes run inside this one container,
+    # so DDS discovery doesn't need the host network here.
+    network_mode: bridge
+    ports:
+      - "127.0.0.1:${NOVNC_PORT:-6080}:6080"
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+      - DISPLAY=:1
+      - VNC_RESOLUTION=${VNC_RESOLUTION:-1920x1080}
+      # Mesa's software renderer; there is no GPU in the container.
+      - LIBGL_ALWAYS_SOFTWARE=1
+    command: start-vnc

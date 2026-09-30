@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   tier0:
-    name: Tier-0 (lint + unit tests + model smoke)
+    name: Tier-0 (lint + unit tests + model loads)
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -35,3 +35,33 @@ jobs:
       # Unit tests + MuJoCo model loading test
       - name: Tests
         run: uv run pytest -q
+
+  tier1:
+    name: Tier-1 (colcon build in ROS 2 Jazzy)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - uses: docker/setup-buildx-action@v3
+ 
+      - name: Build dev image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          tags: hrc/prairie-ros-sim:jazzy
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+ 
+      - name: colcon build + launch-file check
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/ws" hrc/prairie-ros-sim:jazzy bash -c '
+            set -e
+            colcon build --event-handlers console_direct+
+            source install/setup.bash
+            ros2 pkg list | grep -x prairie_control
+            # Loads and parses the launch file (imports, arguments) without starting anything.
+            ros2 launch prairie_control master_gzlink.launch.py --show-args
+          '

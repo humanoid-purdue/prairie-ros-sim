@@ -1,0 +1,6 @@
+# The image only needs pyproject.toml, uv.lock and docker/. The repo itself is
+# bind-mounted at runtime.
+*
+!pyproject.toml
+!uv.lock
+!docker/
