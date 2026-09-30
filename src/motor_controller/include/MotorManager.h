@@ -34,11 +34,13 @@ class SingleMotorManager {
         float raw_q_motor[6];
         float raw_dq_motor[6];
         int motor_error[6];
-        SingleMotorManager(std::string port = "/dev/ttyUSB0");
+        SingleMotorManager(std::string port = "/dev/ttyUSB0", int section_id = 5, bool missing_motors = false);
         ~SingleMotorManager();
         void update();
         void printMotorData();
         void set_q_offsets(float q[6]);
+        MotorData * getData();
+        MotorCmd * getCmd();
 };
 
 class MotorManager {
@@ -56,15 +58,17 @@ class MotorManager {
         // 9: r_knee
         // 10: r_ankle_pitch
         // 11: r_ankle_roll
-        SingleMotorManager pelvis;
-        SingleMotorManager left;
-        SingleMotorManager right;
+        std::unique_ptr<SingleMotorManager> pelvis;
+        std::unique_ptr<SingleMotorManager> left;
+        std::unique_ptr<SingleMotorManager> right;
         bool safe;
         float gear_ratio;
     public:
         void set_q_offsets(float pelvis_des_q[6], float left_des_q[6], float right_des_q[6]);
         struct JointStateStruct joint_state[12];
+        void mapUSB(std::string port);
         MotorManager();
         ~MotorManager();
         void update();
+        int error_codes[18];
 };

@@ -1,5 +1,6 @@
 # prairie-ros-sim
 
+
 ### Install requirements
 ```
 sudo apt-get install gz-harmonic
@@ -9,7 +10,7 @@ sudo apt install ros-${ROS_DISTRO}-gz-ros2-control
 sudo apt install ros-${ROS_DISTRO}-gz-ros2-control-demos
 ```
 
-### Launch nemo3 test
+### Launch nemo3 testFor the plot can you remov
 ```
 ros2 launch gz_sim empty_gz_nemo3.launch.py
 
@@ -55,3 +56,7 @@ ros2 topic pub /joint_trajectory_controller/joint_trajectory trajectory_msgs/msg
   ]
 }'
 ```
+
+### master_gzlink controls
+
+See [docs/master_gzlink_controls.md](docs/master_gzlink_controls.md) for the high-level control scheme, Xbox mapping, launch arguments, and topics to inspect.

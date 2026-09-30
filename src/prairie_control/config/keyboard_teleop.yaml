@@ -1,0 +1,11 @@
+prairie_keyboard_teleop:
+  ros__parameters:
+    vx_scale: 0.4
+    vy_scale: 0.3
+    yaw_rate_scale: 0.5
+
+prairie_supervisor:
+  ros__parameters:
+    # A value of 0.35 reaches about 95% of a new command after one second.
+    # Set to 0.0 to disable motion filtering.
+    command_filter_tau: 0.35

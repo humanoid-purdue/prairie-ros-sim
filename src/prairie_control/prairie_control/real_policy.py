@@ -20,9 +20,9 @@ sys.path.append(helper_path)
 import policy_network, utils
 from utils import JOINT_LIST_COMPLETE
 
-class gz_policy(Node):
+class real_policy(Node):
     def __init__(self):
-        super().__init__('gz_policy')
+        super().__init__('real_policy')
         self.prev_time = time.time()
         qos_profile = QoSProfile(depth=10)
 
@@ -42,12 +42,12 @@ class gz_policy(Node):
 
         self.state_subscriber = self.create_subscription(
             StateObservationReduced,
-            '/gz_state_observation',
+            '/real_state_observation',
             self.state_callback,
             qos_profile
         )
 
-        self.state = PrairieState.MODE_STAND
+        self.state = PrairieState.MODE_DISABLED
 
         self.cmd = np.array([0.0, 0.0, 0.0])
 
@@ -58,7 +58,7 @@ class gz_policy(Node):
             qos_profile
         )
 
-        self.joint_pub = self.create_publisher(JointTrajectory, 'gz_policy_jtp', qos_profile)
+        self.joint_pub = self.create_publisher(JointTrajectory, 'real_policy_jtp', qos_profile)
         self.timer = self.create_timer(0.02, self.timer_callback)
         self.obs = {}
 
@@ -70,7 +70,7 @@ class gz_policy(Node):
         return 
     
     def prairie_state_callback(self, msg):
-        self.state = msg.sim_mode
+        self.state = msg.real_mode
         self.cmd = np.array([msg.vx, msg.vy, msg.yaw_rate])
         return
     
@@ -126,7 +126,7 @@ class gz_policy(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    node = gz_policy()
+    node = real_policy()
 
     rclpy.spin(node)
     node.destroy_node()
