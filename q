@@ -1,0 +1,84 @@
+[1mdiff --git a/src/gz_sim/launch/empty_gz_g1.launch.py b/src/gz_sim/launch/empty_gz_g1.launch.py[m
+[1mindex 0e1dec3..0477b7a 100644[m
+[1m--- a/src/gz_sim/launch/empty_gz_g1.launch.py[m
+[1m+++ b/src/gz_sim/launch/empty_gz_g1.launch.py[m
+[36m@@ -1,43 +1,51 @@[m
+ import os[m
+[32m+[m
+ from ament_index_python.packages import get_package_share_directory[m
+ from launch import LaunchDescription[m
+[31m-from launch.actions import (DeclareLaunchArgument, SetEnvironmentVariable,[m
+[31m-                            IncludeLaunchDescription, SetLaunchConfiguration)[m
+[32m+[m[32mfrom launch.actions import ([m
+[32m+[m[32m    DeclareLaunchArgument,[m
+[32m+[m[32m    IncludeLaunchDescription,[m
+[32m+[m[32m)[m
+[32m+[m[32mfrom launch.launch_description_sources import PythonLaunchDescriptionSource[m
+ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution[m
+ from launch_ros.actions import Node[m
+[31m-from launch.launch_description_sources import PythonLaunchDescriptionSource[m
+[32m+[m
+ [m
+ def generate_launch_description():[m
+ [m
+[31m-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')[m
+[32m+[m[32m    use_sim_time = LaunchConfiguration("use_sim_time", default="false")[m
+ [m
+[31m-    #default_rviz_config_path = os.path.join(get_package_share_directory('gz_sim'), 'rviz/robot_viewer.rviz')[m
+[32m+[m[32m    # default_rviz_config_path = os.path.join(get_package_share_directory('gz_sim'), 'rviz/robot_viewer.rviz')[m
+ [m
+[31m-    urdf_file_name = 'urdf/g1.urdf'[m
+[31m-    urdf = os.path.join([m
+[31m-        get_package_share_directory('gz_sim'),[m
+[31m-        urdf_file_name)[m
+[32m+[m[32m    urdf_file_name = "urdf/g1.urdf"[m
+[32m+[m[32m    urdf = os.path.join(get_package_share_directory("gz_sim"), urdf_file_name)[m
+ [m
+[31m-    #rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path,[m
+[32m+[m[32m    # rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=default_rviz_config_path,[m
+     #                                 description='Absolute path to rviz config file')[m
+ [m
+[31m-    pkg_gz = get_package_share_directory('gz_sim')[m
+[31m-    gz_launch = PathJoinSubstitution([pkg_gz, 'launch', 'walk_plane.launch.py'])[m
+[32m+[m[32m    pkg_gz = get_package_share_directory("gz_sim")[m
+[32m+[m[32m    gz_launch = PathJoinSubstitution([pkg_gz, "launch", "walk_plane.launch.py"])[m
+ [m
+[31m-    with open(urdf, 'r') as infp:[m
+[32m+[m[32m    with open(urdf, "r") as infp:[m
+         robot_desc = infp.read()[m
+ [m
+[31m-    return LaunchDescription([[m
+[31m-        IncludeLaunchDescription(PythonLaunchDescriptionSource(gz_launch)),[m
+[31m-        DeclareLaunchArgument([m
+[31m-            'use_sim_time',[m
+[31m-            default_value='false',[m
+[31m-            description='Use simulation (Gazebo) clock if true'),[m
+[31m-        Node([m
+[31m-            package='robot_state_publisher',[m
+[31m-            executable='robot_state_publisher',[m
+[31m-            name='robot_state_publisher',[m
+[31m-            output='screen',[m
+[31m-            parameters=[{'use_sim_time': use_sim_time, 'robot_description': robot_desc}],[m
+[31m-            arguments=[urdf]),[m
+[31m-    ])[m
+\ No newline at end of file[m
+[32m+[m[32m    return LaunchDescription([m
+[32m+[m[32m        [[m
+[32m+[m[32m            IncludeLaunchDescription(PythonLaunchDescriptionSource(gz_launch)),[m
+[32m+[m[32m            DeclareLaunchArgument([m
+[32m+[m[32m                "use_sim_time",[m
+[32m+[m[32m                default_value="false",[m
+[32m+[m[32m                description="Use simulation (Gazebo) clock if true",[m
+[32m+[m[32m            ),[m
+[32m+[m[32m            Node([m
+[32m+[m[32m                package="robot_state_publisher",[m
+[32m+[m[32m                executable="robot_state_publisher",[m
+[32m+[m[32m                name="robot_state_publisher",[m
+[32m+[m[32m                output="screen",[m
+[32m+[m[32m                parameters=[[m
+[32m+[m[32m                    {"use_sim_time": use_sim_time, "robot_description": robot_desc}[m
+[32m+[m[32m                ],[m
+[32m+[m[32m                arguments=[urdf],[m
+[32m+[m[32m            ),[m
+[32m+[m[32m        ][m
+[32m+[m[32m    )[m
