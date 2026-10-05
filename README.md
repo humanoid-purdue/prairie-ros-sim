@@ -10,6 +10,21 @@ sudo apt install ros-${ROS_DISTRO}-gz-ros2-control
 sudo apt install ros-${ROS_DISTRO}-gz-ros2-control-demos
 ```
 
+### Running the project
+IF YOU USE WINDOWS:
+In the compose.yaml, uncomment:
+- /tmp/.X11-unix:/tmp/.X11-unix:rw
+AND
+- DISPLAY=${DISPLAY}
+
+From the repository root:
+docker compose -f docker/compose.yaml build        # first time: ~10 min
+docker compose -f docker/compose.yaml run --rm dev
+
+Inside the container (repo is at /ws):
+colcon build --symlink-install && source install/setup.bash
+ros2 launch prairie_control master_gzlink.launch.py use_rviz:=false use_joy:=false
+
 ### Launch nemo3 testFor the plot can you remov
 ```
 ros2 launch gz_sim empty_gz_nemo3.launch.py
