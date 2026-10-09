@@ -3,21 +3,28 @@ import sys
 print(sys.executable)
 try:
     import numpy as np
-    import scipy
-    import scipy.signal
+    import osqp
+
     # import crocoddyl
     import pinocchio as pin
-    import osqp
+    import scipy
+    import scipy.signal
     from scipy import sparse
-except:
+except ImportError:
     print("Unable to load PY dependencies")
 
 try:
-    from geometry_msgs.msg import Point, Pose, Quaternion
+    pass
     # from hrc_msgs.msg import InverseCommand, BipedalCommand
-except:
+except ImportError:
     print("Unable to load ROS dependencies")
+
+try:
+    from geometry_msgs.msg import Point, Pose, Quaternion
+except ImportError:
+    print("Failed to import ROS dependencies")
 import os
+
 import yaml
 
 
@@ -30,26 +37,39 @@ def makeJointList():
     :rtype: tuple (list of str, list of str, list of str)
     """
 
+    # refactored the initial try block to catch more specific errors
+    # the imports can throw an ImportError, and get_package_share_directory can throw a PackageNotFound
+    # if either errors occur, the joint_path falls back to the default
     try:
-        from ament_index_python.packages import get_package_share_directory
-        joint_path = os.path.join(
-            get_package_share_directory('hrc_handler'),
-            "config/joints_list.yaml")
-    except:
+        from ament_index_python.packages import (
+            PackageNotFoundError,
+            get_package_share_directory,
+        )
+
+        try:
+            joint_path = os.path.join(
+                get_package_share_directory("hrc_handler"), "config/joints_list.yaml"
+            )
+        except PackageNotFoundError:
+            print("failed to get joints_list from hrc_handler")
+            joint_path = os.getcwd()[:-7] + "config/joints_list.yaml"
+
+    except ImportError:
+        print("Failed to import get_package_share_directory")
         joint_path = os.getcwd()[:-7] + "config/joints_list.yaml"
 
-    with open(joint_path, 'r') as infp:
+    with open(joint_path, "r") as infp:
         pid_txt = infp.read()
         joints_dict = yaml.load(pid_txt, Loader=yaml.Loader)
     JOINT_LIST_COMPLETE = []
     JOINT_LIST_MOVABLE = []
     JOINT_LIST_LEG = []
     for c in range(len(joints_dict.keys())):
-        JOINT_LIST_COMPLETE += [joints_dict[c]['name']]
-        if joints_dict[c]['movable']:
-            JOINT_LIST_MOVABLE += [joints_dict[c]['name']]
-        if joints_dict[c]['leg']:
-            JOINT_LIST_LEG += [joints_dict[c]['name']]
+        JOINT_LIST_COMPLETE += [joints_dict[c]["name"]]
+        if joints_dict[c]["movable"]:
+            JOINT_LIST_MOVABLE += [joints_dict[c]["name"]]
+        if joints_dict[c]["leg"]:
+            JOINT_LIST_LEG += [joints_dict[c]["name"]]
     return JOINT_LIST_COMPLETE, JOINT_LIST_MOVABLE, JOINT_LIST_LEG
 
 
@@ -84,9 +104,7 @@ def quaternion_rotation_matrix(Q):
     r22 = 2 * (q0 * q0 + q3 * q3) - 1
 
     # 3x3 rotation matrix
-    rot_matrix = np.array([[r00, r01, r02],
-                           [r10, r11, r12],
-                           [r20, r21, r22]])
+    rot_matrix = np.array([[r00, r01, r02], [r10, r11, r12], [r20, r21, r22]])
 
     return rot_matrix
 
@@ -175,7 +193,9 @@ class JointInterpolation:
         cs_pos = scipy.interpolate.CubicSpline(timelist, new_pos, axis=0)
         cs_vel = scipy.interpolate.CubicSpline(timelist, new_vel, axis=0)
         if centroid_vec is not None:
-            self.cs_centroid = scipy.interpolate.CubicSpline(timelist, centroid_vec, axis=0)
+            self.cs_centroid = scipy.interpolate.CubicSpline(
+                timelist, centroid_vec, axis=0
+            )
 
         if self.pos_arr is None:
             self.pos_arr = pos
@@ -193,7 +213,11 @@ class JointInterpolation:
             self.timelist = timelist
             self.cs_pos = cs_pos
             self.cs_vel = cs_vel
-            return True, np.mean(np.abs(pos - check_pos)), np.mean(np.abs(vel - check_vel))
+            return (
+                True,
+                np.mean(np.abs(pos - check_pos)),
+                np.mean(np.abs(vel - check_vel)),
+            )
         else:
             self.consecutive_fails += 1
             if self.consecutive_fails > self.fail_thresh:
@@ -203,7 +227,11 @@ class JointInterpolation:
                 self.timelist = timelist
                 self.cs_pos = cs_pos
                 self.cs_vel = cs_vel
-            return False, np.mean(np.abs(pos - check_pos)), np.mean(np.abs(vel - check_vel))
+            return (
+                False,
+                np.mean(np.abs(pos - check_pos)),
+                np.mean(np.abs(vel - check_vel)),
+            )
 
     def forceUpdateState(self, timelist, pos, vel, tau):
         """
@@ -268,9 +296,11 @@ class JointInterpolation:
             self.cs_pos = scipy.interpolate.CubicSpline(timelist, pos, axis=0)
             self.cs_vel = scipy.interpolate.CubicSpline(timelist, vel, axis=0)
         else:
-            new_timelist = np.concatenate([np.array([current_time]), timelist[:]], axis=0)
-            new_timelist = np.sort(np.array(list(set(list(new_timelist)))))
-            new_timelist = new_timelist[np.where(new_timelist == current_time)[0][0]:]
+            new_timelist = np.concatenate(
+                [np.array([current_time]), timelist[:]], axis=0
+            )
+            new_timelist = np.sort(np.array(list(set(new_timelist))))
+            new_timelist = new_timelist[np.where(new_timelist == current_time)[0][0] :]
 
             new_pos = scipy.interpolate.CubicSpline(timelist, pos, axis=0)(new_timelist)
             new_vel = scipy.interpolate.CubicSpline(timelist, vel, axis=0)(new_timelist)
@@ -302,9 +332,9 @@ class JointInterpolation:
         """
 
         centroid_pos = x[:, 0:7]
-        pos = x[:, 7:7 + self.joint_num]
-        centroid_vel = x[:, 7 + self.joint_num: 13 + self.joint_num]
-        vel = x[:, 13 + self.joint_num:]
+        pos = x[:, 7 : 7 + self.joint_num]
+        centroid_vel = x[:, 7 + self.joint_num : 13 + self.joint_num]
+        vel = x[:, 13 + self.joint_num :]
         centroid = np.concatenate([centroid_pos, centroid_vel], axis=1)
         return self.updateJointState(timelist, pos, vel, centroid_vec=centroid)
 
@@ -413,17 +443,20 @@ class JointSpaceFilter:
         self.B = np.zeros([joint_num])
 
     def getInterpolation(self, pos, vel, timestamp):
-        state_r = np.concatenate([pos, vel], axis=0)
-        error = np.linalg.norm(self.state_samples[:, :self.joint_num] - state_r[:self.joint_num], axis=1)
-        index = np.argmin(error)
-        ref = self.tau_samples[index, :]
+        # state_r = np.concatenate([pos, vel], axis=0)
+        # error = np.linalg.norm(
+        #     self.state_samples[:, : self.joint_num] - state_r[: self.joint_num], axis=1
+        # )
+        # index = np.argmin(error)
+        # ref = self.tau_samples[index, :]
         weight = 0.5 + 0.0 * np.arange(timestamp.shape[0]) / timestamp.shape[0]
         weight[weight > 1] = 1
 
         pos = self.cs_pos(timestamp)
         vel = self.cs_vel(timestamp)
         tau = self.cs_tau(
-            timestamp)  # * weight[:, None] + np.tile(ref[None, :], [timestamp.shape[0], 1]) * (1 - weight)[:, None]
+            timestamp
+        )  # * weight[:, None] + np.tile(ref[None, :], [timestamp.shape[0], 1]) * (1 - weight)[:, None]
 
         return pos, vel, tau
 
@@ -435,17 +468,19 @@ class JointSpaceFilter:
         self.state_samples = np.concatenate([state, self.state_samples], axis=0)
         self.tau_samples = np.concatenate([tau[1:, :], self.tau_samples], axis=0)
         if self.state_samples.shape[0] > self.max_points:
-            self.state_samples = self.state_samples[:self.max_points, :]
-            self.tau_samples = self.tau_samples[:self.max_points, :]
+            self.state_samples = self.state_samples[: self.max_points, :]
+            self.tau_samples = self.tau_samples[: self.max_points, :]
         self.cs_tau = scipy.interpolate.CubicSpline(timelist[:], tau[:, :], axis=0)
 
         if self.cs_pos is None or self.cs_vel is None:
             self.cs_pos = scipy.interpolate.CubicSpline(timelist, pos, axis=0)
             self.cs_vel = scipy.interpolate.CubicSpline(timelist, vel, axis=0)
         else:
-            new_timelist = np.concatenate([np.array([current_time]), timelist[:]], axis=0)
-            new_timelist = np.sort(np.array(list(set(list(new_timelist)))))
-            new_timelist = new_timelist[np.where(new_timelist == current_time)[0][0]:]
+            new_timelist = np.concatenate(
+                [np.array([current_time]), timelist[:]], axis=0
+            )
+            new_timelist = np.sort(np.array(list(set(new_timelist))))
+            new_timelist = new_timelist[np.where(new_timelist == current_time)[0][0] :]
 
             new_pos = scipy.interpolate.CubicSpline(timelist, pos, axis=0)(new_timelist)
             new_vel = scipy.interpolate.CubicSpline(timelist, vel, axis=0)(new_timelist)
@@ -492,7 +527,9 @@ class SignalFilter:
         # self.b, self.a = scipy.signal.butter(4, cutoff, btype='low', analog=False, fs = freq)
         nyquist = 0.5 * freq
         normal_cutoff = cutoff / nyquist
-        self.sos = scipy.signal.butter(4, normal_cutoff, btype='low', analog=False, output='sos')
+        self.sos = scipy.signal.butter(
+            4, normal_cutoff, btype="low", analog=False, output="sos"
+        )
         self.zi = []
         self.y = np.zeros(n_signal)  # filter results
         for c in range(n_signal):
@@ -506,7 +543,9 @@ class SignalFilter:
         :type vec: np.ndarray
         """
         for c in range(vec.shape[0]):
-            filtered_point, self.zi[c] = scipy.signal.sosfilt(self.sos, vec[c:c + 1], zi=self.zi[c], axis=0)
+            filtered_point, self.zi[c] = scipy.signal.sosfilt(
+                self.sos, vec[c : c + 1], zi=self.zi[c], axis=0
+            )
             self.y[c] = filtered_point[0]
 
     def get(self):
@@ -536,8 +575,8 @@ class CSVDump:
         if os.path.exists(self.abs_path):
             for c in range(len(self.name_list)):
                 name = self.name_list[c]
-                path = self.abs_path + "/{}.csv".format(name)
-                np.savetxt(path, self.arr[:, :, c], delimiter=',')
+                path = self.abs_path + f"/{name}.csv"
+                np.savetxt(path, self.arr[:, :, c], delimiter=",")
 
 
 class discreteIntegral:
@@ -572,20 +611,24 @@ class ForwardPoser:
         self.q_r = np.zeros([len(self.leg_joints) + 7])
         self.q_r[6] = 1
         self.q[6] = 1
-        self.model_r = pin.buildReducedModel(self.model,
-                                             list_of_joints_to_lock=lock_joints,
-                                             reference_configuration=self.q)
+        self.model_r = pin.buildReducedModel(
+            self.model,
+            list_of_joints_to_lock=lock_joints,
+            reference_configuration=self.q,
+        )
         self.data_r = self.model_r.createData()
         self.data = self.model.createData()
 
         self.m = osqp.OSQP()
         self.qp_weights = {"control": 1}
-        self.epsilons = {"com_pos": np.array([0.01, 0.01, 0.01]),
-                         "link": np.array([0.001, 0.001, 0.001, 0.01, 0.01, 0.01])}
+        self.epsilons = {
+            "com_pos": np.array([0.01, 0.01, 0.01]),
+            "link": np.array([0.001, 0.001, 0.001, 0.01, 0.01, 0.01]),
+        }
 
     def updateReducedQ(self, centroid_pos, centroid_orien, joint_pos_dict):
         vec = np.zeros([len(self.leg_joints)])
-        for key in joint_pos_dict.keys():
+        for key in joint_pos_dict:
             if key in self.leg_joints:
                 index = self.model_r.getJointId(key) - 2
                 vec[index] = joint_pos_dict[key]
@@ -594,7 +637,7 @@ class ForwardPoser:
     def config2Vec(self, config_dict):
         num_joints = len(self.joint_list)
         vec = np.zeros([num_joints])
-        for key in config_dict.keys():
+        for key in config_dict:
             index = self.model.getJointId(key) - 2
             vec[index] = config_dict[key]
         return vec
@@ -625,7 +668,9 @@ class ForwardPoser:
             return com_pos
         return None
 
-    def jacobianCOMCorrection(self, desired_cpos, desired_corien, desired_jpos, contacts):
+    def jacobianCOMCorrection(
+        self, desired_cpos, desired_corien, desired_jpos, contacts
+    ):
         pin.forwardKinematics(self.model, self.data, self.q)
         pin.updateFramePlacements(self.model, self.data)
         current_com = np.array(pin.centerOfMass(self.model, self.data, self.q))
@@ -634,8 +679,9 @@ class ForwardPoser:
 
         jac_contacts = np.zeros([jac_com.shape[0], jac_com.shape[1]])
         for contact in contacts:
-            jac_contact = pin.computeFrameJacobian(self.model, self.data, self.q,
-                                                   self.model.getFrameId(contact))
+            jac_contact = pin.computeFrameJacobian(
+                self.model, self.data, self.q, self.model.getFrameId(contact)
+            )
             jac_contacts += jac_contact[:3, 6:] / len(contacts)
 
         jac = jac_com - jac_contacts
@@ -647,7 +693,9 @@ class ForwardPoser:
         pin.updateFramePlacements(self.model, self.data)
         desired_com = np.array(pin.centerOfMass(self.model, self.data, q_desired))
         delta_com = desired_com - current_com
-        delta_r = np.sum(inv_jac * np.tile(delta_com[None, :], [inv_jac.shape[0], 1]), axis=1)
+        delta_r = np.sum(
+            inv_jac * np.tile(delta_com[None, :], [inv_jac.shape[0], 1]), axis=1
+        )
 
         names = self.model.names.tolist()
         joint_dict = {}
@@ -662,8 +710,9 @@ class ForwardPoser:
         pin.updateFramePlacements(self.model, self.data)
         contact_forces = []
         for contact in contacts:
-            jac_contacts = pin.computeFrameJacobian(self.model, self.data, self.q,
-                                                    self.model.getFrameId(contact))[:3, 6:]
+            jac_contacts = pin.computeFrameJacobian(
+                self.model, self.data, self.q, self.model.getFrameId(contact)
+            )[:3, 6:]
             contact_force = np.sum(jac_contacts * torque_vec[None, :], axis=1)
             contact_forces += [contact_force]
         return contact_forces
@@ -676,18 +725,19 @@ class ForwardPoser:
 
         # compute IK solution for achieving a target com position, target l foot pos, and target r foot pos
         pin_dict = {}
-        for link in link_target_dict.keys():
+        for link in link_target_dict:
             if isinstance(link_target_dict[link], np.ndarray):
                 se3 = pin.SE3(np.eye(3), link_target_dict[link])
             else:
                 se3 = link_target_dict[link]
-            pin_dict[link] = (se3,
-                              self.model_r.getFrameId(link))
+            pin_dict[link] = (se3, self.model_r.getFrameId(link))
         ref_state = self.q_r.copy()
         for c in range(2):
             pin.forwardKinematics(self.model_r, self.data_r, ref_state)
             pin.updateFramePlacements(self.model_r, self.data_r)
-            current_com = np.array(pin.centerOfMass(self.model_r, self.data_r, ref_state, False))
+            current_com = np.array(
+                pin.centerOfMass(self.model_r, self.data_r, ref_state, False)
+            )
             r_mat = np.zeros([self.model_r.nv, self.model_r.nv])
             d_vec = np.zeros([self.model_r.nv])
 
@@ -697,9 +747,10 @@ class ForwardPoser:
             u = np.array(self.model_r.upperPositionLimit[7:]) - ref_state[7:]
             l = np.array(self.model_r.lowerPositionLimit[7:]) - ref_state[7:]
 
-            j_com = pin.jacobianCenterOfMass(self.model_r, self.data_r, ref_state, False)
-            j_com = j_com
-            d_com = (target_com - current_com)
+            j_com = pin.jacobianCenterOfMass(
+                self.model_r, self.data_r, ref_state, False
+            )
+            d_com = target_com - current_com
 
             a = np.concatenate([a, j_com], axis=0)
             u = np.concatenate([u, d_com + self.epsilons["com_pos"]], axis=0)
@@ -707,11 +758,14 @@ class ForwardPoser:
 
             # (matrix 6 x model.nv)
             # Each column represents the x y z roll pitch yaw
-            for link in pin_dict.keys():
-                inv_transform = pin_dict[link][0].actInv(self.data_r.oMf[pin_dict[link][1]])
+            for link in pin_dict:
+                inv_transform = pin_dict[link][0].actInv(
+                    self.data_r.oMf[pin_dict[link][1]]
+                )
                 err_vecs = np.array(pin.log(inv_transform)) * -1
-                j = pin.computeFrameJacobian(self.model_r, self.data_r, ref_state, pin_dict[link][1])
-                j = j
+                j = pin.computeFrameJacobian(
+                    self.model_r, self.data_r, ref_state, pin_dict[link][1]
+                )
                 d = err_vecs
 
                 a = np.concatenate([a, j], axis=0)
