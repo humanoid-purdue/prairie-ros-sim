@@ -311,8 +311,9 @@ class GZSateObserver(Node):
         op = np.array(self.odom_pos)
         op_prev = np.array(self.odom_pos_prev)
         if (
-            np.linalg.norm(op - op_prev) > 0.00001 and sim_time - self.odom_prev_time
-        ) != 0:
+            np.linalg.norm(op - op_prev) > 0.00001
+            and sim_time - self.odom_prev_time != 0
+        ):
             global_vel = (op - op_prev) / (sim_time - self.odom_prev_time)
             self.odom_prev_time = sim_time
             self.odom_pos_prev = self.odom_pos

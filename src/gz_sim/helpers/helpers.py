@@ -18,6 +18,11 @@ try:
     # from hrc_msgs.msg import InverseCommand, BipedalCommand
 except ImportError:
     print("Unable to load ROS dependencies")
+
+try:
+    from geometry_msgs.msg import Point, Pose, Quaternion
+except ImportError:
+    print("Failed to import ROS dependencies")
 import os
 
 import yaml
@@ -32,13 +37,25 @@ def makeJointList():
     :rtype: tuple (list of str, list of str, list of str)
     """
 
+    # refactored the initial try block to catch more specific errors
+    # the imports can throw an ImportError, and get_package_share_directory can throw a PackageNotFound
+    # if either errors occur, the joint_path falls back to the default
     try:
-        from ament_index_python.packages import get_package_share_directory
-
-        joint_path = os.path.join(
-            get_package_share_directory("hrc_handler"), "config/joints_list.yaml"
+        from ament_index_python.packages import (
+            PackageNotFoundError,
+            get_package_share_directory,
         )
-    except TypeError:
+
+        try:
+            joint_path = os.path.join(
+                get_package_share_directory("hrc_handler"), "config/joints_list.yaml"
+            )
+        except PackageNotFoundError:
+            print("failed to get joints_list from hrc_handler")
+            joint_path = os.getcwd()[:-7] + "config/joints_list.yaml"
+
+    except ImportError:
+        print("Failed to import get_package_share_directory")
         joint_path = os.getcwd()[:-7] + "config/joints_list.yaml"
 
     with open(joint_path, "r") as infp:
