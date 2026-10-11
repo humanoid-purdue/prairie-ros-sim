@@ -37,9 +37,6 @@ def makeJointList():
     :rtype: tuple (list of str, list of str, list of str)
     """
 
-    # refactored the initial try block to catch more specific errors
-    # the imports can throw an ImportError, and get_package_share_directory can throw a PackageNotFound
-    # if either errors occur, the joint_path falls back to the default
     try:
         from ament_index_python.packages import (
             PackageNotFoundError,
