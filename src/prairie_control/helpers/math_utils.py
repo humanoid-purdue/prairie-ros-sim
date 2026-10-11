@@ -1,3 +1,5 @@
+"""Math helpers for filtering, quaternion operations, and cross-product matrices"""
+
 import numpy as np
 
 
