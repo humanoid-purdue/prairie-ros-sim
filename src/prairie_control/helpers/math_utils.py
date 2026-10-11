@@ -3,19 +3,19 @@
 import numpy as np
 
 
-def exponential_filter(previous, current, alpha):
+def exponential_filter(previous: np.ndarray, current: np.ndarray, alpha: float):
     """
     Reduce high freq noise by taking a weighted average between the previous value and the new measurement
 
     :param previous: (n,) Filtered signal value from the previous timestep
     :param current: (n,) New, raw measurement
-    :param alpha: () Weight placed on previous value
+    :param alpha: Weight placed on previous value
     :return: (n,) Updated, filtered signal
     """
     return alpha * previous + (1 - alpha) * current
 
 
-def quat_conjugate(q):
+def quat_conjugate(q: np.ndarray):
     """
     Compute conjugate of given quaternion
 
@@ -25,7 +25,7 @@ def quat_conjugate(q):
     return np.array([q[0], -q[1], -q[2], -q[3]])
 
 
-def quat_mul(q1, q2):
+def quat_mul(q1: np.ndarray, q2: np.ndarray):
     """
     Compute multiplication of 2 quaternions
 
@@ -45,7 +45,7 @@ def quat_mul(q1, q2):
     )
 
 
-def quat_from_mat(r):
+def quat_from_mat(r: np.ndarray):
     """
     Convert 3x3 rotation matrix to quaternion
 
@@ -59,7 +59,7 @@ def quat_from_mat(r):
     return np.array([qw, qx, qy, qz])
 
 
-def skew(v):
+def skew(v: np.ndarray):
     """
     Converts a vector into its cross product matrix
 
