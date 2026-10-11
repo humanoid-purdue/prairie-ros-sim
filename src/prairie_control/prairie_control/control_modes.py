@@ -1,6 +1,6 @@
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import List, Optional, Sequence, Tuple
 
 DOMAIN_SIM = 0
 DOMAIN_REAL = 1
@@ -13,36 +13,108 @@ MODE_MIRROR = 4
 MODE_ESTOP = 5
 
 JOINT_LIST_COMPLETE = [
-    "l_hip_pitch_joint", "l_hip_roll_joint", "l_hip_yaw_joint",
-    "l_knee_joint", "l_foot_pitch_joint", "l_foot_roll_joint",
-    "r_hip_pitch_joint", "r_hip_roll_joint", "r_hip_yaw_joint",
-    "r_knee_joint", "r_foot_pitch_joint", "r_foot_roll_joint",
-    "l_shoulder_pitch_joint", "l_shoulder_roll_joint", "l_elbow_joint",
-    "r_shoulder_pitch_joint", "r_shoulder_roll_joint", "r_elbow_joint",
+    "l_hip_pitch_joint",
+    "l_hip_roll_joint",
+    "l_hip_yaw_joint",
+    "l_knee_joint",
+    "l_foot_pitch_joint",
+    "l_foot_roll_joint",
+    "r_hip_pitch_joint",
+    "r_hip_roll_joint",
+    "r_hip_yaw_joint",
+    "r_knee_joint",
+    "r_foot_pitch_joint",
+    "r_foot_roll_joint",
+    "l_shoulder_pitch_joint",
+    "l_shoulder_roll_joint",
+    "l_elbow_joint",
+    "r_shoulder_pitch_joint",
+    "r_shoulder_roll_joint",
+    "r_elbow_joint",
 ]
 
 HOME_POSE = [
-    -0.698132, 0.0, 0.0, 1.22173, -0.523599, 0.0,
-    -0.698132, 0.0, 0.0, 1.22173, -0.523599, 0.0,
-    0.0, 0.05, 0.0, 0.0, -0.05, 0.0,
+    -0.698132,
+    0.0,
+    0.0,
+    1.22173,
+    -0.523599,
+    0.0,
+    -0.698132,
+    0.0,
+    0.0,
+    1.22173,
+    -0.523599,
+    0.0,
+    0.0,
+    0.05,
+    0.0,
+    0.0,
+    -0.05,
+    0.0,
 ]
 
 DEFAULT_REAL_KP = [
-    35.0, 25.0, 25.0, 35.0, 35.0, 25.0,
-    35.0, 25.0, 25.0, 35.0, 35.0, 25.0,
-    15.0, 15.0, 15.0, 15.0, 15.0, 15.0,
+    35.0,
+    25.0,
+    25.0,
+    35.0,
+    35.0,
+    25.0,
+    35.0,
+    25.0,
+    25.0,
+    35.0,
+    35.0,
+    25.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
 ]
 
 WALK_REAL_KP = [
-    35.0, 25.0, 25.0, 35.0, 35.0, 25.0,
-    35.0, 25.0, 25.0, 35.0, 35.0, 25.0,
-    15.0, 15.0, 15.0, 15.0, 15.0, 15.0,
+    35.0,
+    25.0,
+    25.0,
+    35.0,
+    35.0,
+    25.0,
+    35.0,
+    25.0,
+    25.0,
+    35.0,
+    35.0,
+    25.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
 ]
 
 DEFAULT_REAL_KD = [
-    2.0, 1.0, 1.0, 2.0, 2.0, 1.0,
-    2.0, 1.0, 1.0, 2.0, 2.0, 1.0,
-    1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+    2.0,
+    1.0,
+    1.0,
+    2.0,
+    2.0,
+    1.0,
+    2.0,
+    1.0,
+    1.0,
+    2.0,
+    2.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
 ]
 
 
@@ -99,11 +171,24 @@ class ExponentialCommandFilter:
         self.reset()
 
     def reset(self):
+        """
+        Set command to zero
+        """
         self.vx = 0.0
         self.vy = 0.0
         self.yaw_rate = 0.0
 
     def update(self, command: CommandIntent, dt: float) -> CommandIntent:
+        """
+        Compute new command with command data
+        If the command says to ESTOP, set command to 0
+        If the time constant is 0, don't use the filter
+        Else compute command with a time invariant low pass filter
+
+        :param command: CommandIntent New command
+        :param dt: () Timestep between this frame and last frame
+        :return: Filtered command values
+        """
         if command.mode == MODE_ESTOP:
             self.reset()
         elif self.time_constant == 0.0:
@@ -139,9 +224,9 @@ def _button(buttons: Sequence[int], index: int) -> bool:
 
 
 class JoyMapper:
-    def __init__(self, config: Optional[TeleopConfig] = None):
+    def __init__(self, config: TeleopConfig | None = None):
         self.config = config or TeleopConfig()
-        self.previous_buttons: List[int] = []
+        self.previous_buttons: list[int] = []
         self.last_domain = DOMAIN_SIM
         self.last_mode = MODE_STAND
 
@@ -166,8 +251,8 @@ class JoyMapper:
             vx=config.vx_scale * _axis(axes, config.axis_left_y, config.deadzone),
             vy=config.vy_scale * _axis(axes, config.axis_left_x, config.deadzone),
             yaw_rate=(
-                config.yaw_rate_scale *
-                _axis(axes, config.axis_right_x, config.deadzone)
+                config.yaw_rate_scale
+                * _axis(axes, config.axis_right_x, config.deadzone)
             ),
         )
 
@@ -188,7 +273,7 @@ class KeyboardMapper:
     }
     MOVEMENT_KEYS = frozenset("wasdqe")
 
-    def __init__(self, config: Optional[KeyboardConfig] = None):
+    def __init__(self, config: KeyboardConfig | None = None):
         self.config = config or KeyboardConfig()
         self.pressed_keys = set()
         self.last_domain = DOMAIN_SIM
@@ -222,18 +307,17 @@ class KeyboardMapper:
 
     def _direction(self, positive_key: str, negative_key: str) -> float:
         return float(
-            (positive_key in self.pressed_keys) -
-            (negative_key in self.pressed_keys)
+            (positive_key in self.pressed_keys) - (negative_key in self.pressed_keys)
         )
 
 
 class SupervisorCore:
     def __init__(self, allow_real_walk: bool = False):
         self.state = ControlState()
-        self._last_mode_command: Optional[Tuple[int, int]] = None
+        self._last_mode_command: tuple[int, int] | None = None
         self.allow_real_walk = allow_real_walk
 
-    def update(self, command: CommandIntent) -> Tuple[ControlState, bool, Optional[str]]:
+    def update(self, command: CommandIntent) -> tuple[ControlState, bool, str | None]:
         self.state.real_start_standing = False
         command_key = (command.domain, command.mode)
 
@@ -268,13 +352,13 @@ class SupervisorCore:
             self._last_mode_command = command_key
         return state, accepted, reason
 
-    def _apply_sim(self, mode: int) -> Tuple[ControlState, bool, Optional[str]]:
+    def _apply_sim(self, mode: int) -> tuple[ControlState, bool, str | None]:
         if mode in (MODE_STAND, MODE_WALK, MODE_MIRROR):
             self.state.sim_mode = mode
             return self.state, True, None
         return self.state, False, f"refusing unsupported sim mode {mode}"
 
-    def _apply_real(self, mode: int) -> Tuple[ControlState, bool, Optional[str]]:
+    def _apply_real(self, mode: int) -> tuple[ControlState, bool, str | None]:
         current = self.state.real_mode
         if mode == MODE_DISABLED:
             self.state.real_mode = MODE_DISABLED
@@ -319,7 +403,7 @@ def mode_name(mode: int) -> str:
     return names.get(mode, f"UNKNOWN({mode})")
 
 
-def _normalized(values: Sequence[float], length: int, fill: float = 0.0) -> List[float]:
+def _normalized(values: Sequence[float], length: int, fill: float = 0.0) -> list[float]:
     result = list(values[:length])
     if len(result) < length:
         result.extend([fill] * (length - len(result)))
@@ -332,7 +416,7 @@ def motor_payload_from_trajectory(
     velocities: Sequence[float],
     torques: Sequence[float],
     disable: bool = False,
-    kp: Optional[Sequence[float]] = None,
+    kp: Sequence[float] | None = None,
 ) -> dict:
     count = len(JOINT_LIST_COMPLETE)
     payload = {
