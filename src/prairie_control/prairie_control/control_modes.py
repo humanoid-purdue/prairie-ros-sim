@@ -232,10 +232,10 @@ class ExponentialCommandFilter:
 
 def _axis(axes: Sequence[float], index: int, deadzone: float) -> float:
     """
-    Applies a deadband to a joystick output and clips it between -1 and 1
+    Applies a deadband to a joystick output and clips it between -1 and 1.
 
-    :param axes: list of all joystick inputs
-    :param index: index specifying which reading to operate on
+    :param axes: list of all joystick inputs (should be ordered according to TeleopConfig indices)
+    :param index: index specifying which input to operate on
     :param deadzone: the deadband radius
 
     :return: the clipped reading, or 0 if the number is within the deadzone
@@ -339,9 +339,11 @@ class KeyboardMapper:
 
     def press(self, key: str) -> CommandIntent:
         """
-        Updates either a list of pressed keys relating to movement or the domain and mode of the robot
-        :param: Key that is pressed
-        :return: Command with key added
+        Movement and mode input listener
+        - When movement key detected, update list of pressed movement keys
+        - When mode key detected, update robot domain and mode
+        :param key: Key that is pressed
+        :return: Updated command
         """
         key = key.lower()
         if key in self.MOVEMENT_KEYS:
@@ -376,7 +378,7 @@ class KeyboardMapper:
 
     def clear_movement(self) -> CommandIntent:
         """
-        Clears key history and returns static command
+        Clears movement key presses and returns static command
 
         :return: Static command
         """
@@ -397,7 +399,7 @@ class KeyboardMapper:
 
 
 class SupervisorCore:
-    """Check desired CommandIntent against safety interlocks and return an updated command with reason if rejected"""
+    """Check desired CommandIntent against safety interlocks and return tuple as such: (updated ControlState, if accepted, reason if rejected)"""
 
     def __init__(self, allow_real_walk: bool = False):
         """
@@ -451,10 +453,11 @@ class SupervisorCore:
 
     def _apply_sim(self, mode: int) -> tuple[ControlState, bool, str | None]:
         """
-        Checks if mode is a recognized mode when simulating robot
+        Mutator function with safety interlocks for self.state.sim_mode
+        - only STAND, WALK, and MIRROR are supported in sim, but they can be entered from any mode
 
-        :param mode: Mode to be checked
-        :return: Whether mode is a recognized mode
+        :param mode: desired mode to try to enter
+        :return: (the control state, if desired mode was accepted, reason if rejection)
         """
         if mode in (MODE_STAND, MODE_WALK, MODE_MIRROR):
             self.state.sim_mode = mode
@@ -463,10 +466,16 @@ class SupervisorCore:
 
     def _apply_real(self, mode: int) -> tuple[ControlState, bool, str | None]:
         """
-        Checks if mode is a recognized mode when physically controlling robot
+        Mutator function with safety interlocks for self.state.real_mode
+        that returns the result of attempting to enter the new desired mode
+        - can enter DISABLED from any mode
+        - can enter HOME only from DISABLED
+        - can enter STAND from anywhere except DISABLED & ESTOP
+        - can enter MIRROR from HOME or STAND
+        - can enter WALK from only STAND (and if allow_real_walk=True)
 
-        :param mode: Mode to be checked
-        :return: Whether mode is a recognized mode
+        :param mode: desired mode to try to enter
+        :return: (the control state, if desired mode was accepted, reason if rejection)
         """
         current = self.state.real_mode
         if mode == MODE_DISABLED:
@@ -541,7 +550,8 @@ def motor_payload_from_trajectory(
     kp: Sequence[float] | None = None,
 ) -> dict:
     """
-    Builds a dictionary of normalized joint data when given parallel lists
+    Builds a dictionary of normalized joint data when given parallel lists.
+    If lists are of varying lengths, they will be normalized according to length of JOINT_LIST_COMPLETE
 
     :param joint_names: Names of each joint
     :param positions: Positions of each joint
