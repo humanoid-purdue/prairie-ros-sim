@@ -1,3 +1,12 @@
+"""
+Solves for a combined left and right-foot contact wrench through quadratic optimization.
+
+The contact wrench contains three forces and torques for each foot. The optimizer
+solves for a contact wrench that results in a desired acceleration vector while 
+remaining within friction constraints.
+"""
+
+
 import osqp
 import numpy as np
 import scipy.sparse as sp
@@ -6,11 +15,12 @@ MU = 0.6
 
 class ContactForceSolver:
     """
-    Computes the combined left and right-foot contact wrench, which contains
-    three forces and torques for each foot, subject to acceleration
-    and friction constraints using OSQP solver.
+    Computes the combined left and right-foot contact wrench using a OSQP solver.
     """
     def __init__(self):
+        """
+        Initialize OSQP solver and friction constraints.
+        """
         n_vars = 12  # 6 for left foot, 6 for right foot
         n_eq = 6     # 3 linear + 3 angular acceleration
 
