@@ -5,6 +5,11 @@ import scipy.sparse as sp
 MU = 0.6
 
 class ContactForceSolver:
+    """
+    Computes the combined left and right-foot contact wrench, which contains
+    three forces and torques for each foot, subject to acceleration
+    and friction constraints using OSQP solver.
+    """
     def __init__(self):
         n_vars = 12  # 6 for left foot, 6 for right foot
         n_eq = 6     # 3 linear + 3 angular acceleration
@@ -45,8 +50,18 @@ class ContactForceSolver:
         self.osqp = osqp.OSQP()
         self.osqp.setup(P=P, q=q, A=self.A_full, l=self.l_full, u=self.u_full, warm_start=True, verbose=False)
 
-    def solve(self, force_to_accel, desired_accel):
+    def solve(self, force_to_accel: np.ndarray, desired_accel: np.ndarray):
+        """
+        Solves for the combined contact wrench vector, x, so that:
+            force_to_accel @ x = desired_accel
+        While constraining forces to stay within frictional force limits.
 
+        :param force_to_accel: (6,12) Maps 12 contact wrench force and torque values to 
+            three linear acceleration and three angular acceleration values
+        :param desired_accel: (6,) Target linear and angular acceleration vector
+        :return: (12,) Optimizied contact wrench vector. If OSQP returns no solution, then 
+            return a fallback solution that does not enforce friction constraints.
+        """
         self.A_full[:self.A_eq.shape[0], :] = force_to_accel
         self.l_full[:self.A_eq.shape[0]] = desired_accel
         self.u_full[:self.A_eq.shape[0]] = desired_accel
