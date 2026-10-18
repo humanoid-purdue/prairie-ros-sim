@@ -1,3 +1,6 @@
+"""Multiplexer that subscribes to JointTrajectory topics for each MODE and
+publishes one for sim and one for real depending on current state mode"""
+
 import time
 
 import numpy as np
@@ -23,7 +26,16 @@ from .control_modes import (
 
 
 class PrairieCommandMux(Node):
+    """
+    Multiplexer that subscribes to JointTrajectory topics for each MODE and
+    publishes one for sim and one for real depending on current state mode
+    """
+
     def __init__(self):
+        """
+        Instantiates state, joint position, home metadata,
+        gazebo and real joint trajectories and publishers, and state & mode trajectory subscribers
+        """
         super().__init__("prairie_command_mux")
         self.state = PrairieState()
         self.state.sim_mode = MODE_STAND
@@ -154,11 +166,13 @@ class PrairieCommandMux(Node):
             self.gz_pub.publish(sim_traj)
         self.real_pub.publish(self.select_real_command())
 
-    def select_sim_trajectory(self):
+    def select_sim_trajectory(self) -> JointTrajectory | None:
         """
         Sim trajectory multiplexer
         Tries to output JointTrajectory associated with current sim mode
         If the JointTrajectory data is invalid, send warning and return None
+
+        :return: selected JointTrajectory
         """
         if self.state.sim_mode == MODE_WALK:
             if self.gz_policy_jtp is not None:
@@ -183,11 +197,13 @@ class PrairieCommandMux(Node):
         )
         return None
 
-    def select_real_command(self):
+    def select_real_command(self) -> JointTrajectory:
         """
         Real trajectory multiplexer
         Tries to output JointTrajectory associated with current real mode
-        If the JointTrajectory data is invalid, send warning and return None
+        If the JointTrajectory data is invalid, send warning and return disabled JointTrajectory
+
+        :return: MotorCommand of the selected JointTrajectory
         """
         if self.state.real_mode == MODE_HOME:
             return self.jtp_to_mcmd(self.home_trajectory())
@@ -220,13 +236,24 @@ class PrairieCommandMux(Node):
             return self.disabled_mcmd()
         return self.disabled_mcmd()
 
-    def home_trajectory(self):
+    def home_trajectory(self) -> JointTrajectory:
+        """
+        Interpolates target JointTrajectory between ending home and starting home position based on time elapsed since entering home
+
+        :return: JointTrajectory representing position targets of each actuator
+        """
         elapsed = time.time() - self.home_start_time
         coeff = min(elapsed / 2.0, 1.0)
         positions = np.array(HOME_POSE) * coeff + (1.0 - coeff) * self.home_start_pos
         return self.pos_to_trajectory(positions)
 
-    def pos_to_trajectory(self, positions):
+    def pos_to_trajectory(self, positions) -> JointTrajectory:
+        """
+        Creates JointTrajectory with 2 identical JointTrajectoryPoints from position data with 0 velocity and effort
+
+        :param positions: list of joint positions
+        :return: JointTrajectory representing trajectory to hold mechanism in place at set position
+        """
         joint_traj = JointTrajectory()
         joint_traj.header.stamp = self.get_clock().now().to_msg()
         joint_traj.joint_names = list(JOINT_LIST_COMPLETE)
@@ -245,16 +272,23 @@ class PrairieCommandMux(Node):
         joint_traj.points = [point, hold_point]
         return joint_traj
 
-    def disabled_mcmd(self):
+    def disabled_mcmd(self) -> MotorCmd:
+        """
+        Return static motor command
+        :return: motor command with no motion
+        """
         return self.jtp_to_mcmd(
             self.pos_to_trajectory(np.zeros(len(JOINT_LIST_COMPLETE))),
             disable=True,
         )
 
-    def jtp_to_mcmd(self, joint_traj, disable=False, kp=None):
+    def jtp_to_mcmd(self, joint_traj, disable=False, kp=None) -> MotorCmd:
         """
-        Convert JointTrajectory to MotorCommand
+        Convert JointTrajectory to MotorCommand by taking first JointTrajectoryPoint in JointTrajectory
 
+        :param joint_traj: JointTrajectory to convert
+        :param disable: whether to enable motor actuation
+        :param kp: constant used to calculate motor torque
         """
         point = joint_traj.points[0] if joint_traj.points else JointTrajectoryPoint()
         payload = motor_payload_from_trajectory(
@@ -289,6 +323,9 @@ class PrairieCommandMux(Node):
 
 
 def main(args=None):
+    """
+    Starts PrairieCommandMux node's event loop
+    """
     rclpy.init(args=args)
     node = PrairieCommandMux()
     rclpy.spin(node)
