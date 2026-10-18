@@ -6,6 +6,7 @@ from builtin_interfaces.msg import Duration
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
 from gz_sim_interfaces.msg import MotorCmd, PrairieState
 
 from .control_modes import (
@@ -42,7 +43,9 @@ class PrairieCommandMux(Node):
         self.gz_pub = self.create_publisher(JointTrajectory, "/joint_trajectories", 10)
         self.real_pub = self.create_publisher(MotorCmd, "/real_joint_trajectories", 10)
 
-        self.create_subscription(PrairieState, "/prairie/state", self.state_callback, 10)
+        self.create_subscription(
+            PrairieState, "/prairie/state", self.state_callback, 10
+        )
         self.create_subscription(
             JointTrajectory,
             "/gz_standing_jtp",
@@ -73,44 +76,90 @@ class PrairieCommandMux(Node):
             self.real_policy_callback,
             10,
         )
-        self.create_subscription(JointState, "/joint_states", self.joint_state_callback, 10)
+        self.create_subscription(
+            JointState, "/joint_states", self.joint_state_callback, 10
+        )
 
         self.timer = self.create_timer(0.002, self.timer_callback)
 
     def state_callback(self, msg: PrairieState):
+        """
+        Updates prairie state and previous_real)mode when given new PrairieState,
+        and starts tracking time if the CommandMux enters HOME_MODE
+
+        :param msg: ROS 2 message holding sim/real mode data and movement command
+        """
         if self.previous_real_mode != MODE_HOME and msg.real_mode == MODE_HOME:
             self.home_start_pos = self.joint_pos.copy()
             self.home_start_time = time.time()
         self.previous_real_mode = msg.real_mode
         self.state = msg
 
-    def gz_standing_callback(self, msg):
+    def gz_standing_callback(self, msg: JointTrajectory):
+        """
+        Mutator for self.gz_stand_jtp
+
+        :param msg: JointTrajectory to set gz_stand_jtp to
+        """
         self.gz_stand_jtp = msg
 
-    def gz_policy_callback(self, msg):
+    def gz_policy_callback(self, msg: JointTrajectory):
+        """
+        Mutator for self.gz_policy_jtp
+
+        :param msg: JointTrajectory to set gz_policy_callback to
+        """
         self.gz_policy_jtp = msg
 
-    def gz_mirror_callback(self, msg):
+    def gz_mirror_callback(self, msg: JointTrajectory):
+        """
+        Mutator for self.gz_mirror_jtp
+
+        :param msg: JointTrajectory to set gz_mirror_callback to
+        """
         self.gz_mirror_jtp = msg
 
-    def real_standing_callback(self, msg):
+    def real_standing_callback(self, msg: JointTrajectory):
+        """
+        Mutator for self.real_standing_callback
+
+        :param msg: JointTrajectory to set real_standing_callback to
+        """
         self.real_standing_jtp = msg
 
-    def real_policy_callback(self, msg):
+    def real_policy_callback(self, msg: JointTrajectory):
+        """
+        Mutator for self.real_policy_callback
+
+        :param msg: JointTrajectory to set real_policy_callback to
+        """
         self.real_policy_jtp = msg
 
     def joint_state_callback(self, msg: JointState):
+        """
+        Update self.joint_pos with normalized JointState positions
+
+        :param msg: JointState containing joint names, positions, velocities, and efforts
+        """
         limit = min(len(msg.position), len(JOINT_LIST_COMPLETE))
         for i in range(limit):
             self.joint_pos[i] = msg.position[i]
 
     def timer_callback(self):
+        """
+        The CommandMux's update function
+        """
         sim_traj = self.select_sim_trajectory()
         if sim_traj is not None:
             self.gz_pub.publish(sim_traj)
         self.real_pub.publish(self.select_real_command())
 
     def select_sim_trajectory(self):
+        """
+        Sim trajectory multiplexer
+        Tries to output JointTrajectory associated with current sim mode
+        If the JointTrajectory data is invalid, send warning and return None
+        """
         if self.state.sim_mode == MODE_WALK:
             if self.gz_policy_jtp is not None:
                 return self.gz_policy_jtp
@@ -135,6 +184,11 @@ class PrairieCommandMux(Node):
         return None
 
     def select_real_command(self):
+        """
+        Real trajectory multiplexer
+        Tries to output JointTrajectory associated with current real mode
+        If the JointTrajectory data is invalid, send warning and return None
+        """
         if self.state.real_mode == MODE_HOME:
             return self.jtp_to_mcmd(self.home_trajectory())
         if self.state.real_mode == MODE_STAND:
@@ -198,6 +252,10 @@ class PrairieCommandMux(Node):
         )
 
     def jtp_to_mcmd(self, joint_traj, disable=False, kp=None):
+        """
+        Convert JointTrajectory to MotorCommand
+
+        """
         point = joint_traj.points[0] if joint_traj.points else JointTrajectoryPoint()
         payload = motor_payload_from_trajectory(
             joint_traj.joint_names,
@@ -218,6 +276,12 @@ class PrairieCommandMux(Node):
         return msg
 
     def warn_throttled(self, key: str, message: str):
+        """
+        Logs warnings at a max rate of 2 seconds per warning for every unique key
+
+        :param key: string identifying the type of issue
+        :param message: warning message to try and log
+        """
         now = time.time()
         if now - self.last_warn_times.get(key, 0.0) > 2.0:
             self.get_logger().warn(message)
