@@ -2,7 +2,15 @@ import os
 
 import numpy as np
 from ament_index_python.packages import get_package_share_directory
-from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import (
+    Point,
+    Pose,
+    PoseWithCovariance,
+    Quaternion,
+    Twist,
+    TwistWithCovariance,
+    Vector3,
+)
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.time import Time
@@ -49,16 +57,28 @@ class SimNode(Node):
     def _apply_physics(self):
         self.mujoco_sim.step_sim(self.target_pos, self.target_vel)
 
+    def _publish_joint_state(self):
+        msg = JointState()
+        msg.header.stamp = Time(seconds=self.mujoco_sim.data.time).to_msg()
+        msg.header.frame_id = "?"
+
+        msg.name = JOINT_LIST_COMPLETE
+        msg.position = self.mujoco_sim.data.qpos[7:]
+        msg.velocity = self.mujoco_sim.data.qvel[6:]
+        msg.effort = self.mujoco_sim.data.ctrl[:]
+
+        self.joint_state_publisher.publish(msg)
+
     def _publish_pelvis_imu(self):
-        stamp = self.get_clock().now().to_msg()
+        stamp = Time(seconds=self.mujoco_sim.data.time).to_msg()
         gyro = self.mujoco_sim.get_pelvis_gyro()
         accel = self.mujoco_sim.get_pelvis_linaccel()
 
         imu = Imu()
         imu.header.stamp = stamp
-        imu.header.frame_id = "imu"
-        imu.angular_velocity = Vector3(gyro[0], gyro[1], gyro[2])
-        imu.linear_acceleration = Vector3(accel[0], accel[1], accel[2])
+        imu.header.frame_id = "imu" # check with Henry; not sure if this is right
+        imu.angular_velocity = Vector3(x=gyro[0], y=gyro[1], z=gyro[2])
+        imu.linear_acceleration = Vector3(x=accel[0], y=accel[1], z=accel[2])
 
         self.pelvis_imu_publisher.publish(imu)
 
@@ -67,6 +87,28 @@ class SimNode(Node):
         msg.clock = Time(seconds=self.mujoco_sim.data.time).to_msg()
         self.clock_publisher.publish(msg)
 
+    def _publish_robot_odometry(self):
+        msg = Odometry()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "global" # check with Henry; not sure if this is right
+        msg.pose = PoseWithCovariance()
+        msg.pose.pose = Pose()
+        msg.twist = TwistWithCovariance()
+        msg.twist.twist = Twist()
+
+        pos = self.mujoco_sim.get_imu_position()
+        quat = self.muojco_sim.get_imu_orientation()
+        linvel = self.mujoco_sim.get_imu_linvel()
+        angvel = self.mujoco_sim.get_imu_angvel()
+
+        msg.pose.pose.position = Point(x=pos[0], y=pos[1], z=pos[2])
+        msg.pose.pose.orientation = Quaternion(x=quat[1], y=quat[2], z=quat[3], w=quat[0])
+        msg.twist.twist.linear = Vector3(x=linvel[0], y=linvel[1], z=linvel[2])
+        msg.twist.twist.angular = Vector3(x=angvel[0], y=angvel[1], z=angvel[2])
+
+        self.robot_odo_publisher.publish(msg)
+
+ 
     def _normalize(self, arr: np.ndarray) -> np.ndarray:
         arr_len = len(arr)
         if arr_len == self.joint_len:

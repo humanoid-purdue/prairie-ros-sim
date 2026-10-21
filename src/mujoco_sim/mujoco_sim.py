@@ -10,6 +10,10 @@ class MujocoSim:
         self.kP = kP
         self.kD = kD
 
+        print(self.model.nu)
+        for i in range(self.model.nu):
+            print(i, self.model.actuator(i).name)
+
     def step_sim(self, target_pos: np.ndarray, target_vel: np.ndarray):
         cur_pos = self.data.qpos[7:]
         cur_vel = self.data.qvel[6:]
@@ -17,9 +21,31 @@ class MujocoSim:
         self.data.ctrl[:] = torques
         mujoco.mj_step(self.model, self.data)
 
+    def get_joint_pos(self) -> np.ndarray:
+        return self.data.qpos[7:]
+    def get_joint_vel(self) -> np.ndarray:
+        return self.data.qvel[6:]
+    def get_joint_torque(self) -> np.ndarray:
+        return self.data.ctrl[:]
+
+    # returns imu data in local reference frame
     def get_pelvis_gyro(self) -> np.ndarray:
         return self.data.sensor("gyro").data
     def get_pelvis_local_linvel(self) -> np.ndarray:
         return self.data.sensor("local_linvel").data
     def get_pelvis_linaccel(self) -> np.ndarray:
         return self.data.sensor("accelerometer").data
+
+    # returns imu data in global reference frame
+    def get_imu_orientation(self) -> np.ndarray:
+        """Returns in wxyz format"""
+        return self.data.sensor("orientation").data
+    def get_imu_position(self) -> np.ndarray:
+        return self.data.sensor("position").data
+    def get_imu_linvel(self) -> np.ndarray:
+        return self.data.sensor("global_linvel").data
+    def get_imu_angvel(self) -> np.ndarray:
+        return self.data.sensor("global_angvel").data
+
+
+# mj = MujocoSim("src/prairie_control/urdf/nemo5.xml", 0, 0)
