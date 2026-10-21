@@ -14,4 +14,12 @@ class MujocoSim:
         cur_pos = self.data.qpos[7:]
         cur_vel = self.data.qvel[6:]
         torques = (target_pos - cur_pos) * self.kP + (target_vel - cur_vel) * self.kD
+        self.data.ctrl[:] = torques
         mujoco.mj_step(self.model, self.data)
+
+    def get_pelvis_gyro(self) -> np.ndarray:
+        return self.data.sensor("gyro").data
+    def get_pelvis_local_linvel(self) -> np.ndarray:
+        return self.data.sensor("local_linvel").data
+    def get_pelvis_linaccel(self) -> np.ndarray:
+        return self.data.sensor("accelerometer").data

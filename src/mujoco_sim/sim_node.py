@@ -2,8 +2,10 @@ import os
 
 import numpy as np
 from ament_index_python.packages import get_package_share_directory
+from geometry_msgs.msg import Vector3
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
+from rclpy.time import Time
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Imu, JointState
 from trajectory_msgs.msg import JointTrajectory
@@ -46,6 +48,24 @@ class SimNode(Node):
 
     def _apply_physics(self):
         self.mujoco_sim.step_sim(self.target_pos, self.target_vel)
+
+    def _publish_pelvis_imu(self):
+        stamp = self.get_clock().now().to_msg()
+        gyro = self.mujoco_sim.get_pelvis_gyro()
+        accel = self.mujoco_sim.get_pelvis_linaccel()
+
+        imu = Imu()
+        imu.header.stamp = stamp
+        imu.header.frame_id = "imu"
+        imu.angular_velocity = Vector3(gyro[0], gyro[1], gyro[2])
+        imu.linear_acceleration = Vector3(accel[0], accel[1], accel[2])
+
+        self.pelvis_imu_publisher.publish(imu)
+
+    def _publish_clock(self):
+        msg = Clock()
+        msg.clock = Time(seconds=self.mujoco_sim.data.time).to_msg()
+        self.clock_publisher.publish(msg)
 
     def _normalize(self, arr: np.ndarray) -> np.ndarray:
         arr_len = len(arr)
