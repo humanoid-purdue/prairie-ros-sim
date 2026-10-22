@@ -23,6 +23,7 @@ from prairie_control.prairie_control.control_modes import JOINT_LIST_COMPLETE
 
 SCENE = os.path.join(get_package_share_directory("prairie_control"), "urdf", "nemo5.xml")
 PHYSICS_TIMESTEP = 0.01
+VIEWER_TIMESTEP = 1. / 60.
 
 
 class SimNode(Node):
@@ -36,8 +37,9 @@ class SimNode(Node):
         self.target_vel = np.zeros(self.joint_len)
         self.kP = 0
         self.kD = 0
+        self.headless = False
 
-        self.mujoco_sim = MujocoSim(SCENE, self.kP, self.kD)
+        self.mujoco_sim = MujocoSim(SCENE, self.kP, self.kD, self.headless)
 
         self.create_subscription(JointTrajectory, "joint_trajectories", self._on_new_jt, 10)
 
@@ -47,6 +49,8 @@ class SimNode(Node):
         self.clock_publisher = self.create_publisher(Clock, "clock", 10)
 
         self.create_timer(PHYSICS_TIMESTEP, self._apply_physics)
+        if not self.headless:
+            self.create_timer(VIEWER_TIMESTEP, self.mujoco_sim.update_viewer)
 
     def _on_new_jt(self, msg: JointTrajectory):
         """update desired targets for sim"""

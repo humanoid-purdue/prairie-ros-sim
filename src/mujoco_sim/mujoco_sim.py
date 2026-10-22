@@ -1,19 +1,21 @@
+import time
+
 import mujoco
 import numpy as np
 
 
 class MujocoSim:
-
-    def __init__(self, scene: str, kP, kD):
+    def __init__(self, scene: str, kP, kD, headless=True):
         self.model = mujoco.MjModel.from_xml_path(scene)
         self.data = mujoco.MjData(self.model)
         self.kP = kP
         self.kD = kD
 
-        print(self.model.nu)
-        for i in range(self.model.nu):
-            print(i, self.model.actuator(i).name)
-
+        self.viewer = None
+        if not headless:
+            from mujoco import viewer
+            self.viewer = viewer.launch_passive(self.model, self.data)
+    
     def step_sim(self, target_pos: np.ndarray, target_vel: np.ndarray):
         cur_pos = self.data.qpos[7:]
         cur_vel = self.data.qvel[6:]
@@ -47,5 +49,18 @@ class MujocoSim:
     def get_imu_angvel(self) -> np.ndarray:
         return self.data.sensor("global_angvel").data
 
+    def update_viewer(self):
+        if self.viewer is not None:
+            if not self.viewer.is_running():
+                raise SystemExit(0)
+            self.viewer.sync()
 
-# mj = MujocoSim("src/prairie_control/urdf/nemo5.xml", 0, 0)
+
+if __name__ == "__main__":
+    ms = MujocoSim("src/prairie_control/urdf/nemo5.xml", 0, 0, False)
+    n = 0
+    while True:
+        ms.update_viewer()
+        time.sleep(1./60.)
+        print("hi" + str(n % 10))
+        n += 1

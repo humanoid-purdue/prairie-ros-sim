@@ -28,10 +28,10 @@ services:
     ipc: host
     volumes:
       - ..:/ws
-      # - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
     environment:
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
-      # - DISPLAY=${DISPLAY}
+      - DISPLAY=${DISPLAY}
     working_dir: /ws
     stdin_open: true
     tty: true
