@@ -45,11 +45,11 @@ class PrairieCommandMux(Node):
         self.home_start_pos = self.joint_pos.copy()
         self.home_start_time = time.time()
 
-        self.gz_stand_jtp = None
-        self.gz_policy_jtp = None
-        self.gz_mirror_jtp = None
-        self.real_standing_jtp = None
-        self.real_policy_jtp = None
+        self.gz_stand_trajectory = None
+        self.gz_policy_trajectory = None
+        self.gz_mirror_trajectory = None
+        self.real_standing_trajectory = None
+        self.real_policy_trajectory = None
         self.last_warn_times = {}
 
         self.gz_pub = self.create_publisher(JointTrajectory, "/joint_trajectories", 10)
@@ -109,43 +109,43 @@ class PrairieCommandMux(Node):
 
     def gz_standing_callback(self, msg: JointTrajectory):
         """
-        Mutator for self.gz_stand_jtp
+        Mutator for self.gz_stand_trajectory
 
-        :param msg: JointTrajectory to set gz_stand_jtp to
+        :param msg: JointTrajectory to set gz_stand_trajectory to
         """
-        self.gz_stand_jtp = msg
+        self.gz_stand_trajectory = msg
 
     def gz_policy_callback(self, msg: JointTrajectory):
         """
-        Mutator for self.gz_policy_jtp
+        Mutator for self.gz_policy_trajectory
 
-        :param msg: JointTrajectory to set gz_policy_callback to
+        :param msg: JointTrajectory to set gz_policy_trajectory to
         """
-        self.gz_policy_jtp = msg
+        self.gz_policy_trajectory = msg
 
     def gz_mirror_callback(self, msg: JointTrajectory):
         """
-        Mutator for self.gz_mirror_jtp
+        Mutator for self.gz_mirror_trajectory
 
-        :param msg: JointTrajectory to set gz_mirror_callback to
+        :param msg: JointTrajectory to set gz_mirror_trajectory to
         """
-        self.gz_mirror_jtp = msg
+        self.gz_mirror_trajectory = msg
 
     def real_standing_callback(self, msg: JointTrajectory):
         """
-        Mutator for self.real_standing_callback
+        Mutator for self.real_standing_trajectory
 
-        :param msg: JointTrajectory to set real_standing_callback to
+        :param msg: JointTrajectory to set real_standing_trajectory to
         """
-        self.real_standing_jtp = msg
+        self.real_standing_trajectory = msg
 
     def real_policy_callback(self, msg: JointTrajectory):
         """
-        Mutator for self.real_policy_callback
+        Mutator for self.real_policy_trajectory
 
-        :param msg: JointTrajectory to set real_policy_callback to
+        :param msg: JointTrajectory to set real_policy_trajectory to
         """
-        self.real_policy_jtp = msg
+        self.real_policy_trajectory = msg
 
     def joint_state_callback(self, msg: JointState):
         """
@@ -175,42 +175,42 @@ class PrairieCommandMux(Node):
         :return: selected JointTrajectory
         """
         if self.state.sim_mode == MODE_WALK:
-            if self.gz_policy_jtp is not None:
-                return self.gz_policy_jtp
+            if self.gz_policy_trajectory is not None:
+                return self.gz_policy_trajectory
             self.warn_throttled(
                 "gz_policy_missing",
                 "missing /gz_policy_jtp; falling back to standing",
             )
         elif self.state.sim_mode == MODE_MIRROR:
-            if self.gz_mirror_jtp is not None:
-                return self.gz_mirror_jtp
+            if self.gz_mirror_trajectory is not None:
+                return self.gz_mirror_trajectory
             self.warn_throttled(
                 "gz_mirror_missing",
                 "missing /gz_mirror_jtp; falling back to standing",
             )
 
-        if self.gz_stand_jtp is not None:
-            return self.gz_stand_jtp
+        if self.gz_stand_trajectory is not None:
+            return self.gz_stand_trajectory
         self.warn_throttled(
             "gz_stand_missing",
             "missing /gz_standing_jtp; no Gazebo command published",
         )
         return None
 
-    def select_real_command(self) -> JointTrajectory:
+    def select_real_command(self) -> MotorCmd:
         """
-        Real trajectory multiplexer
-        Tries to output JointTrajectory associated with current real mode
-        If the JointTrajectory data is invalid, send warning and return disabled JointTrajectory
+        Select a MotorCmd for the current real mode.
+        Warn when a required trajectory is missing and return a disabled command.
+        Disabled or unsupported modes also return a disabled command.
 
-        :return: MotorCommand of the selected JointTrajectory
+        :return: selected MotorCmd
         """
         if self.state.real_mode == MODE_HOME:
-            return self.jtp_to_mcmd(self.home_trajectory())
+            return self.trajectory_to_motor_command(self.home_trajectory())
         if self.state.real_mode == MODE_STAND:
-            if self.real_standing_jtp is not None:
-                return self.jtp_to_mcmd(
-                    self.real_standing_jtp,
+            if self.real_standing_trajectory is not None:
+                return self.trajectory_to_motor_command(
+                    self.real_standing_trajectory,
                     kp=[0.0] * len(JOINT_LIST_COMPLETE),
                 )
             self.warn_throttled(
@@ -219,16 +219,16 @@ class PrairieCommandMux(Node):
             )
             return self.disabled_mcmd()
         if self.state.real_mode == MODE_MIRROR:
-            if self.gz_mirror_jtp is not None:
-                return self.jtp_to_mcmd(self.gz_mirror_jtp)
+            if self.gz_mirror_trajectory is not None:
+                return self.trajectory_to_motor_command(self.gz_mirror_trajectory)
             self.warn_throttled(
                 "real_mirror_missing",
                 "missing /gz_mirror_jtp; disabling real command",
             )
             return self.disabled_mcmd()
         if self.state.real_mode == MODE_WALK:
-            if self.real_policy_jtp is not None:
-                return self.jtp_to_mcmd(self.real_policy_jtp, kp=WALK_REAL_KP)
+            if self.real_policy_trajectory is not None:
+                return self.trajectory_to_motor_command(self.real_policy_trajectory, kp=WALK_REAL_KP)
             self.warn_throttled(
                 "real_policy_missing",
                 "missing /real_policy_jtp; disabling real command",
@@ -249,9 +249,12 @@ class PrairieCommandMux(Node):
 
     def pos_to_trajectory(self, positions) -> JointTrajectory:
         """
-        Creates JointTrajectory with 2 identical JointTrajectoryPoints from position data with 0 velocity and effort
+        Create a constant target with zero velocity and effort.
 
-        :param positions: list of joint positions
+        Identical targets at 0 and 100 seconds describe a hold trajectory.
+        Hardware conversion uses only the first point and ignores this timing.
+
+        :param positions: array of joint positions
         :return: JointTrajectory representing trajectory to hold mechanism in place at set position
         """
         joint_traj = JointTrajectory()
@@ -277,18 +280,26 @@ class PrairieCommandMux(Node):
         Return static motor command
         :return: motor command with no motion
         """
-        return self.jtp_to_mcmd(
+        return self.trajectory_to_motor_command(
             self.pos_to_trajectory(np.zeros(len(JOINT_LIST_COMPLETE))),
             disable=True,
         )
 
-    def jtp_to_mcmd(self, joint_traj, disable=False, kp=None) -> MotorCmd:
+    def trajectory_to_motor_command(
+        self, joint_traj: JointTrajectory, disable=False, kp=None
+    ) -> MotorCmd:
         """
-        Convert JointTrajectory to MotorCommand by taking first JointTrajectoryPoint in JointTrajectory
+        Convert the first trajectory point into an instantaneous MotorCmd.
 
-        :param joint_traj: JointTrajectory to convert
-        :param disable: whether to enable motor actuation
-        :param kp: constant used to calculate motor torque
+        Current publishers stream a target at time zero followed by an identical
+        hold point at 100 seconds. MotorCmd has no trajectory timing, so later
+        points and time_from_start are ignored. This does not execute arbitrary
+        multipoint trajectories; new targets arrive through subsequent messages.
+
+        :param joint_traj: JointTrajectory containing the current target
+        :param disable: whether to disable motor actuation
+        :param kp: optional per-joint proportional gains
+        :return: MotorCmd for the first point
         """
         point = joint_traj.points[0] if joint_traj.points else JointTrajectoryPoint()
         payload = motor_payload_from_trajectory(
