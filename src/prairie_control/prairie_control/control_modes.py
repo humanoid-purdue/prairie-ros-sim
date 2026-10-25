@@ -1,6 +1,8 @@
+"""Contains everything to parse keyboard/gamepad inputs into a filtered, robot command"""
+
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import List, Optional, Sequence, Tuple
 
 DOMAIN_SIM = 0
 DOMAIN_REAL = 1
@@ -13,41 +15,117 @@ MODE_MIRROR = 4
 MODE_ESTOP = 5
 
 JOINT_LIST_COMPLETE = [
-    "l_hip_pitch_joint", "l_hip_roll_joint", "l_hip_yaw_joint",
-    "l_knee_joint", "l_foot_pitch_joint", "l_foot_roll_joint",
-    "r_hip_pitch_joint", "r_hip_roll_joint", "r_hip_yaw_joint",
-    "r_knee_joint", "r_foot_pitch_joint", "r_foot_roll_joint",
-    "l_shoulder_pitch_joint", "l_shoulder_roll_joint", "l_elbow_joint",
-    "r_shoulder_pitch_joint", "r_shoulder_roll_joint", "r_elbow_joint",
+    "l_hip_pitch_joint",
+    "l_hip_roll_joint",
+    "l_hip_yaw_joint",
+    "l_knee_joint",
+    "l_foot_pitch_joint",
+    "l_foot_roll_joint",
+    "r_hip_pitch_joint",
+    "r_hip_roll_joint",
+    "r_hip_yaw_joint",
+    "r_knee_joint",
+    "r_foot_pitch_joint",
+    "r_foot_roll_joint",
+    "l_shoulder_pitch_joint",
+    "l_shoulder_roll_joint",
+    "l_elbow_joint",
+    "r_shoulder_pitch_joint",
+    "r_shoulder_roll_joint",
+    "r_elbow_joint",
 ]
 
 HOME_POSE = [
-    -0.698132, 0.0, 0.0, 1.22173, -0.523599, 0.0,
-    -0.698132, 0.0, 0.0, 1.22173, -0.523599, 0.0,
-    0.0, 0.05, 0.0, 0.0, -0.05, 0.0,
+    -0.698132,
+    0.0,
+    0.0,
+    1.22173,
+    -0.523599,
+    0.0,
+    -0.698132,
+    0.0,
+    0.0,
+    1.22173,
+    -0.523599,
+    0.0,
+    0.0,
+    0.05,
+    0.0,
+    0.0,
+    -0.05,
+    0.0,
 ]
 
 DEFAULT_REAL_KP = [
-    35.0, 25.0, 25.0, 35.0, 35.0, 25.0,
-    35.0, 25.0, 25.0, 35.0, 35.0, 25.0,
-    15.0, 15.0, 15.0, 15.0, 15.0, 15.0,
+    35.0,
+    25.0,
+    25.0,
+    35.0,
+    35.0,
+    25.0,
+    35.0,
+    25.0,
+    25.0,
+    35.0,
+    35.0,
+    25.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
 ]
 
 WALK_REAL_KP = [
-    35.0, 25.0, 25.0, 35.0, 35.0, 25.0,
-    35.0, 25.0, 25.0, 35.0, 35.0, 25.0,
-    15.0, 15.0, 15.0, 15.0, 15.0, 15.0,
+    35.0,
+    25.0,
+    25.0,
+    35.0,
+    35.0,
+    25.0,
+    35.0,
+    25.0,
+    25.0,
+    35.0,
+    35.0,
+    25.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
 ]
 
 DEFAULT_REAL_KD = [
-    2.0, 1.0, 1.0, 2.0, 2.0, 1.0,
-    2.0, 1.0, 1.0, 2.0, 2.0, 1.0,
-    1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+    2.0,
+    1.0,
+    1.0,
+    2.0,
+    2.0,
+    1.0,
+    2.0,
+    1.0,
+    1.0,
+    2.0,
+    2.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
 ]
 
 
 @dataclass
 class TeleopConfig:
+    """
+    Stores numeric codes for each type of gamepad input and joystick movement scaling/deadzone
+    """
+
     axis_left_x: int = 0
     axis_left_y: int = 1
     axis_right_x: int = 3
@@ -65,6 +143,10 @@ class TeleopConfig:
 
 @dataclass
 class KeyboardConfig:
+    """
+    Stores movement scales for keyboard movement
+    """
+
     vx_scale: float = 0.4
     vy_scale: float = 0.3
     yaw_rate_scale: float = 0.8
@@ -72,6 +154,10 @@ class KeyboardConfig:
 
 @dataclass
 class CommandIntent:
+    """
+    Stores robot environment, robot state, and movement command data
+    """
+
     domain: int = DOMAIN_SIM
     mode: int = MODE_STAND
     vx: float = 0.0
@@ -81,6 +167,10 @@ class CommandIntent:
 
 @dataclass
 class ControlState:
+    """
+    Stores current control state of robot
+    """
+
     sim_mode: int = MODE_STAND
     real_mode: int = MODE_DISABLED
     vx: float = 0.0
@@ -93,17 +183,32 @@ class ExponentialCommandFilter:
     """Low-pass the motion fields of a command while preserving its mode."""
 
     def __init__(self, time_constant: float = 0.35):
+        """
+        Stores time constant and resets command
+
+        :param time_constant: time constant used in low pass filter
+        """
         self.time_constant = float(time_constant)
         if self.time_constant < 0.0:
             raise ValueError("command filter time constant cannot be negative")
         self.reset()
 
     def reset(self):
+        """
+        Set command to zero
+        """
         self.vx = 0.0
         self.vy = 0.0
         self.yaw_rate = 0.0
 
     def update(self, command: CommandIntent, dt: float) -> CommandIntent:
+        """
+        Computes a smoothened command using new command data and old command data
+
+        :param command: New command
+        :param dt: Timestep between this frame and last frame
+        :return: Filtered command values
+        """
         if command.mode == MODE_ESTOP:
             self.reset()
         elif self.time_constant == 0.0:
@@ -126,6 +231,15 @@ class ExponentialCommandFilter:
 
 
 def _axis(axes: Sequence[float], index: int, deadzone: float) -> float:
+    """
+    Applies a deadband to a joystick output and clips it between -1 and 1.
+
+    :param axes: list of all joystick inputs (should be ordered according to TeleopConfig indices)
+    :param index: index specifying which input to operate on
+    :param deadzone: the deadband radius
+
+    :return: the clipped reading, or 0 if the number is within the deadzone
+    """
     if index < 0 or index >= len(axes):
         return 0.0
     value = float(axes[index])
@@ -135,17 +249,36 @@ def _axis(axes: Sequence[float], index: int, deadzone: float) -> float:
 
 
 def _button(buttons: Sequence[int], index: int) -> bool:
+    """
+    Figures out whether a button at index i is pressed (has non zero value)
+
+    :param buttons: list of buttons represented with numbers
+    :param index: index of button to check
+    :return: whether the specified button is pressed
+    """
     return 0 <= index < len(buttons) and bool(buttons[index])
 
 
 class JoyMapper:
-    def __init__(self, config: Optional[TeleopConfig] = None):
+    """Convert gamepad joystick and button inputs into an intended command"""
+
+    def __init__(self, config: TeleopConfig | None = None):
+        """
+        Initiate config, button list, domain and mode ot default values
+        """
         self.config = config or TeleopConfig()
-        self.previous_buttons: List[int] = []
+        self.previous_buttons: list[int] = []
         self.last_domain = DOMAIN_SIM
         self.last_mode = MODE_STAND
 
     def update(self, axes: Sequence[float], buttons: Sequence[int]) -> CommandIntent:
+        """
+        Calculates new command based on joystick input and button states
+
+        :param axes: list containing left joystick x & y, and right joystick x values
+        :param buttons: list containing all button states (nonzero value = pressed)
+        :return: Calculated command based on gamepad inputs
+        """
         config = self.config
         bindings = [
             (config.button_a, (DOMAIN_SIM, MODE_STAND)),
@@ -166,12 +299,19 @@ class JoyMapper:
             vx=config.vx_scale * _axis(axes, config.axis_left_y, config.deadzone),
             vy=config.vy_scale * _axis(axes, config.axis_left_x, config.deadzone),
             yaw_rate=(
-                config.yaw_rate_scale *
-                _axis(axes, config.axis_right_x, config.deadzone)
+                config.yaw_rate_scale
+                * _axis(axes, config.axis_right_x, config.deadzone)
             ),
         )
 
     def _rising_edge(self, buttons: Sequence[int], index: int) -> bool:
+        """
+        Returns if this is the first frame that a specified button has been pressed
+
+        :param buttons: list of numbers representing button states
+        :param index: index of the specified button to check
+        :return: if this is the button's first frame pressed since being last released
+        """
         return _button(buttons, index) and not _button(self.previous_buttons, index)
 
 
@@ -188,13 +328,23 @@ class KeyboardMapper:
     }
     MOVEMENT_KEYS = frozenset("wasdqe")
 
-    def __init__(self, config: Optional[KeyboardConfig] = None):
+    def __init__(self, config: KeyboardConfig | None = None):
+        """
+        Initiate config, pressed keys, domain, and mode to default values
+        """
         self.config = config or KeyboardConfig()
         self.pressed_keys = set()
         self.last_domain = DOMAIN_SIM
         self.last_mode = MODE_STAND
 
     def press(self, key: str) -> CommandIntent:
+        """
+        Movement and mode input listener
+        - When movement key detected, update list of pressed movement keys
+        - When mode key detected, update robot domain and mode
+        :param key: Key that is pressed
+        :return: Updated command
+        """
         key = key.lower()
         if key in self.MOVEMENT_KEYS:
             self.pressed_keys.add(key)
@@ -203,10 +353,20 @@ class KeyboardMapper:
         return self.command()
 
     def release(self, key: str) -> CommandIntent:
+        """
+        Removes key from pressed keys list and returns updated command
+        :param key: Key to remove
+        :return: Command with key removed
+        """
         self.pressed_keys.discard(key.lower())
         return self.command()
 
     def command(self) -> CommandIntent:
+        """
+        Returns command based on most recent instance data
+
+        :return: Command based on most recent instance data
+        """
         config = self.config
         return CommandIntent(
             domain=self.last_domain,
@@ -217,23 +377,46 @@ class KeyboardMapper:
         )
 
     def clear_movement(self) -> CommandIntent:
+        """
+        Clears movement key presses and returns static command
+
+        :return: Static command
+        """
         self.pressed_keys.clear()
         return self.command()
 
     def _direction(self, positive_key: str, negative_key: str) -> float:
+        """
+        Calculates movement direction based on positive and negative key states
+
+        :param positive_key: Positive key name
+        :param negative_key: Negative key name
+        :return: 1 if only positive key down, -1 if only negative key down, else 0
+        """
         return float(
-            (positive_key in self.pressed_keys) -
-            (negative_key in self.pressed_keys)
+            (positive_key in self.pressed_keys) - (negative_key in self.pressed_keys)
         )
 
 
 class SupervisorCore:
+    """Check desired CommandIntent against safety interlocks and return tuple as such: (updated ControlState, if accepted, reason if rejected)"""
+
     def __init__(self, allow_real_walk: bool = False):
+        """
+        Initiate state, last command, and whether real walk is allowed to default values
+        :param allow_real_walk: decides if physical robot can enter MODE_WALK
+        """
         self.state = ControlState()
-        self._last_mode_command: Optional[Tuple[int, int]] = None
+        self._last_mode_command: tuple[int, int] | None = None
         self.allow_real_walk = allow_real_walk
 
-    def update(self, command: CommandIntent) -> Tuple[ControlState, bool, Optional[str]]:
+    def update(self, command: CommandIntent) -> tuple[ControlState, bool, str | None]:
+        """
+        Regulates robot control state when given a new CommandIntent
+
+        :param command: New attempted command
+        :return: (controlState, whether CommandIntent was accepted, reason for acceptance/rejection)
+        """
         self.state.real_start_standing = False
         command_key = (command.domain, command.mode)
 
@@ -268,13 +451,32 @@ class SupervisorCore:
             self._last_mode_command = command_key
         return state, accepted, reason
 
-    def _apply_sim(self, mode: int) -> Tuple[ControlState, bool, Optional[str]]:
+    def _apply_sim(self, mode: int) -> tuple[ControlState, bool, str | None]:
+        """
+        Mutator function with safety interlocks for self.state.sim_mode
+        - only STAND, WALK, and MIRROR are supported in sim, but they can be entered from any mode
+
+        :param mode: desired mode to try to enter
+        :return: (the control state, if desired mode was accepted, reason if rejection)
+        """
         if mode in (MODE_STAND, MODE_WALK, MODE_MIRROR):
             self.state.sim_mode = mode
             return self.state, True, None
         return self.state, False, f"refusing unsupported sim mode {mode}"
 
-    def _apply_real(self, mode: int) -> Tuple[ControlState, bool, Optional[str]]:
+    def _apply_real(self, mode: int) -> tuple[ControlState, bool, str | None]:
+        """
+        Mutator function with safety interlocks for self.state.real_mode
+        that returns the result of attempting to enter the new desired mode
+        - can enter DISABLED from any mode
+        - can enter HOME only from DISABLED
+        - can enter STAND from anywhere except DISABLED & ESTOP
+        - can enter MIRROR from HOME or STAND
+        - can enter WALK from only STAND (and if allow_real_walk=True)
+
+        :param mode: desired mode to try to enter
+        :return: (the control state, if desired mode was accepted, reason if rejection)
+        """
         current = self.state.real_mode
         if mode == MODE_DISABLED:
             self.state.real_mode = MODE_DISABLED
@@ -308,6 +510,12 @@ class SupervisorCore:
 
 
 def mode_name(mode: int) -> str:
+    """
+    Converts mode's integer code into its string description
+
+    :param mode: Mode to string version of
+    :return: String version of specified mode
+    """
     names = {
         MODE_DISABLED: "DISABLED",
         MODE_HOME: "HOME",
@@ -319,7 +527,14 @@ def mode_name(mode: int) -> str:
     return names.get(mode, f"UNKNOWN({mode})")
 
 
-def _normalized(values: Sequence[float], length: int, fill: float = 0.0) -> List[float]:
+def _normalized(values: Sequence[float], length: int, fill: float = 0.0) -> list[float]:
+    """
+    Normalize list so it is at specified length (elements can be cut off or new fill elements can be added until specified length is achieved)
+    :param values: List to normalize
+    :param length: Desired length of list
+    :param fill: Number to append to end of list if necessary
+    :return: List normalized to specified length
+    """
     result = list(values[:length])
     if len(result) < length:
         result.extend([fill] * (length - len(result)))
@@ -332,8 +547,20 @@ def motor_payload_from_trajectory(
     velocities: Sequence[float],
     torques: Sequence[float],
     disable: bool = False,
-    kp: Optional[Sequence[float]] = None,
+    kp: Sequence[float] | None = None,
 ) -> dict:
+    """
+    Builds a dictionary of normalized joint data when given parallel lists.
+    If lists are of varying lengths, they will be normalized according to length of JOINT_LIST_COMPLETE
+
+    :param joint_names: Names of each joint
+    :param positions: Positions of each joint
+    :param velocities: Velocities of each joint
+    :param torques: Torques each joint is giving
+    :param disable: Whether to disable joint actuation
+    :param kp: kp for each joint control system
+    :return: Dictionary of normalized joint data
+    """
     count = len(JOINT_LIST_COMPLETE)
     payload = {
         "joint_names": list(joint_names) if joint_names else list(JOINT_LIST_COMPLETE),
