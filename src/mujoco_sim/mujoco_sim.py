@@ -23,6 +23,9 @@ class MujocoSim:
         self.data.ctrl[:] = torques
         mujoco.mj_step(self.model, self.data)
 
+    def get_quat(self) -> np.ndarray:
+        """x, y, z, w"""
+        return np.concat([self.data.qpos[4:7], self.data.qpos[3]])
     def get_joint_pos(self) -> np.ndarray:
         return self.data.qpos[7:]
     def get_joint_vel(self) -> np.ndarray:
@@ -35,7 +38,7 @@ class MujocoSim:
         return self.data.sensor("gyro").data
     def get_pelvis_local_linvel(self) -> np.ndarray:
         return self.data.sensor("local_linvel").data
-    def get_pelvis_linaccel(self) -> np.ndarray:
+    def get_pelvis_local_linaccel(self) -> np.ndarray:
         return self.data.sensor("accelerometer").data
 
     # returns imu data in global reference frame

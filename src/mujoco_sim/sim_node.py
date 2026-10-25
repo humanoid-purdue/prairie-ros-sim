@@ -2,22 +2,12 @@ import os
 
 import numpy as np
 from ament_index_python.packages import get_package_share_directory
-from geometry_msgs.msg import (
-    Point,
-    Pose,
-    PoseWithCovariance,
-    Quaternion,
-    Twist,
-    TwistWithCovariance,
-    Vector3,
-)
-from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.time import Time
-from rosgraph_msgs.msg import Clock
-from sensor_msgs.msg import Imu, JointState
 from trajectory_msgs.msg import JointTrajectory
 
+from gz_sim.gz_sim.gz_state_observer import quaternion_rotation_matrix
+from gz_sim_interfaces.msg import StateObservationReduced
 from mujoco_sim.mujoco_sim import MujocoSim
 from prairie_control.prairie_control.control_modes import JOINT_LIST_COMPLETE
 
@@ -43,10 +33,12 @@ class SimNode(Node):
 
         self.create_subscription(JointTrajectory, "joint_trajectories", self._on_new_jt, 10)
 
-        self.joint_state_publisher = self.create_publisher(JointState, "joint_states_mj", 10)
-        self.pelvis_imu_publisher = self.create_publisher(Imu, "pelvis_imu", 10)
-        self.robot_odo_publisher = self.create_publisher(Odometry, "robot_odometry", 10)
-        self.clock_publisher = self.create_publisher(Clock, "clock", 10)
+        # self.joint_state_publisher = self.create_publisher(JointState, "joint_states_mj", 10)
+        # self.pelvis_imu_publisher = self.create_publisher(Imu, "pelvis_imu", 10)
+        # self.robot_odo_publisher = self.create_publisher(Odometry, "robot_odometry", 10)
+        # self.clock_publisher = self.create_publisher(Clock, "clock", 10)
+
+        self.obs_publisher = self.create_publisher(StateObservationReduced, "mj_state_observation", 10)
 
         self.create_timer(PHYSICS_TIMESTEP, self._apply_physics)
         if not self.headless:
@@ -61,56 +53,71 @@ class SimNode(Node):
     def _apply_physics(self):
         self.mujoco_sim.step_sim(self.target_pos, self.target_vel)
 
-    def _publish_joint_state(self):
-        msg = JointState()
-        msg.header.stamp = Time(seconds=self.mujoco_sim.data.time).to_msg()
-        msg.header.frame_id = "?"
+    def _publish_obs(self):
+        msg = StateObservationReduced()
+        msg.sim_time = Time(seconds=self.mujoco_sim.data.time).to_msg()
+        msg.joint_name = JOINT_LIST_COMPLETE
+        msg.joint_pos = self.normalize(self.mujoco_sim.data.qpos[7:])
+        msg.joint_vel = self.normalize(self.mujoco_sim.data.qvel[6:])
 
-        msg.name = JOINT_LIST_COMPLETE
-        msg.position = self.mujoco_sim.data.qpos[7:]
-        msg.velocity = self.mujoco_sim.data.qvel[6:]
-        msg.effort = self.mujoco_sim.data.ctrl[:]
+        msg.ang_vel = self.normalize(self.mujoco_sim.get_pelvis_gyro())
+        quat = self.mujoco_sim.get_quat()
+        quat_inv = np.concat([-quat[:3], quat[3]])
+        msg.grav_vec = quaternion_rotation_matrix(quat_inv) @ np.array([0., 0., -1.])
+        msg.lin_vel = self.normalize(self.mujoco_sim.get_pelvis_local_linvel())
+        msg.lin_acc = self.normalize(self.mujoco_sim.get_pelvis_local_linaccel())
 
-        self.joint_state_publisher.publish(msg)
+        self.obs_publisher.publish(msg)
+    # def _publish_joint_state(self):
+    #     msg = JointState()
+    #     msg.header.stamp = Time(seconds=self.mujoco_sim.data.time).to_msg()
+    #     msg.header.frame_id = "?"
 
-    def _publish_pelvis_imu(self):
-        stamp = Time(seconds=self.mujoco_sim.data.time).to_msg()
-        gyro = self.mujoco_sim.get_pelvis_gyro()
-        accel = self.mujoco_sim.get_pelvis_linaccel()
+    #     msg.name = JOINT_LIST_COMPLETE
+    #     msg.position = self.mujoco_sim.data.qpos[7:]
+    #     msg.velocity = self.mujoco_sim.data.qvel[6:]
+    #     msg.effort = self.mujoco_sim.data.ctrl[:]
 
-        imu = Imu()
-        imu.header.stamp = stamp
-        imu.header.frame_id = "imu" # check with Henry; not sure if this is right
-        imu.angular_velocity = Vector3(x=gyro[0], y=gyro[1], z=gyro[2])
-        imu.linear_acceleration = Vector3(x=accel[0], y=accel[1], z=accel[2])
+    #     self.joint_state_publisher.publish(msg)
 
-        self.pelvis_imu_publisher.publish(imu)
+    # def _publish_pelvis_imu(self):
+    #     stamp = Time(seconds=self.mujoco_sim.data.time).to_msg()
+    #     gyro = self.mujoco_sim.get_pelvis_gyro()
+    #     accel = self.mujoco_sim.get_pelvis_linaccel()
 
-    def _publish_clock(self):
-        msg = Clock()
-        msg.clock = Time(seconds=self.mujoco_sim.data.time).to_msg()
-        self.clock_publisher.publish(msg)
+    #     imu = Imu()
+    #     imu.header.stamp = stamp
+    #     imu.header.frame_id = "imu" # check with Henry; not sure if this is right
+    #     imu.angular_velocity = Vector3(x=gyro[0], y=gyro[1], z=gyro[2])
+    #     imu.linear_acceleration = Vector3(x=accel[0], y=accel[1], z=accel[2])
 
-    def _publish_robot_odometry(self):
-        msg = Odometry()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "global" # check with Henry; not sure if this is right
-        msg.pose = PoseWithCovariance()
-        msg.pose.pose = Pose()
-        msg.twist = TwistWithCovariance()
-        msg.twist.twist = Twist()
+    #     self.pelvis_imu_publisher.publish(imu)
 
-        pos = self.mujoco_sim.get_imu_position()
-        quat = self.muojco_sim.get_imu_orientation()
-        linvel = self.mujoco_sim.get_imu_linvel()
-        angvel = self.mujoco_sim.get_imu_angvel()
+    # def _publish_clock(self):
+    #     msg = Clock()
+    #     msg.clock = Time(seconds=self.mujoco_sim.data.time).to_msg()
+    #     self.clock_publisher.publish(msg)
 
-        msg.pose.pose.position = Point(x=pos[0], y=pos[1], z=pos[2])
-        msg.pose.pose.orientation = Quaternion(x=quat[1], y=quat[2], z=quat[3], w=quat[0])
-        msg.twist.twist.linear = Vector3(x=linvel[0], y=linvel[1], z=linvel[2])
-        msg.twist.twist.angular = Vector3(x=angvel[0], y=angvel[1], z=angvel[2])
+    # def _publish_robot_odometry(self):
+    #     msg = Odometry()
+    #     msg.header.stamp = self.get_clock().now().to_msg()
+    #     msg.header.frame_id = "global" # check with Henry; not sure if this is right
+    #     msg.pose = PoseWithCovariance()
+    #     msg.pose.pose = Pose()
+    #     msg.twist = TwistWithCovariance()
+    #     msg.twist.twist = Twist()
 
-        self.robot_odo_publisher.publish(msg)
+    #     pos = self.mujoco_sim.get_imu_position()
+    #     quat = self.muojco_sim.get_imu_orientation()
+    #     linvel = self.mujoco_sim.get_imu_linvel()
+    #     angvel = self.mujoco_sim.get_imu_angvel()
+
+    #     msg.pose.pose.position = Point(x=pos[0], y=pos[1], z=pos[2])
+    #     msg.pose.pose.orientation = Quaternion(x=quat[1], y=quat[2], z=quat[3], w=quat[0])
+    #     msg.twist.twist.linear = Vector3(x=linvel[0], y=linvel[1], z=linvel[2])
+    #     msg.twist.twist.angular = Vector3(x=angvel[0], y=angvel[1], z=angvel[2])
+
+    #     self.robot_odo_publisher.publish(msg)
 
  
     def _normalize(self, arr: np.ndarray) -> np.ndarray:
