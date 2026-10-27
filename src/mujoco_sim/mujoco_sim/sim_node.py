@@ -1,15 +1,16 @@
 import os
 
 import numpy as np
+import rclpy
 from ament_index_python.packages import get_package_share_directory
+from gz_sim.gz_state_observer import quaternion_rotation_matrix
+from prairie_control.control_modes import JOINT_LIST_COMPLETE
 from rclpy.node import Node
 from rclpy.time import Time
 from trajectory_msgs.msg import JointTrajectory
 
-from gz_sim.gz_sim.gz_state_observer import quaternion_rotation_matrix
 from gz_sim_interfaces.msg import StateObservationReduced
-from mujoco_sim.mujoco_sim import MujocoSim
-from prairie_control.prairie_control.control_modes import JOINT_LIST_COMPLETE
+from mujoco_sim.sim import MujocoSim
 
 SCENE = os.path.join(get_package_share_directory("prairie_control"), "urdf", "nemo5.xml")
 PHYSICS_TIMESTEP = 0.01
@@ -20,7 +21,7 @@ class SimNode(Node):
     """Run MuJoCo sim with subscribed JointTrajectory data and publish sensor data to construct state observation"""
 
     def __init__(self):
-        super().__init__("mujoco_sim")
+        super().__init__("mujoco_sim_node")
 
         self.joint_len = len(JOINT_LIST_COMPLETE)
         self.target_pos = np.zeros(self.joint_len)
@@ -127,3 +128,9 @@ class SimNode(Node):
         if arr_len < self.joint_len:
             return np.concat([arr, np.zeros(self.joint_len - arr_len)])
         return arr[: self.joint_len]
+
+def main():
+    rclpy.init()
+    node = SimNode()
+    rclpy.spin(node)
+    rclpy.shutdown()

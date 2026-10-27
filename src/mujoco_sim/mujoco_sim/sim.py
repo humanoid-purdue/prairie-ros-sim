@@ -64,4 +64,3 @@ if __name__ == "__main__":
     while True:
         ms.update_viewer()
         time.sleep(1./60.)
-
