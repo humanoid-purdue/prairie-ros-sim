@@ -61,9 +61,7 @@ class MujocoSim:
 
 if __name__ == "__main__":
     ms = MujocoSim("src/prairie_control/urdf/nemo5.xml", 0, 0, False)
-    n = 0
     while True:
         ms.update_viewer()
         time.sleep(1./60.)
-        print("hi" + str(n % 10))
-        n += 1
+
