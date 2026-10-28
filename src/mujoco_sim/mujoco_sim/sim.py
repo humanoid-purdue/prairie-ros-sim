@@ -1,8 +1,16 @@
+import os
+import sys
 import time
 
 import mujoco
 import numpy as np
-from prairie_control.control_modes import HOME_POSE
+from ament_index_python.packages import get_package_share_directory
+
+# helpers/ is installed as data files, not as part of the prairie_control package
+sys.path.append(os.path.join(get_package_share_directory("prairie_control"), "helpers"))
+from stabilizer import Stabilizer
+
+from prairie_control.gz_standing import STANDING_COM
 
 
 class MujocoSim:
@@ -12,6 +20,7 @@ class MujocoSim:
         self.reset_to_pose(home_pose)
         self.kP = kP
         self.kD = kD
+        self.stabilizer = Stabilizer()
 
         self.viewer = None
         if not headless:
@@ -25,11 +34,13 @@ class MujocoSim:
         mujoco.mj_forward(self.model, self.data)
     
     def step_sim(self, tp: np.ndarray, target_vel: np.ndarray):
-        target_pos = tp + HOME_POSE
+        self.stabilizer.update_simulation(self.data.qpos[7:], self.data.qvel[6:])
+        ff_torque = self.stabilizer.calculate_joint_torques(STANDING_COM)
+        target_pos = tp
         cur_pos = self.data.qpos[7:]
         cur_vel = self.data.qvel[6:]
-        torques = (target_pos - cur_pos) * self.kP + (target_vel - cur_vel) * self.kD
-        self.data.ctrl[:] = torques
+        torques = (target_pos - cur_pos) * self.kP + (target_vel - cur_vel) * self.kD + ff_torque
+        self.data.ctrl[:] = ff_torque
         mujoco.mj_step(self.model, self.data)
 
     def get_quat(self) -> np.ndarray:

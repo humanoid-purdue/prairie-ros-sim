@@ -30,7 +30,7 @@ class SimNode(Node):
         self.joint_len = len(JOINT_LIST_COMPLETE)
         self.target_pos = np.zeros(self.joint_len)
         self.target_vel = np.zeros(self.joint_len)
-        self.kP = np.array(DEFAULT_REAL_KP) * 4
+        self.kP = np.array(DEFAULT_REAL_KP)
         self.kD = np.array(DEFAULT_REAL_KD)
         self.headless = False
 
