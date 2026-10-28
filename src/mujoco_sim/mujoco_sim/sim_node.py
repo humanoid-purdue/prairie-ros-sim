@@ -4,7 +4,12 @@ import numpy as np
 import rclpy
 from ament_index_python.packages import get_package_share_directory
 from gz_sim.gz_state_observer import quaternion_rotation_matrix
-from prairie_control.control_modes import JOINT_LIST_COMPLETE
+from prairie_control.control_modes import (
+    DEFAULT_REAL_KD,
+    DEFAULT_REAL_KP,
+    HOME_POSE,
+    JOINT_LIST_COMPLETE,
+)
 from rclpy.node import Node
 from rclpy.time import Time
 from trajectory_msgs.msg import JointTrajectory
@@ -13,7 +18,6 @@ from gz_sim_interfaces.msg import StateObservationReduced
 from mujoco_sim.sim import MujocoSim
 
 SCENE = os.path.join(get_package_share_directory("prairie_control"), "urdf", "nemo5.xml")
-PHYSICS_TIMESTEP = 0.01
 VIEWER_TIMESTEP = 1. / 60.
 
 
@@ -26,11 +30,11 @@ class SimNode(Node):
         self.joint_len = len(JOINT_LIST_COMPLETE)
         self.target_pos = np.zeros(self.joint_len)
         self.target_vel = np.zeros(self.joint_len)
-        self.kP = 0
-        self.kD = 0
+        self.kP = np.array(DEFAULT_REAL_KP) * 4
+        self.kD = np.array(DEFAULT_REAL_KD)
         self.headless = False
 
-        self.mujoco_sim = MujocoSim(SCENE, self.kP, self.kD, self.headless)
+        self.mujoco_sim = MujocoSim(SCENE, self.kP, self.kD, HOME_POSE, self.headless)
 
         self.create_subscription(JointTrajectory, "joint_trajectories", self._on_new_jt, 10)
 
@@ -41,7 +45,7 @@ class SimNode(Node):
 
         self.obs_publisher = self.create_publisher(StateObservationReduced, "mj_state_observation", 10)
 
-        self.create_timer(PHYSICS_TIMESTEP, self._apply_physics)
+        self.create_timer(self.mujoco_sim.model.opt.timestep, self._apply_physics)
         if not self.headless:
             self.create_timer(VIEWER_TIMESTEP, self.mujoco_sim.update_viewer)
 

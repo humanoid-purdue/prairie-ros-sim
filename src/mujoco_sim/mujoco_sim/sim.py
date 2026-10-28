@@ -2,12 +2,14 @@ import time
 
 import mujoco
 import numpy as np
+from prairie_control.control_modes import HOME_POSE
 
 
 class MujocoSim:
-    def __init__(self, scene: str, kP, kD, headless=True):
+    def __init__(self, scene: str, kP, kD, home_pose, headless=True):
         self.model = mujoco.MjModel.from_xml_path(scene)
         self.data = mujoco.MjData(self.model)
+        self.reset_to_pose(home_pose)
         self.kP = kP
         self.kD = kD
 
@@ -15,8 +17,15 @@ class MujocoSim:
         if not headless:
             from mujoco import viewer
             self.viewer = viewer.launch_passive(self.model, self.data)
+
+    def reset_to_pose(self, pose):
+        mujoco.mj_resetData(self.model, self.data)
+        self.data.qpos[7:] = pose
+        self.data.qvel[:] = 0
+        mujoco.mj_forward(self.model, self.data)
     
-    def step_sim(self, target_pos: np.ndarray, target_vel: np.ndarray):
+    def step_sim(self, tp: np.ndarray, target_vel: np.ndarray):
+        target_pos = tp + HOME_POSE
         cur_pos = self.data.qpos[7:]
         cur_vel = self.data.qvel[6:]
         torques = (target_pos - cur_pos) * self.kP + (target_vel - cur_vel) * self.kD

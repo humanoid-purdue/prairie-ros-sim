@@ -62,6 +62,7 @@
   </asset>
 
 <worldbody>
+  <geom name="floor" type="plane" size="0 0 0.05" contype="1" conaffinity="1" condim="3" friction="1 0.005 0.0001" rgba="0.8 0.8 0.8 1"/>
   <light name="spotlight" mode="targetbodycom" target="pelvis" pos="0 -6 4" cutoff="30" />
   <body name="pelvis" pos="0.0 0.0 0.6088" childclass="robot">
     <inertial pos="0.00505250 -0.00005977 0.18608225" mass="5.29698285" fullinertia="0.11381520 0.08283557 0.05217409 -0.00002232 0.00625310 -0.00006998" />
